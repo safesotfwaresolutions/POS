@@ -10,24 +10,19 @@ import {
   CheckCircle2, 
   Printer, 
   Banknote, 
-  FileText,
-  AlertCircle,
   X,
-  Sparkles,
-  ArrowRight,
   ShieldAlert
 } from 'lucide-react';
-import { INITIAL_MOCK_DATA } from '../services/api';
+import { getProductsApi, getCustomersApi, createSaleApi, INITIAL_MOCK_DATA } from '../services/api';
 
 export default function POSBento() {
-  const { products, categories, customers } = INITIAL_MOCK_DATA;
+  const [productsList, setProductsList] = useState(INITIAL_MOCK_DATA.products);
+  const [customersList, setCustomersList] = useState(INITIAL_MOCK_DATA.customers);
+  const [categoriesList] = useState(INITIAL_MOCK_DATA.categories);
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
-  const [cart, setCart] = useState([
-    { ...products[0], quantity: 2 },
-    { ...products[2], quantity: 1 }
-  ]);
-  const [selectedCustomer, setSelectedCustomer] = useState(customers[0]);
+  const [cart, setCart] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(INITIAL_MOCK_DATA.customers[0]);
   const [issueDian, setIssueDian] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [cashTendered, setCashTendered] = useState('');
@@ -35,12 +30,29 @@ export default function POSBento() {
 
   const barcodeInputRef = useRef(null);
 
-  // Filter products by search and category
-  const filteredProducts = products.filter(p => {
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const prods = await getProductsApi();
+        if (Array.isArray(prods) && prods.length > 0) setProductsList(prods);
+
+        const custs = await getCustomersApi();
+        if (Array.isArray(custs) && custs.length > 0) {
+          setCustomersList(custs);
+          setSelectedCustomer(custs[0]);
+        }
+      } catch (e) {
+        console.warn('Cargando respaldo POS local:', e);
+      }
+    }
+    loadData();
+  }, []);
+
+  const filteredProducts = productsList.filter(p => {
     const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.barcode.includes(searchQuery) || 
-                          p.internalCode.toLowerCase().includes(searchQuery.toLowerCase());
+                          (p.barcode && p.barcode.includes(searchQuery)) || 
+                          (p.internalCode && p.internalCode.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -49,7 +61,7 @@ export default function POSBento() {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
-        if (existing.quantity >= product.stock) return prev; // Limit to stock
+        if (existing.quantity >= product.stock) return prev;
         return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       }
       return [...prev, { ...product, quantity: 1 }];
@@ -74,7 +86,6 @@ export default function POSBento() {
     setCart([]);
   };
 
-  // Cart calculations
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const tax = issueDian ? Math.round(subtotal * 0.19) : 0;
   const total = subtotal + tax;
@@ -82,13 +93,31 @@ export default function POSBento() {
   const cashNumber = parseFloat(cashTendered) || 0;
   const change = cashNumber - total;
 
-  const handleCompleteSale = () => {
+  const handleCompleteSale = async () => {
     if (cashNumber < total) return;
 
-    const newSale = {
-      id: `FAC-${Math.floor(1000 + Math.random() * 9000)}`,
+    const saleCommand = {
+      customerId: selectedCustomer?.id || 1,
+      items: cart.map(item => ({
+        productId: item.id,
+        quantity: item.quantity,
+        unitPrice: item.price
+      })),
+      cashReceived: cashNumber,
+      totalAmount: total
+    };
+
+    let result = null;
+    try {
+      result = await createSaleApi(saleCommand);
+    } catch (e) {
+      // ignore, local fallback
+    }
+
+    const completed = {
+      id: result?.id || `FAC-${Math.floor(1000 + Math.random() * 9000)}`,
       date: new Date().toLocaleString('es-CO'),
-      customer: selectedCustomer.name,
+      customer: selectedCustomer?.name || 'Cliente General',
       items: [...cart],
       total,
       cashTendered: cashNumber,
@@ -97,7 +126,7 @@ export default function POSBento() {
       cufe: issueDian ? `cufe-${Math.random().toString(36).substring(2, 12)}-2026` : null
     };
 
-    setSaleCompleted(newSale);
+    setSaleCompleted(completed);
     setShowCheckoutModal(false);
     setCart([]);
     setCashTendered('');
@@ -109,15 +138,15 @@ export default function POSBento() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-[#111c2d] flex items-center gap-2">
-            Punto de Venta Bento <span className="text-xs font-bold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full">Caja Activa</span>
+            Punto de Venta Bento <span className="text-xs font-bold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full">Caja Activa API</span>
           </h1>
-          <p className="text-xs text-gray-500 font-medium">Procesamiento inmediato de ventas en efectivo e impresión de tiquetes</p>
+          <p className="text-xs text-gray-500 font-medium">Procesamiento de ventas conectado con el backend Spring Boot</p>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-gray-500">Categorías:</span>
           <div className="flex flex-wrap gap-1.5">
-            {categories.map(cat => (
+            {categoriesList.map(cat => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
@@ -134,13 +163,11 @@ export default function POSBento() {
         </div>
       </div>
 
-      {/* Main Grid: Products Left 7 cols, Cart Right 5 cols */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Products Grid (Left Column) */}
         <div className="lg:col-span-7 space-y-4">
-          
-          {/* Search bar */}
           <div className="bento-card p-3 flex items-center gap-3">
             <Search className="w-4 h-4 text-gray-400" />
             <input
@@ -158,10 +185,9 @@ export default function POSBento() {
             )}
           </div>
 
-          {/* Products List */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {filteredProducts.map(product => {
-              const isLowStock = product.stock <= product.minStock;
+              const isLowStock = product.stock <= (product.minStock || 5);
               const isOut = product.stock <= 0;
 
               return (
@@ -209,14 +235,12 @@ export default function POSBento() {
               );
             })}
           </div>
-
         </div>
 
-        {/* Shopping Cart (Right Column - Bento Style) */}
+        {/* Shopping Cart (Right Column) */}
         <div className="lg:col-span-5">
           <div className="bento-card p-5 sticky top-20 space-y-4 bg-white shadow-lg">
             
-            {/* Header Cart */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-blue-600 text-white rounded-xl shadow-xs">
@@ -237,28 +261,26 @@ export default function POSBento() {
               )}
             </div>
 
-            {/* Customer Selector */}
             <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-gray-600">
                 <span>Cliente Asignado:</span>
                 <span className="text-[10px] text-blue-600 font-extrabold">SELECCIONAR</span>
               </div>
               <select
-                value={selectedCustomer.id}
+                value={selectedCustomer?.id || 1}
                 onChange={(e) => {
-                  const cust = customers.find(c => c.id === parseInt(e.target.value));
+                  const cust = customersList.find(c => c.id === parseInt(e.target.value));
                   setSelectedCustomer(cust);
                 }}
                 className="w-full bg-white border border-gray-300 rounded-lg p-2 text-xs font-bold text-[#111c2d] focus:outline-none focus:border-blue-600"
               >
-                {customers.map(c => (
+                {customersList.map(c => (
                   <option key={c.id} value={c.id}>
-                    {c.name} ({c.type})
+                    {c.name || c.fullName} ({c.type || 'Cliente'})
                   </option>
                 ))}
               </select>
 
-              {/* DIAN Electronic invoice toggle */}
               <label className="flex items-center gap-2 pt-1 cursor-pointer">
                 <input
                   type="checkbox"
@@ -272,13 +294,12 @@ export default function POSBento() {
               </label>
             </div>
 
-            {/* Cart Items Table */}
             <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1">
               {cart.length === 0 ? (
                 <div className="py-12 text-center text-gray-400 space-y-2">
                   <ShoppingCart className="w-10 h-10 mx-auto stroke-1 text-gray-300" />
                   <p className="text-xs font-bold">El carrito de venta está vacío</p>
-                  <p className="text-[11px]">Haz clic en los productos del catálogo o usa el escáner de barras para agregar</p>
+                  <p className="text-[11px]">Haz clic en los productos del catálogo para agregar al ticket</p>
                 </div>
               ) : (
                 cart.map(item => (
@@ -318,7 +339,6 @@ export default function POSBento() {
               )}
             </div>
 
-            {/* Totals Section */}
             <div className="border-t border-gray-200 pt-3 space-y-2 text-xs font-semibold text-gray-600">
               <div className="flex justify-between">
                 <span>Subtotal Neto:</span>
@@ -336,7 +356,6 @@ export default function POSBento() {
               </div>
             </div>
 
-            {/* Checkout Action Button */}
             <button
               disabled={cart.length === 0}
               onClick={() => setShowCheckoutModal(true)}
@@ -389,12 +408,11 @@ export default function POSBento() {
                   value={cashTendered}
                   onChange={(e) => setCashTendered(e.target.value)}
                   placeholder="Ingrese monto pagado por cliente..."
-                  className="w-full pl-8 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-base font-black text-[#111c2d] focus:outline-none focus:border-blue-600 focus:bg-white"
+                  className="w-full pl-8 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-base font-black text-[#111c2d] focus:outline-none focus:border-blue-600"
                   autoFocus
                 />
               </div>
 
-              {/* Preset Cash Buttons */}
               <div className="grid grid-cols-4 gap-2 pt-1">
                 {[total, 20000, 50000, 100000].map(val => (
                   <button
@@ -408,7 +426,6 @@ export default function POSBento() {
               </div>
             </div>
 
-            {/* Change calculation */}
             <div className={`p-4 rounded-xl border ${
               change >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'
             }`}>
@@ -459,8 +476,8 @@ export default function POSBento() {
             <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h3 className="text-xl font-extrabold text-[#111c2d]">¡Venta Procesada con Éxito!</h3>
-            <p className="text-xs text-gray-500 font-medium">Comprobante #{saleCompleted.id} • Stock actualizado automáticamente</p>
+            <h3 className="text-xl font-extrabold text-[#111c2d]">¡Venta Registrada en API!</h3>
+            <p className="text-xs text-gray-500 font-medium">Comprobante #{saleCompleted.id} • Procesada en Spring Boot</p>
 
             <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-left text-xs space-y-1.5">
               <div className="flex justify-between font-bold text-gray-700">

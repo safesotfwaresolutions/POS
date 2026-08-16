@@ -1,28 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   ShoppingCart, 
   AlertTriangle, 
   FileCheck2, 
   ArrowUpRight, 
-  ArrowDownRight,
-  Barcode,
-  CheckCircle,
-  Clock,
-  ChevronRight,
-  Sparkles,
-  Zap,
-  Store
+  Barcode, 
+  ChevronRight, 
+  Sparkles 
 } from 'lucide-react';
-
 import { useNavigate } from 'react-router-dom';
-import { INITIAL_MOCK_DATA } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { getProductsApi, getSalesApi, INITIAL_MOCK_DATA } from '../services/api';
 
-export default function DashboardBento({ activeRole }) {
+export default function DashboardBento() {
   const navigate = useNavigate();
-  const { stats, recentSales, products } = INITIAL_MOCK_DATA;
+  const { user } = useAuth();
+  const [stats, setStats] = useState(INITIAL_MOCK_DATA.stats);
+  const [recentSales, setRecentSales] = useState(INITIAL_MOCK_DATA.recentSales);
+  const [products, setProducts] = useState(INITIAL_MOCK_DATA.products);
 
-  const lowStockItems = products.filter(p => p.stock <= p.minStock);
+  useEffect(() => {
+    async function loadLiveData() {
+      try {
+        const prodData = await getProductsApi();
+        if (Array.isArray(prodData) && prodData.length > 0) {
+          setProducts(prodData);
+        }
+        const salesData = await getSalesApi();
+        if (Array.isArray(salesData) && salesData.length > 0) {
+          setRecentSales(salesData);
+        }
+      } catch (e) {
+        console.warn('Usando datos de respaldo para el Dashboard:', e);
+      }
+    }
+    loadLiveData();
+  }, []);
+
+  const lowStockCount = products.filter(p => p.stock <= (p.minStock || 5)).length;
 
   return (
     <div className="space-y-6 pb-12">
@@ -33,10 +49,10 @@ export default function DashboardBento({ activeRole }) {
             <Sparkles className="w-3.5 h-3.5" /> Punto de Venta • Caja Única #1
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-            ¡Hola, Juan Sebastián! 👋
+            ¡Hola, {user?.fullName || user?.username || 'Usuario'}! 👋
           </h1>
           <p className="text-xs text-blue-100/80 font-medium">
-            Resumen operativo en tiempo real • {activeRole}
+            Resumen operativo en tiempo real • {user?.role || 'ADMINISTRATOR'}
           </p>
         </div>
 
@@ -54,7 +70,7 @@ export default function DashboardBento({ activeRole }) {
       {/* Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        {/* Bento Item 1: Total Ventas Hoy (Large Featured Card) */}
+        {/* Bento Item 1: Total Ventas Hoy */}
         <div className="lg:col-span-2 bento-card p-6 flex flex-col justify-between bg-gradient-to-br from-white via-white to-blue-50/40 relative overflow-hidden">
           <div className="flex items-start justify-between">
             <div>
@@ -73,7 +89,6 @@ export default function DashboardBento({ activeRole }) {
             </div>
           </div>
 
-          {/* Mini chart visual representation */}
           <div className="mt-6 space-y-2">
             <div className="flex justify-between text-xs font-bold text-gray-500">
               <span>Meta diaria ($2,000,000 COP)</span>
@@ -85,7 +100,7 @@ export default function DashboardBento({ activeRole }) {
           </div>
 
           <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-medium text-gray-500">
-            <span>{stats.salesCount} Transacciones procesadas</span>
+            <span>{recentSales.length} Transacciones procesadas</span>
             <span className="font-bold text-blue-600 hover:underline cursor-pointer flex items-center gap-1" onClick={() => navigate('/pos')}>
               Ir a Caja <ChevronRight className="w-3.5 h-3.5" />
             </span>
@@ -121,7 +136,7 @@ export default function DashboardBento({ activeRole }) {
           </div>
           <div className="my-3">
             <h3 className="text-2xl font-black text-amber-950 tabular-nums">
-              {stats.lowStockCount} <span className="text-sm font-bold text-amber-800">Productos</span>
+              {lowStockCount} <span className="text-sm font-bold text-amber-800">Productos</span>
             </h3>
             <p className="text-xs text-amber-700 mt-0.5 font-medium">Bajo stock mínimo requerido</p>
           </div>
@@ -133,7 +148,7 @@ export default function DashboardBento({ activeRole }) {
           </button>
         </div>
 
-        {/* Bento Item 4: Facturación DIAN (Factus Integration) */}
+        {/* Bento Item 4: Facturación DIAN */}
         <div className="lg:col-span-2 bento-card p-6 flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div>
@@ -159,7 +174,7 @@ export default function DashboardBento({ activeRole }) {
             </div>
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
               <span className="text-[11px] font-semibold text-amber-700">Pendientes de Reintento</span>
-              <p className="text-lg font-black text-amber-600">{stats.dianPendingCount} facturas</p>
+              <p className="text-lg font-black text-amber-600">2 facturas</p>
             </div>
           </div>
 
@@ -237,21 +252,19 @@ export default function DashboardBento({ activeRole }) {
                 {recentSales.map((sale) => (
                   <tr key={sale.id} className="hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-3 font-bold text-blue-600">{sale.id}</td>
-                    <td className="py-3 px-3 text-gray-600">{sale.date}</td>
-                    <td className="py-3 px-3 font-semibold text-[#111c2d]">{sale.customer}</td>
-                    <td className="py-3 px-3 text-center font-bold">{sale.itemsCount}</td>
+                    <td className="py-3 px-3 text-gray-600">{sale.date || sale.createdAt}</td>
+                    <td className="py-3 px-3 font-semibold text-[#111c2d]">{sale.customer || 'Cliente General'}</td>
+                    <td className="py-3 px-3 text-center font-bold">{sale.itemsCount || 1}</td>
                     <td className="py-3 px-3 text-right font-extrabold text-[#111c2d] tabular-nums">
-                      ${sale.total.toLocaleString('es-CO')} COP
+                      ${(sale.total || sale.totalAmount || 0).toLocaleString('es-CO')} COP
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                        sale.dianStatus === 'APROBADA'
+                        sale.dianStatus === 'APROBADA' || sale.dianStatus === 'APROBADA_DIAN'
                           ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : sale.dianStatus === 'EN_COLA'
-                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
                           : 'bg-gray-100 text-gray-600 border border-gray-200'
                       }`}>
-                        {sale.dianStatus}
+                        {sale.dianStatus || 'NO_REQUERIDA'}
                       </span>
                     </td>
                   </tr>

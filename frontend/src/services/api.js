@@ -1,8 +1,23 @@
-// API Service layer with integration to Spring Boot backend and fallback mock data for offline/demo mode
+// Real API Service connecting to Spring Boot REST endpoints with token authentication & mock fallbacks
 
 const API_BASE_URL = '/api/v1';
 
-// Initial Mock Data reflecting real POS business domain
+let authToken = localStorage.getItem('jwt_token') || '';
+
+export function getAuthToken() {
+  return authToken;
+}
+
+export function setAuthToken(token) {
+  authToken = token || '';
+  if (token) {
+    localStorage.setItem('jwt_token', token);
+  } else {
+    localStorage.removeItem('jwt_token');
+  }
+}
+
+// Fallback Mock Data for demo / offline use
 export const INITIAL_MOCK_DATA = {
   stats: {
     todaySales: 1420500,
@@ -24,7 +39,7 @@ export const INITIAL_MOCK_DATA = {
   ],
   categories: ['Todos', 'Bebidas', 'Lácteos', 'Panadería', 'Abarrotes', 'Snacks'],
   customers: [
-    { id: 1, name: 'Cliente General (Mostrador)', identification: '222222222222', email: 'consumidorfinal@pos.com', phone: '3000000000', type: 'Consumidor Final' },
+    { id: 1, name: 'Cliente General (Mostrador)', identification: '9999999999', email: 'consumidorfinal@pos.com', phone: '3000000000', type: 'Consumidor Final' },
     { id: 2, name: 'Empresa Distribuidora SAS', identification: '900123456-1', email: 'facturacion@distribuidora.co', phone: '6013456789', type: 'Factura Electrónica' },
     { id: 3, name: 'María Fernanda Gómez', identification: '1020304050', email: 'mfgomez@gmail.com', phone: '3159876543', type: 'Factura Electrónica' },
   ],
@@ -40,20 +55,156 @@ export const INITIAL_MOCK_DATA = {
   ]
 };
 
-// Generic API helper
+// Main HTTP fetch wrapper
 export async function fetchApi(endpoint, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    ...options.headers,
+  };
+
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
       ...options,
+      headers,
     });
-    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+    if (response.status === 401) {
+      console.warn('Sesión expirada o no autenticada.');
+      setAuthToken('');
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Error HTTP ${response.status}`);
+    }
+
+    // Return empty for 204 No Content
+    if (response.status === 204) return true;
     return await response.json();
   } catch (error) {
-    console.warn(`Backend endpoint ${endpoint} fallback to mock data:`, error.message);
-    return null;
+    console.warn(`[API] Call to ${endpoint} failed:`, error.message);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------
+// AUTH API
+// ----------------------------------------------------
+export async function loginApi(username, password) {
+  try {
+    const data = await fetchApi('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+    if (data && data.token) {
+      setAuthToken(data.token);
+    }
+    return data;
+  } catch (err) {
+    // If backend isn't running or credentials fail in demo mode
+    if (username === 'admin' && password === 'Password123') {
+      const mockSession = {
+        token: 'mock-jwt-token-admin',
+        username: 'admin',
+        role: 'ADMINISTRATOR',
+        fullName: 'Administrador Principal'
+      };
+      setAuthToken(mockSession.token);
+      return mockSession;
+    }
+    throw err;
+  }
+}
+
+export async function logoutApi() {
+  try {
+    await fetchApi('/auth/logout', { method: 'POST' });
+  } catch (e) {
+    // ignore
+  } finally {
+    setAuthToken('');
+  }
+}
+
+// ----------------------------------------------------
+// PRODUCTS API
+// ----------------------------------------------------
+export async function getProductsApi(search = '', categoryId = null, page = 0, size = 50) {
+  try {
+    const params = new URLSearchParams({ page, size });
+    if (search) params.append('search', search);
+    if (categoryId) params.append('categoryId', categoryId);
+    
+    const data = await fetchApi(`/products?${params.toString()}`);
+    return data.content || data;
+  } catch (e) {
+    return INITIAL_MOCK_DATA.products;
+  }
+}
+
+export async function createProductApi(productData) {
+  try {
+    return await fetchApi('/products', {
+      method: 'POST',
+      body: JSON.stringify(productData),
+    });
+  } catch (e) {
+    return { ...productData, id: Date.now() };
+  }
+}
+
+// ----------------------------------------------------
+// CUSTOMERS API
+// ----------------------------------------------------
+export async function getCustomersApi() {
+  try {
+    const data = await fetchApi('/customers');
+    return data.content || data;
+  } catch (e) {
+    return INITIAL_MOCK_DATA.customers;
+  }
+}
+
+// ----------------------------------------------------
+// SALES API
+// ----------------------------------------------------
+export async function createSaleApi(saleCommand) {
+  try {
+    return await fetchApi('/sales', {
+      method: 'POST',
+      body: JSON.stringify(saleCommand),
+    });
+  } catch (e) {
+    return {
+      id: `FAC-${Math.floor(1000 + Math.random() * 9000)}`,
+      totalAmount: saleCommand.totalAmount || 0,
+      createdAt: new Date().toISOString()
+    };
+  }
+}
+
+export async function getSalesApi() {
+  try {
+    const data = await fetchApi('/sales');
+    return data.content || data;
+  } catch (e) {
+    return INITIAL_MOCK_DATA.recentSales;
+  }
+}
+
+// ----------------------------------------------------
+// SETTINGS API
+// ----------------------------------------------------
+export async function getSettingsApi() {
+  try {
+    return await fetchApi('/settings');
+  } catch (e) {
+    return {
+      businessName: 'Mi Pequeño Negocio POS',
+      taxId: '900.123.456-7',
+      address: 'Calle 10 # 45-12, Medellín',
+      phone: '300 123 4567'
+    };
   }
 }

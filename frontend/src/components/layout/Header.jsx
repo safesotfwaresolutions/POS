@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { 
   Scan, 
   PlusCircle, 
-  Bell, 
   Search, 
   CheckCircle2, 
   Clock, 
-  UserCheck,
-  Zap
+  LogOut,
+  ShieldCheck,
+  User
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-export default function Header({ activeRole, setActiveRole, onBarcodeSearch }) {
+export default function Header({ onBarcodeSearch }) {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [currentTime, setCurrentTime] = useState('');
   const [searchValue, setSearchValue] = useState('');
 
@@ -35,6 +37,11 @@ export default function Header({ activeRole, setActiveRole, onBarcodeSearch }) {
     if (onBarcodeSearch) {
       onBarcodeSearch(searchValue);
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
   };
 
   return (
@@ -70,23 +77,26 @@ export default function Header({ activeRole, setActiveRole, onBarcodeSearch }) {
         {/* DIAN Factus Status */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-200">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-          <span className="hidden sm:inline">Factus DIAN</span>
+          <span className="hidden sm:inline">Factus API DIAN</span>
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         </div>
 
-        {/* Role Switcher Demo Control */}
-        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200">
-          <UserCheck className="w-3.5 h-3.5 text-gray-500 ml-1.5" />
-          <select 
-            value={activeRole} 
-            onChange={(e) => setActiveRole(e.target.value)}
-            className="bg-transparent text-xs font-bold text-gray-700 focus:outline-none pr-1 cursor-pointer"
-          >
-            <option value="Vendedor">Rol: Vendedor</option>
-            <option value="Supervisor">Rol: Supervisor</option>
-            <option value="Administrador">Rol: Administrador</option>
-          </select>
-        </div>
+        {/* User Account / Logout */}
+        {user ? (
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-900 rounded-xl text-xs font-bold border border-blue-200">
+              <User className="w-3.5 h-3.5 text-blue-600" />
+              <span>{user.username}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-red-200 transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Salir</span>
+            </button>
+          </div>
+        ) : null}
 
         {/* Quick Sale Action Button */}
         <button
