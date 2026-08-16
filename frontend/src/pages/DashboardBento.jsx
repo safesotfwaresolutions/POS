@@ -2,19 +2,19 @@ import React from 'react';
 import { 
   TrendingUp, 
   ShoppingCart, 
-  PackageAlert, 
+  AlertTriangle, 
   FileCheck2, 
   ArrowUpRight, 
   ArrowDownRight,
   Barcode,
   CheckCircle,
-  AlertTriangle,
   Clock,
   ChevronRight,
   Sparkles,
   Zap,
   Store
 } from 'lucide-react';
+
 import { useNavigate } from 'react-router-dom';
 import { INITIAL_MOCK_DATA } from '../services/api';
 
@@ -115,8 +115,8 @@ export default function DashboardBento({ activeRole }) {
         <div className="bento-card p-5 flex flex-col justify-between bg-amber-50/30 border-amber-200/70">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-800">Alerta de Inventario</span>
-            <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-sm">
-              <PackageAlert className="w-5 h-5" />
+            <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-xs">
+              <AlertTriangle className="w-5 h-5" />
             </div>
           </div>
           <div className="my-3">
