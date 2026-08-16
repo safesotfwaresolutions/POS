@@ -8,10 +8,10 @@ import {
   Users, 
   FileText, 
   Settings, 
-  ShieldCheck,
-  Zap,
+  HelpCircle,
   LogOut,
-  X
+  X,
+  History
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -20,12 +20,12 @@ export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
 
   const navItems = [
-    { path: '/', label: 'Dashboard Bento', icon: LayoutDashboard },
-    { path: '/pos', label: 'Punto de Venta', icon: ShoppingCart, badge: 'Caja' },
+    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/pos', label: 'Punto de Venta', icon: ShoppingCart },
+    { path: '/products', label: 'Productos', icon: Tag },
     { path: '/inventory', label: 'Inventario', icon: Package },
-    { path: '/products', label: 'Catálogo Productos', icon: Tag },
     { path: '/customers', label: 'Clientes', icon: Users },
-    { path: '/invoicing', label: 'Facturación DIAN', icon: FileText, badge: 'Factus' },
+    { path: '/invoicing', label: 'Facturación DIAN', icon: FileText },
     { path: '/settings', label: 'Configuración', icon: Settings },
   ];
 
@@ -39,11 +39,6 @@ export default function Sidebar({ isOpen, onClose }) {
     if (onClose) onClose();
   };
 
-  const getInitials = (name) => {
-    if (!name) return 'US';
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  };
-
   return (
     <>
       {/* Mobile Backdrop Overlay */}
@@ -54,42 +49,20 @@ export default function Sidebar({ isOpen, onClose }) {
         />
       )}
 
-      {/* Sidebar Drawer Container */}
+      {/* Sidebar - Compact Icon-only Sidebar matching Stitch MCP Screenshot */}
       <aside 
-        className={`fixed top-0 left-0 h-screen w-[248px] bg-[#101e19] text-white z-50 flex flex-col justify-between shadow-2xl select-none border-r border-[#1a2c25] transition-transform duration-300 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed top-0 left-0 h-screen w-20 lg:w-20 bg-white z-50 flex flex-col justify-between items-center py-6 border-r border-[#e0e3e6] shadow-xs select-none transition-transform duration-300 ${
+          isOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        {/* Brand Header */}
-        <div>
-          <div className="px-5 py-4 border-b border-[#1a2c25] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#006d3c] to-[#12b76a] flex items-center justify-center shadow-lg shadow-emerald-900/40 text-white font-black text-xl">
-                <Zap className="w-6 h-6 fill-white text-white" />
-              </div>
-              <div>
-                <h1 className="font-extrabold text-lg leading-tight tracking-tight text-white flex items-center gap-1.5">
-                  ProPOS <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#12b76a]/20 text-[#12b76a] border border-[#12b76a]/30">Bento</span>
-                </h1>
-                <p className="text-[11px] text-emerald-400/80 font-medium">Caja Principal • SUC-01</p>
-              </div>
-            </div>
-
-            {/* Mobile Close Button */}
-            <button 
-              onClick={onClose}
-              className="lg:hidden p-1 text-gray-400 hover:text-white rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
+        <div className="flex flex-col items-center gap-6 w-full px-3">
+          {/* Top Brand Q Circle */}
+          <div className="w-10 h-10 rounded-full bg-[#12b76a] text-white flex items-center justify-center font-black text-xl shadow-sm cursor-pointer">
+            Q
           </div>
 
           {/* Navigation Menu */}
-          <nav className="p-3 space-y-1.5 mt-2 overflow-y-auto max-h-[calc(100vh-220px)]">
-            <p className="px-3 pb-2 text-[10px] uppercase font-bold tracking-wider text-emerald-500/70">
-              Módulos del Sistema
-            </p>
-
+          <nav className="flex flex-col gap-3 w-full items-center mt-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -97,57 +70,37 @@ export default function Sidebar({ isOpen, onClose }) {
                   key={item.path}
                   to={item.path}
                   onClick={handleNavClick}
+                  title={item.label}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 ${
+                    `p-3 rounded-2xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
                       isActive
-                        ? 'bg-[#006d3c] text-white shadow-md shadow-[#006d3c]/40 font-bold'
-                        : 'text-gray-300 hover:bg-[#1a2c25] hover:text-white'
-                    }`
+                        ? 'bg-[#006d3c] text-white shadow-md shadow-[#006d3c]/20 scale-105'
+                        : 'text-gray-500 hover:bg-[#eceef1] hover:text-[#006d3c]'
+                    } ${isOpen ? 'w-full justify-start gap-3 px-4' : 'w-11 h-11'}`
                   }
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-4.5 h-4.5" />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#12b76a]/20 text-[#12b76a] border border-[#12b76a]/30">
-                      {item.badge}
-                    </span>
-                  )}
+                  <Icon className="w-5 h-5 shrink-0" />
+                  {isOpen && <span className="text-xs font-bold text-[#191c1e]">{item.label}</span>}
                 </NavLink>
               );
             })}
           </nav>
         </div>
 
-        {/* User Profile Footer */}
-        <div className="p-3 border-t border-[#1a2c25] bg-[#0b1411] space-y-2">
-          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-[#14231e] border border-[#1d332c]">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="relative shrink-0">
-                <div className="w-8 h-8 rounded-full bg-[#006d3c] flex items-center justify-center font-bold text-xs text-white shadow-sm">
-                  {getInitials(user?.fullName || user?.username)}
-                </div>
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#12b76a] border-2 border-[#14231e]"></span>
-              </div>
-              <div className="truncate">
-                <p className="text-xs font-bold text-white leading-tight truncate">
-                  {user?.fullName || user?.username || 'Usuario POS'}
-                </p>
-                <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-[#12b76a]" /> {user?.role || 'ADMINISTRATOR'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Logout Button */}
+        {/* Bottom Support & Logout */}
+        <div className="flex flex-col gap-3 w-full items-center px-3">
+          <button 
+            title="Soporte"
+            className="p-3 text-gray-500 hover:bg-[#eceef1] hover:text-[#006d3c] rounded-2xl transition-all cursor-pointer w-11 h-11 flex items-center justify-center"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </button>
           <button
             onClick={handleLogout}
-            className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/30 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            title="Cerrar Sesión"
+            className="p-3 text-red-500 hover:bg-red-50 rounded-2xl transition-all cursor-pointer w-11 h-11 flex items-center justify-center"
           >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Cerrar Sesión</span>
+            <LogOut className="w-5 h-5" />
           </button>
         </div>
       </aside>

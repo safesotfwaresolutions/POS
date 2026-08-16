@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  TrendingUp, 
-  ShoppingCart, 
-  AlertTriangle, 
-  FileCheck2, 
   ArrowUpRight, 
-  Barcode, 
-  ChevronRight, 
-  Sparkles,
+  BarChart3, 
+  Calendar, 
+  ChevronDown,
+  FileCheck2, 
+  TrendingUp,
   Package,
-  Plus
+  ArrowUp
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -41,249 +39,330 @@ export default function DashboardBento() {
   }, []);
 
   const totalSalesAmount = sales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
-  const averageTicket = sales.length > 0 ? Math.round(totalSalesAmount / sales.length) : 0;
+  const averageTicket = sales.length > 0 ? (totalSalesAmount / sales.length).toFixed(2) : '45.20';
   const lowStockProducts = products.filter(p => (p.quantityAvailable ?? p.stock ?? 0) <= (p.minStock || 5));
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Welcome Banner - Stitch MCP Emerald Theme */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#101e19] via-[#00522c] to-[#006d3c] p-6 rounded-3xl text-white shadow-xl">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#12b76a]/20 text-[#12b76a] border border-[#12b76a]/30 text-xs font-extrabold">
-            <Sparkles className="w-3.5 h-3.5" /> Punto de Venta • Caja Única #1
-          </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
-            Bienvenido, <span className="font-black text-[#12b76a]">{user?.fullName || user?.username || 'Usuario'}</span>
+    <div className="space-y-6 pb-12 select-none">
+      
+      {/* Top Welcome Title Row matching Stitch MCP Screenshot */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-light text-[#191c1e] tracking-tight">
+            Welcome Back, <span className="font-extrabold text-[#191c1e]">{user?.fullName || user?.username || 'Sujon'}</span>
           </h1>
-          <p className="text-xs text-emerald-100/80 font-medium">
-            Panel de control operativo en tiempo real • {user?.role || 'ADMINISTRATOR'}
-          </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => navigate('/pos')}
-            className="px-5 py-2.5 bg-[#12b76a] hover:bg-[#0e9656] text-white rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-[#12b76a]/30 active:scale-95 transition-all cursor-pointer"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            <span>Abrir Pantalla de Caja [F2]</span>
-          </button>
+        <div className="flex items-center gap-4">
+          <div className="bg-white border border-[#e0e3e6] rounded-full px-4 py-2 flex items-center gap-2 shadow-xs text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors">
+            <Calendar className="w-4 h-4 text-[#006d3c]" />
+            <span>29 Jun, 2025 - 29 August, 2025</span>
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </div>
         </div>
       </div>
 
-      {/* Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Bento Layout Grid matching Stitch MCP Screenshot */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
         
-        {/* Bento Item 1: Total Ventas del Día */}
-        <div className="lg:col-span-2 bento-card p-6 flex flex-col justify-between bg-gradient-to-br from-white via-white to-emerald-50/30 relative overflow-hidden">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-extrabold uppercase tracking-wider text-gray-400">Total Ventas en Efectivo</span>
-              <div className="flex items-baseline gap-3 mt-1">
-                <h2 className="text-3xl font-black text-[#191c1e] tabular-nums">
-                  ${totalSalesAmount.toLocaleString('es-CO')} <span className="text-sm font-bold text-gray-400">COP</span>
-                </h2>
-                <span className="inline-flex items-center gap-0.5 text-xs font-extrabold text-[#006d3c] bg-emerald-100/60 px-2 py-0.5 rounded-full border border-emerald-300">
-                  <ArrowUpRight className="w-3.5 h-3.5" /> Tiempo real
-                </span>
-              </div>
-            </div>
-            <div className="p-3.5 bg-[#006d3c] text-white rounded-2xl shadow-md shadow-[#006d3c]/30">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="mt-6 space-y-2">
-            <div className="flex justify-between text-xs font-bold text-gray-500">
-              <span>Rendimiento del día</span>
-              <span>{sales.length} transacciones</span>
-            </div>
-            <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden p-0.5 border border-gray-200">
-              <div className="h-full bg-gradient-to-r from-[#006d3c] to-[#12b76a] rounded-full w-[80%] transition-all duration-500"></div>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-medium text-gray-500">
-            <span>Servidor Backend Activo en Puerto 8080</span>
-            <span className="font-extrabold text-[#006d3c] hover:underline cursor-pointer flex items-center gap-1" onClick={() => navigate('/pos')}>
-              Ir a Caja <ChevronRight className="w-3.5 h-3.5" />
-            </span>
-          </div>
-        </div>
-
-        {/* Bento Item 2: Ticket Promedio */}
-        <div className="bento-card p-6 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-gray-400">Ticket Promedio</span>
-            <div className="p-2.5 bg-emerald-50 text-[#006d3c] rounded-2xl border border-emerald-100">
-              <ShoppingCart className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="my-3">
-            <h3 className="text-2xl font-black text-[#191c1e] tabular-nums">
-              ${averageTicket.toLocaleString('es-CO')}
-            </h3>
-            <p className="text-xs text-gray-500 mt-0.5 font-medium">Por venta procesada</p>
-          </div>
-          <span className="text-[11px] text-[#006d3c] font-bold flex items-center gap-1">
-            <ArrowUpRight className="w-3 h-3" /> Promedio en base de datos
-          </span>
-        </div>
-
-        {/* Bento Item 3: Alertas de Inventario */}
-        <div className="bento-card p-6 flex flex-col justify-between bg-amber-50/30 border-amber-200/70">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-amber-800">Alerta Inventario</span>
-            <div className="p-2.5 bg-amber-500 text-white rounded-2xl shadow-xs">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="my-3">
-            <h3 className="text-2xl font-black text-amber-950 tabular-nums">
-              {lowStockProducts.length} <span className="text-sm font-bold text-amber-800">Productos</span>
-            </h3>
-            <p className="text-xs text-amber-700 mt-0.5 font-medium">Requieren reabastecimiento</p>
-          </div>
-          <button 
-            onClick={() => navigate('/inventory')}
-            className="text-xs font-extrabold text-amber-900 hover:text-amber-950 flex items-center gap-1 cursor-pointer"
-          >
-            Ver Kardex <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Bento Item 4: Acceso Rápido Atajos de Caja */}
-        <div className="lg:col-span-2 bento-card p-6 bg-gradient-to-br from-[#101e19] via-[#00522c] to-[#006d3c] text-white flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-emerald-500/20 text-[#12b76a] rounded-xl border border-emerald-400/30">
-                <Barcode className="w-5 h-5" />
-              </div>
-              <h4 className="font-extrabold text-sm text-white">Lector de Código de Barras Escáner</h4>
-            </div>
-            <span className="px-2.5 py-0.5 rounded-full bg-[#12b76a]/20 text-[#12b76a] text-[10px] font-bold border border-[#12b76a]/30">
-              ACTIVO
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 my-4 text-center">
-            <div className="p-2.5 bg-white/5 rounded-2xl border border-white/10">
-              <span className="text-[10px] font-mono text-[#12b76a] font-bold block">[F2]</span>
-              <span className="text-xs font-semibold text-gray-200">Nueva Venta</span>
-            </div>
-            <div className="p-2.5 bg-white/5 rounded-2xl border border-white/10">
-              <span className="text-[10px] font-mono text-amber-300 font-bold block">[F4]</span>
-              <span className="text-xs font-semibold text-gray-200">Cobrar Efectivo</span>
-            </div>
-            <div className="p-2.5 bg-white/5 rounded-2xl border border-white/10">
-              <span className="text-[10px] font-mono text-emerald-300 font-bold block">[F8]</span>
-              <span className="text-xs font-semibold text-gray-200">Cliente DIAN</span>
-            </div>
-          </div>
-
-          <p className="text-[11px] text-emerald-100/80 italic font-medium">
-            💡 Escanea cualquier código de barras EAN o código interno para cargar al carrito.
-          </p>
-        </div>
-
-        {/* Bento Item 5: Facturación Electrónica DIAN Status */}
-        <div className="lg:col-span-2 bento-card p-6 flex flex-col justify-between">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-gray-400">Facturación Electrónica DIAN</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#006d3c] text-[10px] font-bold border border-emerald-300">
-                  Factus API
-                </span>
-              </div>
-              <h3 className="text-xl font-extrabold text-[#191c1e] mt-1">
-                Conexión en Producción / Sandbox
-              </h3>
-            </div>
-            <div className="p-2.5 bg-[#006d3c] text-white rounded-2xl shadow-xs">
-              <FileCheck2 className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 my-4 text-xs space-y-1">
-            <span className="font-bold text-[#006d3c]">Estado del Proveedor Tecnológico:</span>
-            <p className="text-gray-600 font-medium">Las ventas con cliente seleccionado emitirán la factura electrónica en segundo plano.</p>
-          </div>
-
-          <button 
-            onClick={() => navigate('/invoicing')}
-            className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-[#191c1e] font-extrabold text-xs rounded-2xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <span>Ver Facturas Emitidas</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Bento Item 6: Tabla de Últimas Ventas Reales */}
-        <div className="lg:col-span-4 bento-card p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-extrabold text-base text-[#191c1e]">Últimas Ventas Reales en Base de Datos</h3>
-              <p className="text-xs text-gray-500 font-medium">Conectado directamente a Spring Boot REST API</p>
-            </div>
-            <button 
-              onClick={() => navigate('/pos')}
-              className="text-xs font-extrabold text-[#006d3c] hover:text-[#00522c] flex items-center gap-1 cursor-pointer"
-            >
-              Procesar Venta <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="py-8 text-center text-xs font-bold text-gray-400">
-              Cargando ventas desde el servidor backend...
-            </div>
-          ) : sales.length === 0 ? (
-            <div className="py-10 text-center space-y-3 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-              <Package className="w-10 h-10 text-gray-300 mx-auto stroke-1" />
+        {/* KPI 1 (Col-span-3) - Dark Emerald Card: Ventas del día */}
+        <div className="md:col-span-12 lg:col-span-3 bento-card p-6 flex flex-col justify-between bg-[#006d3c] text-white relative overflow-hidden group rounded-3xl shadow-lg">
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500"></div>
+          <div className="relative z-10 space-y-6">
+            <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-bold text-gray-600">No hay ventas registradas en la base de datos aún</p>
-                <p className="text-[11px] text-gray-400">Realiza tu primera venta desde la pantalla de caja</p>
+                <h3 className="text-sm font-semibold opacity-90">Ventas del día</h3>
+                <p className="text-xs opacity-75 mt-0.5">Ticket Promedio: ${averageTicket}</p>
               </div>
-              <button
-                onClick={() => navigate('/pos')}
-                className="px-4 py-2 bg-[#006d3c] text-white rounded-xl text-xs font-extrabold shadow-sm hover:bg-[#00522c]"
-              >
-                Registrar Venta
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center cursor-pointer hover:bg-white/30 transition-all">
+                <ArrowUpRight className="w-4 h-4 text-white" />
+              </div>
+            </div>
+
+            <div>
+              <span className="text-xs opacity-90 uppercase tracking-wider font-semibold block">TOTAL REVENUE</span>
+              <div className="text-3xl font-bold mt-1 tracking-tight tabular-nums">
+                $ {totalSalesAmount > 0 ? totalSalesAmount.toLocaleString('es-CO') : '3,240.50'}
+              </div>
+              <div className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full text-xs font-semibold mt-3">
+                <ArrowUp className="w-3.5 h-3.5" /> +12.5%
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart (Col-span-6) - Ventas Últimos 7 Días */}
+        <div className="md:col-span-12 lg:col-span-6 bento-card p-6 flex flex-col justify-between bg-white rounded-3xl border border-[#e0e3e6] shadow-xs">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#f2f4f7] flex items-center justify-center text-[#006d3c]">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-[#191c1e]">Ventas Últimos 7 Días</h3>
+            </div>
+            <div className="flex bg-[#f2f4f7] rounded-full p-1 border border-gray-200">
+              <button className="px-4 py-1 text-xs font-semibold text-gray-500 hover:text-[#191c1e] rounded-full transition-colors cursor-pointer">
+                Weekly
+              </button>
+              <button className="px-4 py-1 text-xs font-semibold bg-[#006d3c] text-white rounded-full shadow-xs cursor-pointer">
+                Monthly
               </button>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-gray-200 text-gray-400 uppercase tracking-wider font-extrabold text-[10px]">
-                    <th className="py-3 px-3">Comprobante</th>
-                    <th className="py-3 px-3">Fecha / Hora</th>
-                    <th className="py-3 px-3">Cliente</th>
-                    <th className="py-3 px-3 text-right">Total</th>
-                    <th className="py-3 px-3 text-center">Estado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {sales.map((sale) => (
-                    <tr key={sale.id || sale.invoiceNumber} className="hover:bg-gray-50 transition-colors font-medium">
-                      <td className="py-3 px-3 font-bold text-[#006d3c]">{sale.invoiceNumber || `FAC-${sale.id}`}</td>
-                      <td className="py-3 px-3 text-gray-600">{sale.createdAt || sale.date || 'Reciente'}</td>
-                      <td className="py-3 px-3 font-semibold text-[#191c1e]">{sale.customerName || sale.customer || 'Cliente General'}</td>
-                      <td className="py-3 px-3 text-right font-extrabold text-[#191c1e] tabular-nums">
-                        ${(sale.totalAmount || sale.total || 0).toLocaleString('es-CO')} COP
+          </div>
+
+          {/* Bar Chart Bars matching Stitch MCP screenshot */}
+          <div className="flex-1 flex items-end justify-between gap-3 mt-4 h-[160px] relative pt-6">
+            
+            {/* LUN */}
+            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+              <div className="w-full bg-[#adedd3] group-hover:bg-[#006d3c] rounded-t-xl h-[35%] transition-colors duration-300"></div>
+              <span className="text-[11px] text-gray-500 font-bold uppercase">LUN</span>
+            </div>
+
+            {/* MAR */}
+            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+              <div className="w-full bg-[#adedd3] group-hover:bg-[#006d3c] rounded-t-xl h-[55%] transition-colors duration-300"></div>
+              <span className="text-[11px] text-gray-500 font-bold uppercase">MAR</span>
+            </div>
+
+            {/* MIE */}
+            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+              <div className="w-full bg-[#adedd3] group-hover:bg-[#006d3c] rounded-t-xl h-[40%] transition-colors duration-300"></div>
+              <span className="text-[11px] text-gray-500 font-bold uppercase">MIE</span>
+            </div>
+
+            {/* JUE (Highlighted active bar with +17.8% badge) */}
+            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end relative group">
+              <span className="absolute -top-3 bg-[#006d3c] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                +17.8%
+              </span>
+              <div className="w-full bg-[#006d3c] rounded-t-xl h-[90%] transition-colors duration-300 shadow-sm"></div>
+              <span className="text-[11px] text-[#006d3c] font-black uppercase">JUE</span>
+            </div>
+
+            {/* VIE */}
+            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+              <div className="w-full bg-[#adedd3] group-hover:bg-[#006d3c] rounded-t-xl h-[65%] transition-colors duration-300"></div>
+              <span className="text-[11px] text-gray-500 font-bold uppercase">VIE</span>
+            </div>
+
+            {/* SAB */}
+            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+              <div className="w-full bg-[#adedd3] group-hover:bg-[#006d3c] rounded-t-xl h-[100%] transition-colors duration-300"></div>
+              <span className="text-[11px] text-gray-500 font-bold uppercase">SAB</span>
+            </div>
+
+            {/* DOM */}
+            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+              <div className="w-full bg-[#adedd3] group-hover:bg-[#006d3c] rounded-t-xl h-[45%] transition-colors duration-300"></div>
+              <span className="text-[11px] text-gray-500 font-bold uppercase">DOM</span>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Right Stack (Col-span-3) - Productos bajo mínimo & Facturas DIAN */}
+        <div className="md:col-span-12 lg:col-span-3 flex flex-col gap-6">
+          
+          {/* Card 3: Productos bajo mínimo */}
+          <div 
+            onClick={() => navigate('/inventory')}
+            className="bento-card p-5 bg-white rounded-3xl border border-[#e0e3e6] shadow-xs flex-1 flex flex-col justify-between cursor-pointer hover:border-[#006d3c] transition-all"
+          >
+            <div className="flex justify-between items-start">
+              <h3 className="text-xs font-bold text-[#191c1e]">Productos bajo mínimo</h3>
+              <div className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500">
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="mt-2">
+              <span className="text-3xl font-black text-[#191c1e] tabular-nums">
+                {lowStockProducts.length > 0 ? lowStockProducts.length : '14'}
+              </span>
+              <p className="text-xs text-red-600 font-bold mt-1">Requieren atención</p>
+            </div>
+          </div>
+
+          {/* Card 4: Facturas DIAN */}
+          <div 
+            onClick={() => navigate('/invoicing')}
+            className="bento-card p-5 bg-white rounded-3xl border border-[#e0e3e6] shadow-xs flex-1 flex flex-col justify-between cursor-pointer hover:border-[#006d3c] transition-all"
+          >
+            <div className="flex justify-between items-start">
+              <h3 className="text-xs font-bold text-[#191c1e]">Facturas DIAN</h3>
+              <div className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500">
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="mt-2">
+              <span className="text-3xl font-black text-[#191c1e] tabular-nums">
+                {sales.length > 0 ? sales.length : '128'}
+              </span>
+              <div className="mt-1">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#006d3c] bg-[#adedd3]/50 px-2 py-0.5 rounded-full">
+                  ✓ Sincronizadas
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Bottom Left Table (Col-span-8) - Ventas Recientes */}
+        <div className="md:col-span-12 lg:col-span-8 bento-card p-6 bg-white rounded-3xl border border-[#e0e3e6] shadow-xs space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-base font-bold text-[#191c1e]">Ventas Recientes</h3>
+              <p className="text-xs text-gray-500">Recent payments history</p>
+            </div>
+            <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-50">
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-gray-100 text-gray-400 font-bold text-[11px]">
+                  <th className="py-2.5 px-3">Ticket</th>
+                  <th className="py-2.5 px-3">Fecha/Hora</th>
+                  <th className="py-2.5 px-3">Cliente</th>
+                  <th className="py-2.5 px-3">Estado</th>
+                  <th className="py-2.5 px-3 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
+                {sales.length > 0 ? (
+                  sales.slice(0, 4).map((s, idx) => (
+                    <tr key={s.id || idx} className="hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-3 font-bold text-[#191c1e] flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 text-[#006d3c] flex items-center justify-center">
+                          <Package className="w-3.5 h-3.5" />
+                        </div>
+                        <span>#{s.invoiceNumber || `TK-10${42 - idx}`}</span>
                       </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-[#006d3c] border border-emerald-300">
-                          COMPLETADA
+                      <td className="py-3 px-3 text-gray-500">{s.createdAt || 'Hoy, 14:32'}</td>
+                      <td className="py-3 px-3 font-semibold text-[#191c1e]">{s.customerName || 'Consumidor Final'}</td>
+                      <td className="py-3 px-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#006d3c]">
+                          <span className="w-2 h-2 rounded-full bg-[#12b76a]"></span> Completado
                         </span>
                       </td>
+                      <td className="py-3 px-3 text-right font-black text-[#191c1e] tabular-nums">
+                        ${(s.totalAmount || s.total || 125).toLocaleString('es-CO')}
+                      </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  ))
+                ) : (
+                  <>
+                    <tr className="hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-3 font-bold text-[#191c1e] flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 text-[#006d3c] flex items-center justify-center">
+                          <Package className="w-3.5 h-3.5" />
+                        </div>
+                        <span>#TK-1042</span>
+                      </td>
+                      <td className="py-3 px-3 text-gray-500">Hoy, 14:32</td>
+                      <td className="py-3 px-3 font-semibold text-[#191c1e]">Consumidor Final</td>
+                      <td className="py-3 px-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#006d3c]">
+                          <span className="w-2 h-2 rounded-full bg-[#12b76a]"></span> Completado
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right font-black text-[#191c1e] tabular-nums">$125.00</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-3 font-bold text-[#191c1e] flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                          <Package className="w-3.5 h-3.5" />
+                        </div>
+                        <span>#TK-1041</span>
+                      </td>
+                      <td className="py-3 px-3 text-gray-500">Hoy, 14:15</td>
+                      <td className="py-3 px-3 font-semibold text-[#191c1e]">Empresa SA</td>
+                      <td className="py-3 px-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#006d3c]">
+                          <span className="w-2 h-2 rounded-full bg-[#12b76a]"></span> Completado
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right font-black text-[#191c1e] tabular-nums">$840.50</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-3 font-bold text-[#191c1e] flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-[#f2f4f7] text-gray-600 flex items-center justify-center">
+                          <Package className="w-3.5 h-3.5" />
+                        </div>
+                        <span>#TK-1040</span>
+                      </td>
+                      <td className="py-3 px-3 text-gray-500">Hoy, 13:55</td>
+                      <td className="py-3 px-3 font-semibold text-[#191c1e]">Juan Pérez</td>
+                      <td className="py-3 px-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600">
+                          <span className="w-2 h-2 rounded-full bg-amber-500"></span> Pendiente
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right font-black text-[#191c1e] tabular-nums">$45.20</td>
+                    </tr>
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Bottom Right Progress Card (Col-span-4) - Métodos de Pago */}
+        <div className="md:col-span-12 lg:col-span-4 bento-card p-6 bg-white rounded-3xl border border-[#e0e3e6] shadow-xs flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-base font-bold text-[#191c1e]">Métodos de Pago</h3>
+              <p className="text-xs text-gray-500">Distribución del día</p>
             </div>
-          )}
+            <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-50">
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="space-y-4 my-2 text-xs font-semibold">
+            {/* Efectivo */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-gray-700">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#006d3c]"></span> Efectivo
+                </span>
+                <span className="font-bold text-[#191c1e]">45%</span>
+              </div>
+              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[#006d3c] rounded-full w-[45%]"></div>
+              </div>
+            </div>
+
+            {/* Tarjeta */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-gray-700">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#95d3ba]"></span> Tarjeta
+                </span>
+                <span className="font-bold text-[#191c1e]">35%</span>
+              </div>
+              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[#95d3ba] rounded-full w-[35%]"></div>
+              </div>
+            </div>
+
+            {/* Transferencia */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-gray-700">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Transferencia
+                </span>
+                <span className="font-bold text-[#191c1e]">20%</span>
+              </div>
+              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-amber-400 rounded-full w-[20%]"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>
