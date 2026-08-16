@@ -4,7 +4,6 @@ import com.sciencebot.pos.billing.internal.adapters.ElectronicInvoicingProvider;
 import com.sciencebot.pos.billing.internal.adapters.dto.CustomerBillingData;
 import com.sciencebot.pos.billing.internal.adapters.dto.InvoiceItemData;
 import com.sciencebot.pos.billing.internal.adapters.dto.InvoiceRequest;
-import com.sciencebot.pos.billing.internal.adapters.dto.InvoiceResult;
 import com.sciencebot.pos.billing.internal.adapters.mock.MockBillingAdapter;
 import com.sciencebot.pos.billing.internal.entities.ElectronicInvoice;
 import com.sciencebot.pos.billing.internal.mappers.BillingCanonicalMapper;
