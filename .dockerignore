@@ -1,0 +1,24 @@
+# Maven build output
+target/
+*.jar
+*.war
+
+# IDE files and workspace settings
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Git metadata
+.git
+.gitignore
+.gitattributes
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db

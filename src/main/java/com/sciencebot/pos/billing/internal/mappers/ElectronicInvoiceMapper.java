@@ -1,0 +1,27 @@
+package com.sciencebot.pos.billing.internal.mappers;
+
+import com.sciencebot.pos.billing.ElectronicInvoiceDto;
+import com.sciencebot.pos.billing.internal.entities.ElectronicInvoice;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ElectronicInvoiceMapper {
+
+    public ElectronicInvoiceDto toDto(ElectronicInvoice entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return new ElectronicInvoiceDto(
+                entity.getId(),
+                entity.getSaleId(),
+                entity.getFactusNumber(),
+                entity.getCufe(),
+                entity.getQrCode(),
+                entity.getStatus(),
+                entity.getErrorMessage(),
+                entity.getPdfUrl(),
+                entity.getValidatedAt()
+        );
+    }
+}
