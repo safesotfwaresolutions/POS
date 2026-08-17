@@ -63,9 +63,10 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
         categoryFacade.getById(command.categoryId())
                 .orElseThrow(() -> new IllegalArgumentException("La categoría especificada no existe"));
 
+        if (command.quantityAvailable() < 0) {
+            throw new IllegalArgumentException("El stock inicial no puede ser negativo");
+        }
 
-        
-        
         Product product = new Product();
         product.setInternalCode(command.internalCode().trim());
         product.setBarcode(command.barcode() != null ? command.barcode().trim() : null);
@@ -76,7 +77,7 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
         product.setMinStock(command.minStock());
         product.setDescription(command.description() != null ? command.description().trim() : null);
         product.setImageUrl(command.imageUrl() != null ? command.imageUrl().trim() : null);
-        product.setQuantityAvailable(0);
+        product.setQuantityAvailable(command.quantityAvailable());
         product.setActive(true);
 
         Product saved = productRepository.save(product);

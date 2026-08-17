@@ -19,6 +19,8 @@ public record CreateProductCommand(
     BigDecimal salePrice,
     @Schema(description = "Stock mínimo para alerta de reabastecimiento", example = "20")
     int minStock,
+    @Schema(description = "Cantidad de stock inicial disponible", example = "50")
+    int quantityAvailable,
     @Schema(description = "Descripción detallada del producto", example = "Arroz blanco de primera calidad")
     String description,
     @Schema(description = "URL de imagen del producto", example = "https://storage.example.com/products/arroz.jpg")
