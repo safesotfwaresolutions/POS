@@ -1,24 +1,49 @@
-# 🛒 POS System Backend — API REST Monolito Modular
+# 🛒 POS System — Punto de Venta, Inventario y Facturación Electrónica
 
-Sistema backend integral para Punto de Venta (POS), control de inventario en tiempo real y facturación electrónica (DIAN Colombia) para comercios minoristas.
+Sistema integral de Punto de Venta (POS) para comercios minoristas: ventas en caja, control de inventario en tiempo real y facturación electrónica (DIAN Colombia). El repositorio es un **monorepo** con dos proyectos independientes:
 
-Desarrollado bajo el enfoque arquitectónico de **Monolito Modular (Modular Monolith)** con **División Vertical (Vertical Slicing)**, **Java 21**, **Spring Boot**, **Spring Security (JWT)** y **PostgreSQL**.
+* **`backend/`** — API REST en **Java 21 + Spring Boot**, bajo un enfoque de **Monolito Modular** (Vertical Slicing).
+* **`frontend/`** — SPA en **React 19 + Vite + Tailwind CSS 4**, con interfaz "Bento" y soporte de tema claro/oscuro.
 
 ---
 
 ## 📋 Tabla de Contenidos
+- [Estructura del Repositorio](#-estructura-del-repositorio)
 - [Características Principales](#-características-principales)
-- [Arquitectura del Sistema](#-arquitectura-del-sistema)
+- [Arquitectura del Backend](#-arquitectura-del-backend)
 - [Stack Tecnológico](#-stack-tecnológico)
-- [Módulos del Sistema](#-módulos-del-sistema)
+- [Módulos del Backend](#-módulos-del-backend)
+- [Páginas del Frontend](#-páginas-del-frontend)
 - [Roles y Permisos](#-roles-y-permisos)
 - [Requisitos Previos](#-requisitos-previos)
-- [Puesta en Marcha](#-puesta-en-marcha)
-  - [Opción 1: Con Docker Compose (Recomendado)](#opción-1-con-docker-compose-recomendado)
-  - [Opción 2: Ejecución Local con Maven](#opción-2-ejecución-local-con-maven)
-- [Documentación de la API (Swagger y Postman)](#-documentación-de-la-api)
+- [Puesta en Marcha — Backend](#-puesta-en-marcha--backend)
+- [Puesta en Marcha — Frontend](#-puesta-en-marcha--frontend)
+- [Documentación de la API](#-documentación-de-la-api)
 - [Variables de Entorno](#-variables-de-entorno)
 - [Pruebas Automatizadas](#-pruebas-automatizadas)
+
+---
+
+## 📂 Estructura del Repositorio
+
+```
+POS/
+├── backend/                  # API REST — Java 21 / Spring Boot
+│   ├── src/main/java/com/sciencebot/pos/   # Módulos verticales (auth, sales, inventory, ...)
+│   ├── src/test/java/...                   # Pruebas unitarias e integración
+│   ├── docker-compose.yml                  # Entorno de desarrollo (PostgreSQL + app)
+│   ├── docker-compose.prod.yml             # Entorno de producción
+│   ├── Dockerfile                          # Multi-stage: dev / builder / prod
+│   ├── mvnw / mvnw.cmd                     # Maven Wrapper
+│   └── POS_System_API_Postman_Collection.json
+│
+└── frontend/                 # SPA — React 19 / Vite / Tailwind CSS 4
+    ├── src/pages/            # Dashboard, POS, Inventario, Productos, Clientes, Facturación, Configuración
+    ├── src/components/       # Layout (Header, Sidebar) y componentes reutilizables (ej. BarcodeModal)
+    ├── src/context/          # AuthContext, ThemeContext (tema claro/oscuro)
+    ├── src/services/api.js   # Cliente HTTP hacia la API del backend
+    └── vite.config.js        # Proxy de /api → http://localhost:8080
+```
 
 ---
 
@@ -26,16 +51,18 @@ Desarrollado bajo el enfoque arquitectónico de **Monolito Modular (Modular Mono
 
 * ⚡ **Procesamiento Ágil de Ventas**: Registro de ventas en mostrador con soporte para lector de código de barras y cálculo automático de cambio.
 * 📦 **Control de Inventario en Tiempo Real**: Deducción automática de stock con bloqueo pesimista (`Pessimistic Locking`) para prevenir condiciones de carrera concurrentes.
+* 🏷️ **Generación de Códigos de Barras (Code 128)**: Visualización e impresión de la etiqueta de código de barras de cada producto directamente desde el catálogo y el inventario.
 * 🧾 **Facturación Electrónica DIAN**: Integración con **Factus API** y adaptador desacoplado para emisión de facturas electrónicas colombianas.
 * 📊 **Reportes y Analítica con CQRS**: Consultas analíticas optimizadas de solo lectura (`Read Model`) implementadas con **`JdbcClient`**, eliminando sobrecostos de ORM y problemas N+1.
 * 🚚 **Gestión de Abastecimiento**: Registro de compras a proveedores con incremento automático de existencias.
-* 🔐 **Seguridad y Trazabilidad**: Autenticación mediante **JWT (HTTP-only Cookies / Bearer)**, control de acceso basado en roles (RBAC) y auditoría de transacciones.
+* 🔐 **Seguridad y Trazabilidad**: Autenticación mediante **JWT**, control de acceso basado en roles (RBAC) y auditoría de transacciones.
+* 🌗 **Interfaz con Tema Claro / Oscuro**: Panel administrativo tipo "Bento" totalmente responsivo, con preferencia de tema persistida por usuario.
 
 ---
 
-## 🏛 Arquitectura del Sistema
+## 🏛 Arquitectura del Backend
 
-El proyecto sigue una arquitectura de **Monolito Modular**:
+El backend sigue una arquitectura de **Monolito Modular**:
 
 ```
                   ┌────────────────────────────────────────────────┐
@@ -55,7 +82,7 @@ El proyecto sigue una arquitectura de **Monolito Modular**:
                                            │ JPA / JdbcClient
                                            ▼
                   ┌────────────────────────────────────────────────┐
-                  │               PostgreSQL 16 (SQL)              │
+                  │           PostgreSQL 16 (o H2 en `dev`)        │
                   └────────────────────────────────────────────────┘
 ```
 
@@ -63,22 +90,33 @@ El proyecto sigue una arquitectura de **Monolito Modular**:
 * **Lógica Interna (`internal/`)**: Entidades JPA, repositorios y servicios encapsulados (`package-private`), inaccesibles desde otros módulos.
 * **Read Models (CQRS)**: Para el módulo de reportes (`reports`), se utiliza `JdbcClient` con SQL nativo y agregaciones en base de datos (`SUM`, `COUNT`, `GROUP BY`), desacoplado de las entidades de dominio.
 
+El frontend es un **consumidor puro de la API**: no contiene lógica de negocio, solo llama a los endpoints REST (`frontend/src/services/api.js`) y mantiene la sesión mediante el token JWT devuelto por `/api/v1/auth/login`.
+
 ---
 
 ## 🛠 Stack Tecnológico
 
+### Backend
 * **Lenguaje**: Java 21 LTS
-* **Framework**: Spring Boot 3+ (Spring WebMvc, Spring Data JPA, Spring Security, Spring JDBC)
-* **Base de Datos**: PostgreSQL 16 (Producción / Docker) y H2 (Entornos de prueba)
-* **Seguridad**: JWT (JSON Web Tokens con algoritmo HMAC-SHA256)
+* **Framework**: Spring Boot (Spring WebMvc, Spring Data JPA, Spring Security, Spring JDBC)
+* **Base de Datos**: PostgreSQL 16 (Docker / producción) y H2 en memoria (perfil `dev`, por defecto)
+* **Seguridad**: JWT (HMAC-SHA256)
 * **Facturación**: Factus API (Estándar DIAN) / Mock Adapter
 * **Documentación**: SpringDoc OpenAPI 3 / Swagger UI
 * **Contenedores**: Docker & Docker Compose
 * **Gestor de Dependencias**: Apache Maven (Wrapper incluido)
 
+### Frontend
+* **Librería**: React 19 + React Router 7
+* **Build Tool**: Vite
+* **Estilos**: Tailwind CSS 4 (modo oscuro basado en clase, tema persistido en `localStorage`)
+* **Iconografía**: lucide-react
+* **Códigos de Barras**: JsBarcode (renderizado Code 128 en el navegador)
+* **Linter**: oxlint
+
 ---
 
-## 🧩 Módulos del Sistema
+## 🧩 Módulos del Backend
 
 | Módulo | Paquete | Descripción |
 |---|---|---|
@@ -92,8 +130,25 @@ El proyecto sigue una arquitectura de **Monolito Modular**:
 | **Purchases** | `com.sciencebot.pos.purchases` | Registro de compras de abastecimiento que aumentan el stock. |
 | **Sales** | `com.sciencebot.pos.sales` | Procesamiento de ventas en efectivo y generación de comprobantes. |
 | **Billing** | `com.sciencebot.pos.billing` | Emisión y sincronización de facturación electrónica con la DIAN. |
-| **Reports** | `com.sciencebot.pos.reports` | Analítica de ventas, productos más vendidos, bajo stock y rentabilidad. |
+| **Reports** | `com.sciencebot.pos.reports` | Analítica de ventas, productos más vendidos, bajo stock y rentabilidad (CQRS / `JdbcClient`). |
 | **Settings** | `com.sciencebot.pos.settings` | Configuración del negocio (nombre, NIT, encabezados de ticket). |
+
+---
+
+## 🖥️ Páginas del Frontend
+
+| Ruta | Página | Descripción |
+|---|---|---|
+| `/login` | Login | Autenticación contra la API, sesión persistida vía JWT. |
+| `/` | Dashboard | KPIs de ventas, gráfico de últimos 7 días, productos bajo mínimo y facturas DIAN. |
+| `/pos` | Punto de Venta | Carrito de venta, búsqueda de productos, cobro en efectivo y emisión de factura DIAN. |
+| `/products` | Catálogo de Productos | Alta, baja y consulta de productos; visualización e impresión de código de barras. |
+| `/inventory` | Inventario | Kardex de stock, registro de compras a proveedor, código de barras por producto. |
+| `/customers` | Clientes | Directorio de clientes para facturación electrónica. |
+| `/invoicing` | Facturación DIAN | Monitoreo de facturas electrónicas emitidas vía Factus. |
+| `/settings` | Configuración | Datos del negocio y parámetros de facturación electrónica. |
+
+Todas las páginas respetan el tema claro/oscuro seleccionado desde el encabezado (`ThemeContext`, persistido en `localStorage`).
 
 ---
 
@@ -109,19 +164,24 @@ El proyecto sigue una arquitectura de **Monolito Modular**:
 
 ## 📦 Requisitos Previos
 
-* **Java 21 JDK** instalado (si ejecutas de forma nativa).
-* **Docker** y **Docker Compose** instalados.
+* **Java 21 JDK** (si ejecutas el backend de forma nativa).
+* **Node.js 18+** y **npm** (para el frontend).
+* **Docker** y **Docker Compose** (opcional, para PostgreSQL y despliegue contenedorizado).
 * **Git**.
 
 ---
 
-## 🚀 Puesta en Marcha
+## 🚀 Puesta en Marcha — Backend
+
+Todos los comandos se ejecutan desde la carpeta `backend/`.
 
 ### Opción 1: Con Docker Compose (Recomendado)
 
-Inicia la base de datos PostgreSQL y la aplicación en un entorno contenedorizado:
+Levanta PostgreSQL y la aplicación en contenedores:
 
 ```bash
+cd backend
+
 # Levantar los contenedores de desarrollo
 docker compose up -d
 
@@ -129,52 +189,80 @@ docker compose up -d
 docker compose logs -f app
 ```
 
-La aplicación quedará disponible en: `http://localhost:8080`  
+La aplicación quedará disponible en: `http://localhost:8080`
 Base de datos PostgreSQL expuesta en el puerto: `5434` (usuario: `postgres`, contraseña: `postgres`, bd: `app_db`).
-
----
 
 ### Opción 2: Ejecución Local con Maven
 
-1. Inicia únicamente la base de datos PostgreSQL:
-   ```bash
-   docker compose up -d db
-   ```
+Por defecto el perfil activo es `dev`, que usa una base de datos **H2 en memoria** — no necesitas Docker ni PostgreSQL para levantar el backend localmente:
 
-2. Ejecuta el backend usando el Maven Wrapper:
-   * **Linux / macOS**:
-     ```bash
-     ./mvnw spring-boot:run
-     ```
-   * **Windows (PowerShell / CMD)**:
-     ```powershell
-     .\mvnw.cmd spring-boot:run
-     ```
+* **Linux / macOS**:
+  ```bash
+  cd backend
+  ./mvnw spring-boot:run
+  ```
+* **Windows (PowerShell / CMD)**:
+  ```powershell
+  cd backend
+  .\mvnw.cmd spring-boot:run
+  ```
+
+Si prefieres usar PostgreSQL en vez de H2, levanta solo la base de datos con Docker y cambia el perfil activo:
+
+```bash
+cd backend
+docker compose up -d db
+```
+
+Usuario administrador por defecto para iniciar sesión: `admin` / `Password123`.
+
+---
+
+## 🚀 Puesta en Marcha — Frontend
+
+El frontend consume la API en `http://localhost:8080` mediante el proxy configurado en `vite.config.js` (asegúrate de tener el backend corriendo primero).
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+La aplicación quedará disponible en: `http://localhost:3000`
+
+Otros scripts disponibles:
+
+```bash
+npm run build     # Build de producción
+npm run preview   # Previsualizar el build de producción
+npm run lint      # Linter (oxlint)
+```
 
 ---
 
 ## 📖 Documentación de la API
 
-Una vez iniciada la aplicación, puedes explorar e interactuar con los endpoints mediante:
+Con el backend en ejecución:
 
-* **Swagger UI interactivo**:  
+* **Swagger UI interactivo**:
   👉 [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
-* **OpenAPI Docs (JSON)**:  
+* **OpenAPI Docs (JSON)**:
   👉 [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
 
-* **Colección de Postman**:  
-  El repositorio incluye la colección lista para importar en:  
-  📁 [`POS_System_API_Postman_Collection.json`](./POS_System_API_Postman_Collection.json)
+* **Colección de Postman**:
+  El repositorio incluye la colección lista para importar en:
+  📁 [`backend/POS_System_API_Postman_Collection.json`](./backend/POS_System_API_Postman_Collection.json)
 
 ---
 
 ## ⚙️ Variables de Entorno
 
-Puedes personalizar la configuración mediante variables de entorno en tu sistema o en el archivo `.env`:
+Puedes personalizar la configuración del backend mediante variables de entorno en tu sistema o en el archivo `.env` (dentro de `backend/`):
 
 | Variable | Valor por Defecto | Descripción |
 |---|---|---|
+| `SPRING_PROFILES_ACTIVE` | `dev` | Perfil activo (`dev` usa H2 en memoria; para PostgreSQL usa otro perfil junto con Docker). |
 | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/app_db` | URL de conexión a la base de datos PostgreSQL. |
 | `SPRING_DATASOURCE_USERNAME` | `postgres` | Usuario de la base de datos. |
 | `SPRING_DATASOURCE_PASSWORD` | `postgres` | Contraseña de la base de datos. |
@@ -185,11 +273,13 @@ Puedes personalizar la configuración mediante variables de entorno en tu sistem
 | `FACTUS_CLIENT_ID` | *Sandbox Client ID* | Identificador de cliente en Factus. |
 | `FACTUS_CLIENT_SECRET` | *Sandbox Client Secret* | Secreto de cliente en Factus. |
 
+El frontend no requiere variables de entorno propias: las llamadas a `/api` se redirigen al backend mediante el proxy de Vite (`frontend/vite.config.js`).
+
 ---
 
 ## 🧪 Pruebas Automatizadas
 
-Ejecutar la suite completa de pruebas unitarias y de integración:
+Desde la carpeta `backend/`:
 
 ```bash
 # Linux / macOS
