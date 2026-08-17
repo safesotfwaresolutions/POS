@@ -88,7 +88,7 @@ export async function createProductApi(productData) {
       description: productData.description || productData.name,
       internalCode: productData.internalCode,
       barcode: productData.barcode,
-      categoryId: productData.categoryId || 1,
+      categoryId: parseInt(productData.categoryId),
       purchasePrice: parseFloat(productData.purchasePrice || productData.price * 0.7),
       salePrice: parseFloat(productData.price || productData.salePrice),
       quantityAvailable: parseInt(productData.stock || productData.quantityAvailable || 0),
@@ -121,6 +121,17 @@ export async function createCategoryApi(name, description = '') {
     method: 'POST',
     body: JSON.stringify({ name, description }),
   });
+}
+
+export async function updateCategoryApi(id, name, description = '') {
+  return await fetchApi(`/categories/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name, description }),
+  });
+}
+
+export async function deleteCategoryApi(id) {
+  return await fetchApi(`/categories/${id}`, { method: 'DELETE' });
 }
 
 // ----------------------------------------------------

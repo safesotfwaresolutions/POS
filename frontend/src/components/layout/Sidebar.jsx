@@ -7,12 +7,13 @@ import {
   Tag, 
   Users, 
   FileText, 
-  Settings, 
+  Settings,
   HelpCircle,
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  Tags
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -24,6 +25,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/pos', label: 'Punto de Venta', icon: ShoppingCart },
     { path: '/products', label: 'Productos', icon: Tag },
+    { path: '/categories', label: 'Categorías', icon: Tags },
     { path: '/inventory', label: 'Inventario', icon: Package },
     { path: '/customers', label: 'Clientes', icon: Users },
     { path: '/invoicing', label: 'Facturación DIAN', icon: FileText },

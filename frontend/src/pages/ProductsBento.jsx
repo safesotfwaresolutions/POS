@@ -10,11 +10,12 @@ import {
   Check,
   AlertCircle
 } from 'lucide-react';
-import { getProductsApi, createProductApi, deleteProductApi } from '../services/api';
+import { getProductsApi, createProductApi, deleteProductApi, getCategoriesApi } from '../services/api';
 import BarcodeModal from '../components/BarcodeModal';
 
 export default function ProductsBento() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -24,7 +25,7 @@ export default function ProductsBento() {
     name: '',
     barcode: '',
     internalCode: '',
-    category: 'Abarrotes',
+    categoryId: '',
     price: '',
     stock: '',
     minStock: 5
@@ -43,26 +44,38 @@ export default function ProductsBento() {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const data = await getCategoriesApi();
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.warn('Error cargando categorías:', e);
+      setCategories([]);
+    }
+  };
+
   useEffect(() => {
     loadProducts();
+    loadCategories();
   }, []);
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setErrorMsg('');
-    if (!newProduct.name || !newProduct.price) return;
+    if (!newProduct.name || !newProduct.price || !newProduct.categoryId) return;
 
     try {
       await createProductApi({
         name: newProduct.name,
         barcode: newProduct.barcode || `${Math.floor(1000000000000 + Math.random() * 9000000000000)}`,
         internalCode: newProduct.internalCode || `PROD-00${products.length + 1}`,
+        categoryId: newProduct.categoryId,
         price: parseFloat(newProduct.price),
         stock: parseInt(newProduct.stock) || 0,
         minStock: parseInt(newProduct.minStock) || 5
       });
       setShowAddModal(false);
-      setNewProduct({ name: '', barcode: '', internalCode: '', category: 'Abarrotes', price: '', stock: '', minStock: 5 });
+      setNewProduct({ name: '', barcode: '', internalCode: '', categoryId: '', price: '', stock: '', minStock: 5 });
       await loadProducts();
     } catch (err) {
       setErrorMsg(err.message || 'Error al guardar el producto. Intenta nuevamente.');
@@ -206,6 +219,27 @@ export default function ProductsBento() {
                   className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 dark:text-gray-300 block mb-1">Categoría:</label>
+                {categories.length === 0 ? (
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-2xl p-2.5">
+                    No hay categorías creadas. Ve a <span className="font-extrabold">Categorías</span> en el menú y crea una primero.
+                  </p>
+                ) : (
+                  <select
+                    value={newProduct.categoryId}
+                    onChange={e => setNewProduct({ ...newProduct, categoryId: e.target.value })}
+                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                    required
+                  >
+                    <option value="">Selecciona una categoría...</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2">

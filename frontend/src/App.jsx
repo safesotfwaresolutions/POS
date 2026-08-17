@@ -11,6 +11,7 @@ import DashboardBento from './pages/DashboardBento';
 import POSBento from './pages/POSBento';
 import InventoryBento from './pages/InventoryBento';
 import ProductsBento from './pages/ProductsBento';
+import CategoriesBento from './pages/CategoriesBento';
 import CustomersBento from './pages/CustomersBento';
 import InvoicingBento from './pages/InvoicingBento';
 import SettingsBento from './pages/SettingsBento';
@@ -58,6 +59,7 @@ function ProtectedLayout() {
             <Route path="/pos" element={<POSBento />} />
             <Route path="/inventory" element={<InventoryBento />} />
             <Route path="/products" element={<ProductsBento />} />
+            <Route path="/categories" element={<CategoriesBento />} />
             <Route path="/customers" element={<CustomersBento />} />
             <Route path="/invoicing" element={<InvoicingBento />} />
             <Route path="/settings" element={<SettingsBento />} />
