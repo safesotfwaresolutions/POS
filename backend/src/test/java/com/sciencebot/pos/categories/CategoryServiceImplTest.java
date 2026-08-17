@@ -84,4 +84,47 @@ class CategoryServiceImplTest {
         assertTrue(ex.getMessage().contains("productos asociados"));
         verify(categoryRepository, never()).deleteById(anyLong());
     }
+
+    @Test
+    void updateCategory_SameName_Success() {
+        UpdateCategoryCommand command = new UpdateCategoryCommand("Bebidas", "Nueva descripción");
+        Category existing = new Category();
+        existing.setId(1L);
+        existing.setName("Bebidas");
+        existing.setDescription("Antigua descripción");
+
+        when(categoryRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        when(categoryRepository.findByNameIgnoreCase("Bebidas")).thenReturn(java.util.Optional.of(existing));
+        when(categoryRepository.save(any(Category.class))).thenReturn(existing);
+
+        CategoryDto expectedDto = new CategoryDto(1L, "Bebidas", "Nueva descripción", 0);
+        when(categoryMapper.toDto(any(Category.class))).thenReturn(expectedDto);
+
+        CategoryDto result = categoryService.updateCategory(1L, command);
+
+        assertNotNull(result);
+        assertEquals("Bebidas", result.name());
+        verify(categoryRepository, times(1)).save(any(Category.class));
+    }
+
+    @Test
+    void updateCategory_DuplicateNameDifferentId_ThrowsException() {
+        UpdateCategoryCommand command = new UpdateCategoryCommand("Snacks", "Descripción");
+        Category existing = new Category();
+        existing.setId(1L);
+        existing.setName("Bebidas");
+
+        Category otherCategory = new Category();
+        otherCategory.setId(2L);
+        otherCategory.setName("Snacks");
+
+        when(categoryRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        when(categoryRepository.findByNameIgnoreCase("Snacks")).thenReturn(java.util.Optional.of(otherCategory));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> categoryService.updateCategory(1L, command));
+
+        assertTrue(ex.getMessage().contains("Ya existe una categoría"));
+        verify(categoryRepository, never()).save(any(Category.class));
+    }
 }

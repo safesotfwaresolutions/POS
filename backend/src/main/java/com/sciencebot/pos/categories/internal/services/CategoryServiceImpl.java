@@ -95,8 +95,17 @@ public class CategoryServiceImpl implements CategoryFacade {
     }
 
     private void validateCategoryNameUniqueness(String name, Long currentCategoryId) {
-        if (categoryRepository.existsByNameIgnoreCase(name.trim())) {
-            throw new IllegalArgumentException("Ya existe una categoría con el nombre: " + name.trim());
+        if (currentCategoryId == null) {
+            if (categoryRepository.existsByNameIgnoreCase(name.trim())) {
+                throw new IllegalArgumentException("Ya existe una categoría con el nombre: " + name.trim());
+            }
+        } else {
+            categoryRepository.findByNameIgnoreCase(name.trim())
+                    .ifPresent(category -> {
+                        if (!category.getId().equals(currentCategoryId)) {
+                            throw new IllegalArgumentException("Ya existe una categoría con el nombre: " + name.trim());
+                        }
+                    });
         }
     }
 
