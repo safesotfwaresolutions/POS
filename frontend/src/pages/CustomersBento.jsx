@@ -45,8 +45,8 @@ export default function CustomersBento() {
     }
   };
 
-  const filtered = customers.filter(c => 
-    (c.fullName && c.fullName.toLowerCase().includes(search.toLowerCase())) || 
+  const filtered = customers.filter(c =>
+    (c.fullName && c.fullName.toLowerCase().includes(search.toLowerCase())) ||
     (c.name && c.name.toLowerCase().includes(search.toLowerCase())) ||
     (c.identification && c.identification.includes(search))
   );
@@ -55,11 +55,11 @@ export default function CustomersBento() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#191c1e]">Clientes Bento UI</h1>
-          <p className="text-xs text-gray-500 font-medium">Directorio real de clientes para facturación electrónica DIAN</p>
+          <h1 className="text-2xl font-black text-[#191c1e] dark:text-white">Clientes Bento UI</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Directorio real de clientes para facturación electrónica DIAN</p>
         </div>
 
-        <button 
+        <button
           onClick={() => setShowModal(true)}
           className="px-4 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#006d3c]/20 cursor-pointer"
         >
@@ -70,28 +70,28 @@ export default function CustomersBento() {
       <div className="bento-card p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="relative w-72">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-2.5" />
+            <Search className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3.5 top-2.5" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por cédula, NIT o nombre..."
-              className="w-full pl-10 pr-3 py-1.5 bg-[#f7f9fc] border border-[#e0e3e6] rounded-2xl text-xs font-semibold focus:outline-none focus:border-[#006d3c]"
+              className="w-full pl-10 pr-3 py-1.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-[#e0e3e6] dark:border-[#1d332c] rounded-2xl text-xs font-semibold text-[#191c1e] dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
             />
           </div>
-          <span className="text-xs font-bold text-gray-400">{filtered.length} clientes en BD</span>
+          <span className="text-xs font-bold text-gray-400 dark:text-gray-500">{filtered.length} clientes en BD</span>
         </div>
 
         {loading ? (
-          <div className="py-12 text-center text-xs font-bold text-gray-400">
+          <div className="py-12 text-center text-xs font-bold text-gray-400 dark:text-gray-500">
             Consultando clientes en el servidor backend...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-12 text-center space-y-3 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-            <Users className="w-12 h-12 text-gray-300 mx-auto stroke-1" />
+          <div className="py-12 text-center space-y-3 bg-gray-50/50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+            <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto stroke-1" />
             <div>
-              <p className="text-xs font-bold text-gray-700">No hay clientes registrados en la base de datos aún</p>
-              <p className="text-[11px] text-gray-400">El sistema incluye automáticamente el Cliente General para ventas en mostrador</p>
+              <p className="text-xs font-bold text-gray-700 dark:text-gray-300">No hay clientes registrados en la base de datos aún</p>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500">El sistema incluye automáticamente el Cliente General para ventas en mostrador</p>
             </div>
             <button
               onClick={() => setShowModal(true)}
@@ -103,24 +103,24 @@ export default function CustomersBento() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map(c => (
-              <div key={c.id} className="p-5 bg-gray-50/70 rounded-2xl border border-gray-200 space-y-3">
+              <div key={c.id} className="p-5 bg-gray-50/70 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold text-gray-500">CC/NIT: {c.identification}</span>
-                  <span className="text-[10px] px-2.5 py-0.5 rounded-full font-extrabold bg-emerald-100 text-[#006d3c]">
+                  <span className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400">CC/NIT: {c.identification}</span>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full font-extrabold bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]">
                     Habilitado
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="font-extrabold text-sm text-[#191c1e]">{c.fullName || c.name}</h3>
-                  <div className="mt-2 space-y-1 text-xs text-gray-500 font-medium">
-                    <p className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-gray-400" /> {c.email || 'Sin correo'}</p>
-                    <p className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-gray-400" /> {c.phone || 'Sin teléfono'}</p>
+                  <h3 className="font-extrabold text-sm text-[#191c1e] dark:text-white">{c.fullName || c.name}</h3>
+                  <div className="mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    <p className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> {c.email || 'Sin correo'}</p>
+                    <p className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> {c.phone || 'Sin teléfono'}</p>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-xs">
-                  <span className="text-[#006d3c] font-bold flex items-center gap-1">
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center text-xs">
+                  <span className="text-[#006d3c] dark:text-[#12b76a] font-bold flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#12b76a]" /> Facturación Activa
                   </span>
                 </div>
@@ -133,11 +133,11 @@ export default function CustomersBento() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleCreateCustomer} className="bento-card max-w-md w-full bg-white p-6 rounded-3xl shadow-2xl space-y-4">
-            <h3 className="font-extrabold text-base text-[#191c1e]">Registrar Cliente en Backend</h3>
+          <form onSubmit={handleCreateCustomer} className="bento-card max-w-md w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
+            <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Registrar Cliente en Backend</h3>
 
             {errorMsg && (
-              <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold flex items-center gap-2">
+              <div className="p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/40 rounded-xl text-xs font-bold flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
@@ -145,48 +145,48 @@ export default function CustomersBento() {
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="font-bold text-gray-700 block mb-1">Nombre Completo / Razón Social:</label>
+                <label className="font-bold text-gray-700 dark:text-gray-300 block mb-1">Nombre Completo / Razón Social:</label>
                 <input
                   type="text"
                   value={newCustomer.name}
                   onChange={e => setNewCustomer({ ...newCustomer, name: e.target.value })}
                   placeholder="Ej. Juan Pérez u Homero S.A.S."
-                  className="w-full p-2.5 bg-[#f7f9fc] border border-gray-300 rounded-2xl font-semibold"
+                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
                   required
                 />
               </div>
 
               <div>
-                <label className="font-bold text-gray-700 block mb-1">Cédula o NIT:</label>
+                <label className="font-bold text-gray-700 dark:text-gray-300 block mb-1">Cédula o NIT:</label>
                 <input
                   type="text"
                   value={newCustomer.identification}
                   onChange={e => setNewCustomer({ ...newCustomer, identification: e.target.value })}
                   placeholder="1020304050 o 900123456-1"
-                  className="w-full p-2.5 bg-[#f7f9fc] border border-gray-300 rounded-2xl font-mono text-xs"
+                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-mono text-xs text-[#191c1e] dark:text-white"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="font-bold text-gray-700 block mb-1">Correo Electrónico:</label>
+                  <label className="font-bold text-gray-700 dark:text-gray-300 block mb-1">Correo Electrónico:</label>
                   <input
                     type="email"
                     value={newCustomer.email}
                     onChange={e => setNewCustomer({ ...newCustomer, email: e.target.value })}
                     placeholder="cliente@correo.com"
-                    className="w-full p-2.5 bg-[#f7f9fc] border border-gray-300 rounded-2xl text-xs"
+                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-gray-700 block mb-1">Teléfono:</label>
+                  <label className="font-bold text-gray-700 dark:text-gray-300 block mb-1">Teléfono:</label>
                   <input
                     type="text"
                     value={newCustomer.phone}
                     onChange={e => setNewCustomer({ ...newCustomer, phone: e.target.value })}
                     placeholder="3001234567"
-                    className="w-full p-2.5 bg-[#f7f9fc] border border-gray-300 rounded-2xl text-xs"
+                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
                   />
                 </div>
               </div>
@@ -196,7 +196,7 @@ export default function CustomersBento() {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="w-1/2 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl text-xs font-bold"
+                className="w-1/2 py-3 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold"
               >
                 Cancelar
               </button>
