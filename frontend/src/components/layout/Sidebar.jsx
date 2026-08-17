@@ -10,12 +10,13 @@ import {
   Settings, 
   HelpCircle,
   LogOut,
-  X,
-  History
+  ChevronLeft,
+  ChevronRight,
+  Zap
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -49,20 +50,36 @@ export default function Sidebar({ isOpen, onClose }) {
         />
       )}
 
-      {/* Sidebar - Compact Icon-only Sidebar matching Stitch MCP Screenshot */}
+      {/* Sidebar - Expandable / Collapsible Sidebar */}
       <aside 
-        className={`fixed top-0 left-0 h-screen w-20 lg:w-20 bg-white z-50 flex flex-col justify-between items-center py-6 border-r border-[#e0e3e6] shadow-xs select-none transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-screen bg-white dark:bg-[#1e293b] text-[#191c1e] dark:text-white z-50 flex flex-col justify-between py-6 border-r border-[#e0e3e6] dark:border-[#334155] shadow-xs select-none transition-all duration-300 ${
+          isCollapsed ? 'lg:w-20' : 'lg:w-64'
+        } ${
           isOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex flex-col items-center gap-6 w-full px-3">
-          {/* Top Brand Q Circle */}
-          <div className="w-10 h-10 rounded-full bg-[#12b76a] text-white flex items-center justify-center font-black text-xl shadow-sm cursor-pointer">
-            Q
+        <div className="flex flex-col items-center w-full px-3">
+          {/* Brand Header */}
+          <div className={`flex items-center gap-3 w-full pb-4 border-b border-[#e0e3e6] dark:border-[#334155] ${
+            isCollapsed ? 'justify-center' : 'px-2 justify-between'
+          }`}>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-[#006d3c] text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
+                <Zap className="w-5 h-5 fill-white" />
+              </div>
+              {(!isCollapsed || isOpen) && (
+                <div className="truncate">
+                  <h1 className="font-extrabold text-base leading-tight text-[#191c1e] dark:text-white truncate">
+                    ProPOS <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]">Bento</span>
+                  </h1>
+                  <p className="text-[10px] text-gray-400 font-medium">Caja Principal</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Navigation Menu */}
-          <nav className="flex flex-col gap-3 w-full items-center mt-2">
+          <nav className="flex flex-col gap-2 w-full mt-4">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -70,37 +87,68 @@ export default function Sidebar({ isOpen, onClose }) {
                   key={item.path}
                   to={item.path}
                   onClick={handleNavClick}
-                  title={item.label}
+                  title={isCollapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `p-3 rounded-2xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                    `rounded-2xl flex items-center transition-all duration-200 cursor-pointer ${
                       isActive
-                        ? 'bg-[#006d3c] text-white shadow-md shadow-[#006d3c]/20 scale-105'
-                        : 'text-gray-500 hover:bg-[#eceef1] hover:text-[#006d3c]'
-                    } ${isOpen ? 'w-full justify-start gap-3 px-4' : 'w-11 h-11'}`
+                        ? 'bg-[#006d3c] text-white shadow-md shadow-[#006d3c]/20 font-bold'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-[#f2f4f7] dark:hover:bg-[#334155] hover:text-[#006d3c] dark:hover:text-white'
+                    } ${
+                      isCollapsed && !isOpen
+                        ? 'w-11 h-11 justify-center mx-auto'
+                        : 'w-full px-3.5 py-3 gap-3 text-xs font-semibold'
+                    }`
                   }
                 >
                   <Icon className="w-5 h-5 shrink-0" />
-                  {isOpen && <span className="text-xs font-bold text-[#191c1e]">{item.label}</span>}
+                  {(!isCollapsed || isOpen) && <span className="truncate">{item.label}</span>}
                 </NavLink>
               );
             })}
           </nav>
         </div>
 
-        {/* Bottom Support & Logout */}
-        <div className="flex flex-col gap-3 w-full items-center px-3">
+        {/* Bottom Tools & Collapse Toggle */}
+        <div className="flex flex-col gap-2 w-full px-3 pt-3 border-t border-[#e0e3e6] dark:border-[#334155]">
+          {/* Collapse/Expand Desktop Button */}
+          <button
+            onClick={onToggleCollapse}
+            className={`hidden lg:flex items-center gap-3 p-2.5 rounded-2xl text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#334155] transition-colors cursor-pointer ${
+              isCollapsed ? 'justify-center' : 'px-3'
+            }`}
+            title={isCollapsed ? 'Expandir Menú' : 'Contraer Menú'}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-5 h-5 text-[#006d3c] dark:text-[#12b76a]" />
+            ) : (
+              <>
+                <ChevronLeft className="w-5 h-5 text-[#006d3c] dark:text-[#12b76a]" />
+                <span>Contraer Menú</span>
+              </>
+            )}
+          </button>
+
+          {/* Help Button */}
           <button 
             title="Soporte"
-            className="p-3 text-gray-500 hover:bg-[#eceef1] hover:text-[#006d3c] rounded-2xl transition-all cursor-pointer w-11 h-11 flex items-center justify-center"
+            className={`flex items-center gap-3 p-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#334155] hover:text-[#006d3c] rounded-2xl transition-all cursor-pointer text-xs font-semibold ${
+              isCollapsed && !isOpen ? 'justify-center' : 'px-3'
+            }`}
           >
-            <HelpCircle className="w-5 h-5" />
+            <HelpCircle className="w-5 h-5 shrink-0" />
+            {(!isCollapsed || isOpen) && <span>Soporte</span>}
           </button>
+
+          {/* Logout Button */}
           <button
             onClick={handleLogout}
             title="Cerrar Sesión"
-            className="p-3 text-red-500 hover:bg-red-50 rounded-2xl transition-all cursor-pointer w-11 h-11 flex items-center justify-center"
+            className={`flex items-center gap-3 p-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-2xl transition-all cursor-pointer text-xs font-extrabold ${
+              isCollapsed && !isOpen ? 'justify-center' : 'px-3'
+            }`}
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-5 h-5 shrink-0" />
+            {(!isCollapsed || isOpen) && <span>Cerrar Sesión</span>}
           </button>
         </div>
       </aside>
