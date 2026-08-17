@@ -38,7 +38,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             </div>
             <div>
               <h3 className="font-extrabold text-base text-[#111c2d]">Iniciar Sesión en POS</h3>
-              <p className="text-[11px] text-gray-500 font-medium">Autenticación con JWT de Spring Boot</p>
+              <p className="text-[11px] text-gray-500 font-medium">Ingresa tu usuario y contraseña</p>
             </div>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -86,7 +86,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
           <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-100 text-[11px] text-blue-900 font-medium space-y-1">
             <p className="font-bold flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" /> Credenciales por Defecto del Backend:
+              <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" /> Credenciales de Acceso por Defecto:
             </p>
             <p>• Usuario: <code className="bg-white px-1.5 py-0.5 rounded font-mono font-bold text-blue-700">admin</code></p>
             <p>• Contraseña: <code className="bg-white px-1.5 py-0.5 rounded font-mono font-bold text-blue-700">Password123</code></p>
@@ -97,7 +97,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             disabled={loading}
             className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/30 transition-all"
           >
-            {loading ? 'Autenticando en Backend...' : 'Iniciar Sesión en API REST'}
+            {loading ? 'Autenticando...' : 'Iniciar Sesión'}
           </button>
         </form>
       </div>

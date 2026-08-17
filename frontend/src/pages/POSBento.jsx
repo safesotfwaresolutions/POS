@@ -118,7 +118,7 @@ export default function POSBento() {
     try {
       result = await createSaleApi(saleCommand);
     } catch (e) {
-      alert('Error registrando venta en backend: ' + e.message);
+      alert('Error registrando la venta: ' + e.message);
       return;
     }
 
@@ -150,7 +150,7 @@ export default function POSBento() {
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#191c1e] dark:text-white flex items-center gap-2">
             Punto de Venta Bento <span className="text-xs font-bold px-2.5 py-1 bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a] rounded-full border border-emerald-300 dark:border-[#12b76a]/30">Caja Real</span>
           </h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Transacciones conectadas con Spring Boot API</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Registra tus ventas de forma rápida y segura</p>
         </div>
 
         {/* Scrollable Categories List */}
@@ -531,7 +531,7 @@ export default function POSBento() {
               <CheckCircle2 className="w-7 h-7 text-[#006d3c] dark:text-[#12b76a]" />
             </div>
             <h3 className="text-xl font-extrabold text-[#191c1e] dark:text-white">¡Venta Registrada en Base de Datos!</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Comprobante #{saleCompleted.id} • Procesada en Spring Boot</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Comprobante #{saleCompleted.id}</p>
 
             <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-gray-700 text-left text-xs space-y-1.5">
               <div className="flex justify-between font-bold text-gray-700 dark:text-gray-300">

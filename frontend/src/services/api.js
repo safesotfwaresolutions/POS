@@ -1,5 +1,4 @@
-// Real Backend REST API Client connected to Spring Boot 3 & PostgreSQL / H2
-// Zero mockups — Strictly real data operations
+// Real API client — Zero mockups, strictly real data operations
 
 const API_BASE_URL = '/api/v1';
 

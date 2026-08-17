@@ -41,7 +41,7 @@ export default function CustomersBento() {
       setNewCustomer({ name: '', identification: '', email: '', phone: '' });
       await loadCustomers();
     } catch (err) {
-      setErrorMsg(err.message || 'Error al guardar cliente en el backend.');
+      setErrorMsg(err.message || 'Error al guardar el cliente. Intenta nuevamente.');
     }
   };
 
@@ -79,18 +79,18 @@ export default function CustomersBento() {
               className="w-full pl-10 pr-3 py-1.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-[#e0e3e6] dark:border-[#1d332c] rounded-2xl text-xs font-semibold text-[#191c1e] dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
             />
           </div>
-          <span className="text-xs font-bold text-gray-400 dark:text-gray-500">{filtered.length} clientes en BD</span>
+          <span className="text-xs font-bold text-gray-400 dark:text-gray-500">{filtered.length} clientes registrados</span>
         </div>
 
         {loading ? (
           <div className="py-12 text-center text-xs font-bold text-gray-400 dark:text-gray-500">
-            Consultando clientes en el servidor backend...
+            Consultando clientes...
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-12 text-center space-y-3 bg-gray-50/50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
             <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto stroke-1" />
             <div>
-              <p className="text-xs font-bold text-gray-700 dark:text-gray-300">No hay clientes registrados en la base de datos aún</p>
+              <p className="text-xs font-bold text-gray-700 dark:text-gray-300">No hay clientes registrados aún</p>
               <p className="text-[11px] text-gray-400 dark:text-gray-500">El sistema incluye automáticamente el Cliente General para ventas en mostrador</p>
             </div>
             <button
@@ -134,7 +134,7 @@ export default function CustomersBento() {
       {showModal && (
         <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <form onSubmit={handleCreateCustomer} className="bento-card max-w-md w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
-            <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Registrar Cliente en Backend</h3>
+            <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Registrar Cliente</h3>
 
             {errorMsg && (
               <div className="p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/40 rounded-xl text-xs font-bold flex items-center gap-2">

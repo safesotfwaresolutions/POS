@@ -76,7 +76,7 @@ export default function DashboardBento() {
             Bienvenido, <span className="font-extrabold text-[#191c1e] dark:text-[#12b76a]">{user?.fullName || user?.username || 'Usuario'}</span>
           </h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">
-            Panel de control dinámico conectado a base de datos de producción / dev
+            Panel de control con la información actualizada de tu negocio
           </p>
         </div>
 
@@ -84,7 +84,7 @@ export default function DashboardBento() {
           <button 
             onClick={loadData}
             className="p-2 text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] bg-white dark:bg-[#14231e] border border-[#e0e3e6] dark:border-[#1d332c] rounded-full transition-colors cursor-pointer"
-            title="Recargar Datos de BD"
+            title="Recargar Datos"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#006d3c]' : ''}`} />
           </button>
@@ -104,7 +104,7 @@ export default function DashboardBento() {
           <div className="relative z-10 space-y-6">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-sm font-semibold opacity-90 text-white">Ventas en BD</h3>
+                <h3 className="text-sm font-semibold opacity-90 text-white">Ventas Totales</h3>
                 <p className="text-xs opacity-75 mt-0.5 text-emerald-100">Ticket Promedio: ${averageTicket}</p>
               </div>
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center cursor-pointer hover:bg-white/30 transition-all" onClick={() => navigate('/pos')}>
@@ -133,7 +133,7 @@ export default function DashboardBento() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-[#191c1e] dark:text-white">Ventas Últimos 7 Días</h3>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Calculado dinámicamente de transacciones en BD</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Calculado dinámicamente con tus transacciones</p>
               </div>
             </div>
             <div className="flex bg-[#f2f4f7] dark:bg-[#1d332c] rounded-full p-1 border border-gray-200 dark:border-gray-700">
@@ -224,7 +224,7 @@ export default function DashboardBento() {
               </span>
               <div className="mt-1">
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#006d3c] dark:text-[#12b76a] bg-[#adedd3]/50 dark:bg-[#12b76a]/20 px-2 py-0.5 rounded-full">
-                  ✓ Registradas en BD
+                  ✓ Registradas
                 </span>
               </div>
             </div>
@@ -237,7 +237,7 @@ export default function DashboardBento() {
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-base font-bold text-[#191c1e] dark:text-white">Ventas Recientes Reales</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Historial directo de la base de datos Spring Boot</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Historial de tus ventas más recientes</p>
             </div>
             <button 
               onClick={() => navigate('/pos')}
@@ -255,7 +255,7 @@ export default function DashboardBento() {
             <div className="py-10 text-center space-y-3 bg-white dark:bg-[#0b1411] rounded-2xl border border-dashed border-gray-200 dark:border-[#1d332c]">
               <Package className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto stroke-1" />
               <div>
-                <p className="text-xs font-bold text-[#191c1e] dark:text-white">No hay ventas registradas en la base de datos aún</p>
+                <p className="text-xs font-bold text-[#191c1e] dark:text-white">No hay ventas registradas aún</p>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400">Abre la pantalla de caja para realizar tu primera transacción real</p>
               </div>
               <button

@@ -72,7 +72,7 @@ export default function InventoryBento() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#191c1e] dark:text-white">Inventario Bento Premium</h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Kardex real y reabastecimiento directo en PostgreSQL / H2</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Kardex real y reabastecimiento directo de tu inventario</p>
         </div>
 
         <button
@@ -148,7 +148,7 @@ export default function InventoryBento() {
 
         {loading ? (
           <div className="py-12 text-center text-xs font-bold text-gray-400 dark:text-gray-500">
-            Cargando niveles de stock desde la base de datos...
+            Cargando niveles de stock...
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-10 text-center space-y-2 bg-gray-50/50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
@@ -245,7 +245,7 @@ export default function InventoryBento() {
                 type="submit"
                 className="w-1/2 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold"
               >
-                Actualizar BD Real
+                Registrar Compra
               </button>
             </div>
           </form>

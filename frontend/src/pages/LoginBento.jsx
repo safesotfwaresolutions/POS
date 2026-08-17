@@ -17,7 +17,7 @@ export default function LoginBento() {
       await login(username, password);
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Error de autenticación. Verifica que el backend esté ejecutándose.');
+      setError(err.message || 'Error de autenticación. Verifica tu usuario y contraseña.');
     }
   };
 
@@ -43,7 +43,7 @@ export default function LoginBento() {
             ProPOS <span className="text-[#12b76a] font-bold">Bento</span>
           </h1>
           <p className="text-xs text-gray-300 font-semibold">
-            Sistema de Punto de Venta • Iniciar Sesión en API Backend
+            Sistema de Punto de Venta • Iniciar Sesión
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export default function LoginBento() {
           <div className="p-3.5 bg-[#12b76a]/10 rounded-2xl border border-[#12b76a]/20 text-xs space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="font-extrabold text-[#12b76a] flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-[#12b76a]" /> Credenciales por Defecto del Backend:
+                <ShieldCheck className="w-4 h-4 text-[#12b76a]" /> Credenciales de Acceso por Defecto:
               </span>
               <button
                 type="button"
@@ -110,14 +110,10 @@ export default function LoginBento() {
             disabled={loading}
             className="w-full py-3.5 bg-[#006d3c] hover:bg-[#00522c] text-white font-black text-xs rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#006d3c]/40 active:scale-98 transition-all cursor-pointer"
           >
-            <span>{loading ? 'Autenticando en API REST...' : 'Ingresar al Sistema'}</span>
+            <span>{loading ? 'Autenticando...' : 'Ingresar al Sistema'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        <p className="text-[11px] text-center text-gray-400 font-medium">
-          Conexión directa con Spring Boot Security + JWT Bearer Token
-        </p>
 
       </div>
     </div>

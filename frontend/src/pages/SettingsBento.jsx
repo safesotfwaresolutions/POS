@@ -45,7 +45,7 @@ export default function SettingsBento() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      setErrorMsg(err.message || 'Error guardando configuración en el backend.');
+      setErrorMsg(err.message || 'Error guardando la configuración. Intenta nuevamente.');
     }
   };
 
@@ -54,12 +54,12 @@ export default function SettingsBento() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-[#191c1e] dark:text-white">Configuración Bento System</h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Parámetros reales almacenados en la base de datos Spring Boot</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Parámetros generales de tu negocio</p>
         </div>
 
         {saved && (
           <span className="px-3.5 py-1.5 bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a] rounded-2xl text-xs font-extrabold border border-emerald-300 dark:border-[#12b76a]/30 animate-in fade-in">
-            ¡Configuración guardada en BD!
+            ¡Configuración guardada!
           </span>
         )}
       </div>
@@ -129,7 +129,7 @@ export default function SettingsBento() {
           </h3>
 
           <div className="p-4 bg-emerald-50/50 dark:bg-[#12b76a]/10 rounded-2xl border border-emerald-100 dark:border-[#12b76a]/30 text-xs space-y-1 text-[#006d3c] dark:text-[#12b76a]">
-            <p className="font-extrabold">Configuración activa en `application.properties` del Backend:</p>
+            <p className="font-extrabold">Configuración activa del proveedor de facturación electrónica:</p>
             <p className="text-gray-600 dark:text-gray-300 font-medium">• URL Factus: <code className="font-mono bg-white dark:bg-[#0b1411] px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700">https://api-sandbox.factus.com.co</code></p>
             <p className="text-gray-600 dark:text-gray-300 font-medium">• Rango DIAN ID: <code className="font-mono bg-white dark:bg-[#0b1411] px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700">8</code></p>
           </div>

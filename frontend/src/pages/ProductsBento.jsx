@@ -63,7 +63,7 @@ export default function ProductsBento() {
       setNewProduct({ name: '', barcode: '', internalCode: '', category: 'Abarrotes', price: '', stock: '', minStock: 5 });
       await loadProducts();
     } catch (err) {
-      setErrorMsg(err.message || 'Error al guardar el producto en el backend.');
+      setErrorMsg(err.message || 'Error al guardar el producto. Intenta nuevamente.');
     }
   };
 
@@ -88,7 +88,7 @@ export default function ProductsBento() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#191c1e] dark:text-white">Catálogo de Productos Bento</h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Gestión directa de base de datos de productos y códigos EAN</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Gestión completa de productos y códigos de barras</p>
         </div>
 
         <button
@@ -111,18 +111,18 @@ export default function ProductsBento() {
               className="w-full pl-10 pr-3 py-1.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-[#e0e3e6] dark:border-[#1d332c] rounded-2xl text-xs font-semibold text-[#191c1e] dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
             />
           </div>
-          <span className="text-xs font-bold text-gray-400 dark:text-gray-500">{filtered.length} productos en BD</span>
+          <span className="text-xs font-bold text-gray-400 dark:text-gray-500">{filtered.length} productos registrados</span>
         </div>
 
         {loading ? (
           <div className="py-12 text-center text-xs font-bold text-gray-400 dark:text-gray-500">
-            Consultando base de datos Spring Boot...
+            Consultando catálogo de productos...
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-12 text-center space-y-3 bg-gray-50/50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
             <Package className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto stroke-1" />
             <div>
-              <p className="text-xs font-bold text-gray-700 dark:text-gray-300">No se encontraron productos en el backend</p>
+              <p className="text-xs font-bold text-gray-700 dark:text-gray-300">No se encontraron productos</p>
               <p className="text-[11px] text-gray-400 dark:text-gray-500">Crea tu primer producto para empezar a registrar ventas</p>
             </div>
             <button
@@ -176,7 +176,7 @@ export default function ProductsBento() {
       {showAddModal && (
         <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <form onSubmit={handleAddProduct} className="bento-card max-w-md w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
-            <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Crear Producto en BD Backend</h3>
+            <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Crear Nuevo Producto</h3>
 
             {errorMsg && (
               <div className="p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/40 rounded-xl text-xs font-bold flex items-center gap-2">
@@ -258,7 +258,7 @@ export default function ProductsBento() {
                 type="submit"
                 className="w-1/2 py-3 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold"
               >
-                Guardar en BD Real
+                Guardar Producto
               </button>
             </div>
           </form>
