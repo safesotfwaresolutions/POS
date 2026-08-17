@@ -6,9 +6,11 @@ import {
   Search,
   Truck,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Barcode
 } from 'lucide-react';
 import { getProductsApi, createPurchaseApi } from '../services/api';
+import BarcodeModal from '../components/BarcodeModal';
 
 export default function InventoryBento() {
   const [productsList, setProductsList] = useState([]);
@@ -17,6 +19,7 @@ export default function InventoryBento() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [increaseAmount, setIncreaseAmount] = useState('');
+  const [barcodeProduct, setBarcodeProduct] = useState(null);
 
   const loadInventory = async () => {
     setLoading(true);
@@ -194,15 +197,24 @@ export default function InventoryBento() {
                         </span>
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <button
-                          onClick={() => {
-                            setSelectedProduct(item);
-                            setShowPurchaseModal(true);
-                          }}
-                          className="px-2.5 py-1 bg-emerald-50 dark:bg-[#12b76a]/10 hover:bg-[#006d3c] hover:text-white text-[#006d3c] dark:text-[#12b76a] rounded-xl text-[11px] font-bold transition-all cursor-pointer"
-                        >
-                          + Cargar Stock
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => setBarcodeProduct(item)}
+                            title="Ver código de barras"
+                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
+                          >
+                            <Barcode className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedProduct(item);
+                              setShowPurchaseModal(true);
+                            }}
+                            className="px-2.5 py-1 bg-emerald-50 dark:bg-[#12b76a]/10 hover:bg-[#006d3c] hover:text-white text-[#006d3c] dark:text-[#12b76a] rounded-xl text-[11px] font-bold transition-all cursor-pointer"
+                          >
+                            + Cargar Stock
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -251,6 +263,8 @@ export default function InventoryBento() {
           </form>
         </div>
       )}
+
+      <BarcodeModal product={barcodeProduct} onClose={() => setBarcodeProduct(null)} />
     </div>
   );
 }

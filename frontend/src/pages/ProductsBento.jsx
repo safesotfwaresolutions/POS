@@ -11,12 +11,14 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { getProductsApi, createProductApi, deleteProductApi } from '../services/api';
+import BarcodeModal from '../components/BarcodeModal';
 
 export default function ProductsBento() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [barcodeProduct, setBarcodeProduct] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -159,7 +161,15 @@ export default function ProductsBento() {
 
                   <div className="flex items-center gap-1">
                     <button
+                      onClick={() => setBarcodeProduct(p)}
+                      title="Ver código de barras"
+                      className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
+                    >
+                      <Barcode className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => handleDelete(p.id)}
+                      title="Eliminar producto"
                       className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -264,6 +274,8 @@ export default function ProductsBento() {
           </form>
         </div>
       )}
+
+      <BarcodeModal product={barcodeProduct} onClose={() => setBarcodeProduct(null)} />
     </div>
   );
 }
