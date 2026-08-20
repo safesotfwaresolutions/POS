@@ -3,6 +3,7 @@
 const API_BASE_URL = '/api/v1';
 
 let authToken = localStorage.getItem('jwt_token') || '';
+let refreshToken = localStorage.getItem('refresh_token') || '';
 
 export function getAuthToken() {
   return authToken;
@@ -17,8 +18,48 @@ export function setAuthToken(token) {
   }
 }
 
+export function setRefreshToken(token) {
+  refreshToken = token || '';
+  if (token) {
+    localStorage.setItem('refresh_token', token);
+  } else {
+    localStorage.removeItem('refresh_token');
+  }
+}
+
+// Deduplica renovaciones concurrentes: varias peticiones que reciben 401 a la vez
+// comparten una única promesa de refresh.
+let refreshPromise = null;
+
+async function refreshAccessToken() {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(refreshToken ? { refreshToken } : {}),
+      });
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      if (data && data.token) setAuthToken(data.token);
+      if (data && data.refreshToken) setRefreshToken(data.refreshToken);
+      return !!(data && data.token);
+    } catch {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
 // Core HTTP Fetch Wrapper
-export async function fetchApi(endpoint, options = {}) {
+export async function fetchApi(endpoint, options = {}, _retried = false) {
   const headers = {
     'Content-Type': 'application/json',
     ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -28,10 +69,19 @@ export async function fetchApi(endpoint, options = {}) {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   if (response.status === 401) {
+    // Evita bucles: no intentar renovar el propio endpoint de refresh.
+    if (!_retried && endpoint !== '/auth/refresh') {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        return fetchApi(endpoint, options, true);
+      }
+    }
     setAuthToken('');
+    setRefreshToken('');
     throw new Error('Sesión expirada o credenciales no válidas.');
   }
 
@@ -55,16 +105,23 @@ export async function loginApi(username, password) {
   if (data && data.token) {
     setAuthToken(data.token);
   }
+  if (data && data.refreshToken) {
+    setRefreshToken(data.refreshToken);
+  }
   return data;
 }
 
 export async function logoutApi() {
   try {
-    await fetchApi('/auth/logout', { method: 'POST' });
+    await fetchApi('/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify(refreshToken ? { refreshToken } : {}),
+    });
   } catch (e) {
     // Ignore on logout
   } finally {
     setAuthToken('');
+    setRefreshToken('');
   }
 }
 

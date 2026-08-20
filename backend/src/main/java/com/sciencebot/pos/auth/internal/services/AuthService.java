@@ -1,6 +1,9 @@
 package com.sciencebot.pos.auth.internal.services;
 
 import com.sciencebot.pos.config.JwtService;
+import com.sciencebot.pos.config.PosUserDetails;
+import com.sciencebot.pos.users.UserDto;
+import com.sciencebot.pos.users.UserFacade;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -17,20 +20,25 @@ public class AuthService {
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
+    private final UserFacade userFacade;
 
     private final ConcurrentHashMap<String, LockoutDetails> lockoutCache = new ConcurrentHashMap<>();
 
-    public AuthService(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder,
+                       JwtService jwtService, RefreshTokenService refreshTokenService, UserFacade userFacade) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
+        this.userFacade = userFacade;
     }
 
     public LoginResponse login(String username, String password) {
         if (username == null || password == null) {
-            throw new BadCredentialsException("Usuario o contraseña incorrectos");
+            throw new BadCredentialsException("Usuario o contrasena incorrectos");
         }
-        
+
         String cleanUsername = username.trim().toLowerCase();
 
         checkLockout(cleanUsername);
@@ -40,7 +48,7 @@ public class AuthService {
             userDetails = userDetailsService.loadUserByUsername(cleanUsername);
         } catch (Exception e) {
             recordFailedAttempt(cleanUsername);
-            throw new BadCredentialsException("Usuario o contraseña incorrectos");
+            throw new BadCredentialsException("Usuario o contrasena incorrectos");
         }
 
         if (!userDetails.isEnabled()) {
@@ -49,7 +57,7 @@ public class AuthService {
 
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {
             recordFailedAttempt(cleanUsername);
-            throw new BadCredentialsException("Usuario o contraseña incorrectos");
+            throw new BadCredentialsException("Usuario o contrasena incorrectos");
         }
 
         lockoutCache.remove(cleanUsername);
@@ -59,20 +67,69 @@ public class AuthService {
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .orElse("SELLER");
 
-        String token = jwtService.generateToken(userDetails, role);
+        Long storeId = null;
+        if (userDetails instanceof PosUserDetails posUserDetails) {
+            storeId = posUserDetails.getStoreId();
+        }
+
+        Long userId = userFacade.findByUsername(userDetails.getUsername())
+                .map(UserDto::id)
+                .orElseThrow(() -> new BadCredentialsException("Usuario o contrasena incorrectos"));
+
+        String token = jwtService.generateToken(userDetails, role, storeId);
+        String refreshToken = refreshTokenService.issue(userId);
 
         return new LoginResponse(
                 token,
+                refreshToken,
                 userDetails.getUsername(),
                 role,
+                storeId,
                 jwtService.getExpirationTime()
         );
+    }
+
+    /**
+     * Renueva el access token rotando el refresh token (single-use). Si se detecta
+     * reuso de un token ya rotado, {@code RefreshTokenService} revoca la sesion completa.
+     */
+    public LoginResponse refresh(String rawRefreshToken) {
+        RefreshTokenService.RotationResult rotation = refreshTokenService.rotate(rawRefreshToken);
+
+        UserDto user;
+        try {
+            user = userFacade.getById(rotation.userId());
+        } catch (Exception e) {
+            refreshTokenService.revokeFamily(rotation.familyId());
+            throw new BadCredentialsException("Refresh token invalido");
+        }
+
+        if (!user.active()) {
+            refreshTokenService.revokeFamily(rotation.familyId());
+            throw new DisabledException("Cuenta de usuario desactivada");
+        }
+
+        String token = jwtService.generateToken(user.username(), user.role(), user.storeId());
+
+        return new LoginResponse(
+                token,
+                rotation.newRawToken(),
+                user.username(),
+                user.role(),
+                user.storeId(),
+                jwtService.getExpirationTime()
+        );
+    }
+
+    /** Cierra la sesion revocando el refresh token asociado (si se envia). */
+    public void logout(String rawRefreshToken) {
+        refreshTokenService.revoke(rawRefreshToken);
     }
 
     private void checkLockout(String username) {
         LockoutDetails details = lockoutCache.get(username);
         if (details != null && details.isLocked()) {
-            throw new LockedException("Cuenta bloqueada temporalmente por intentos fallidos. Intente de nuevo más tarde.");
+            throw new LockedException("Cuenta bloqueada temporalmente por intentos fallidos. Intente de nuevo mas tarde.");
         }
     }
 
@@ -110,8 +167,10 @@ public class AuthService {
 
     public record LoginResponse(
             String token,
+            String refreshToken,
             String username,
             String role,
+            Long storeId,
             long expiresIn
     ) {}
 }

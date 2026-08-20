@@ -10,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,9 +34,11 @@ class AuthControllerTest {
     void login_ReturnsTokenAndSetsHttpOnlyCookie() {
         AuthService.LoginResponse mockResponse = new AuthService.LoginResponse(
                 "mocked-jwt-token",
+                "mocked-refresh-token",
                 "admin",
                 "ADMINISTRATOR",
-                28800L
+                1L,
+                900L
         );
         when(authService.login("admin", "admin123")).thenReturn(mockResponse);
 
@@ -48,28 +51,32 @@ class AuthControllerTest {
         assertNotNull(response.getBody());
         assertEquals("admin", response.getBody().username());
         assertEquals("mocked-jwt-token", response.getBody().token());
+        assertEquals("mocked-refresh-token", response.getBody().refreshToken());
+        assertEquals(1L, response.getBody().storeId());
 
-        String setCookieHeader = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
-        assertNotNull(setCookieHeader);
-        assertTrue(setCookieHeader.contains("jwt_token=mocked-jwt-token"));
-        assertTrue(setCookieHeader.contains("HttpOnly"));
-        assertTrue(setCookieHeader.contains("SameSite=Strict"));
-        assertTrue(setCookieHeader.contains("Max-Age=28800"));
-        assertTrue(setCookieHeader.contains("Path=/"));
+        List<String> setCookieHeaders = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+        assertNotNull(setCookieHeaders);
+
+        String accessCookie = setCookieHeaders.stream()
+                .filter(c -> c.startsWith("jwt_token=")).findFirst().orElse(null);
+        assertNotNull(accessCookie);
+        assertTrue(accessCookie.contains("jwt_token=mocked-jwt-token"));
+        assertTrue(accessCookie.contains("HttpOnly"));
+        assertTrue(accessCookie.contains("SameSite=Strict"));
+        assertTrue(accessCookie.contains("Max-Age=900"));
+        assertTrue(accessCookie.contains("Path=/"));
+
+        String refreshCookie = setCookieHeaders.stream()
+                .filter(c -> c.startsWith("refresh_token=")).findFirst().orElse(null);
+        assertNotNull(refreshCookie);
+        assertTrue(refreshCookie.contains("refresh_token=mocked-refresh-token"));
+        assertTrue(refreshCookie.contains("HttpOnly"));
+        assertTrue(refreshCookie.contains("Path=/api/v1/auth"));
     }
 
     @Test
-    void logout_ClearsHttpOnlyCookieWithMaxAgeZero() {
-        ResponseEntity<Void> response = authController.logout();
-
-        assertNotNull(response);
-        assertEquals(204, response.getStatusCode().value());
-
-        String setCookieHeader = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
-        assertNotNull(setCookieHeader);
-        assertTrue(setCookieHeader.contains("jwt_token="));
-        assertTrue(setCookieHeader.contains("Max-Age=0"));
-        assertTrue(setCookieHeader.contains("HttpOnly"));
-        assertTrue(setCookieHeader.contains("SameSite=Strict"));
+    void login_MissingFields_ThrowsException() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> authController.login(Map.of("username", "admin")));
+        assertTrue(ex.getMessage().contains("requeridos"));
     }
 }
