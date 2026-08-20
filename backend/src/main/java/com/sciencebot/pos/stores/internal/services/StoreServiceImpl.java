@@ -1,0 +1,199 @@
+package com.sciencebot.pos.stores.internal.services;
+
+import com.sciencebot.pos.stores.*;
+import com.sciencebot.pos.stores.internal.entities.StoreCategoryEntity;
+import com.sciencebot.pos.stores.internal.entities.StoreDocumentEntity;
+import com.sciencebot.pos.stores.internal.entities.StoreEntity;
+import com.sciencebot.pos.stores.internal.mappers.StoreMapper;
+import com.sciencebot.pos.stores.internal.repositories.StoreCategoryRepository;
+import com.sciencebot.pos.stores.internal.repositories.StoreDocumentRepository;
+import com.sciencebot.pos.stores.internal.repositories.StoreRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+
+@Service
+@Transactional(readOnly = true)
+public class StoreServiceImpl implements StoreFacade {
+
+    private static final Set<String> VALID_STATUSES = Set.of("ACTIVE", "INACTIVE", "PENDING_VERIFICATION", "SUSPENDED");
+
+    private final StoreRepository storeRepository;
+    private final StoreCategoryRepository categoryRepository;
+    private final StoreDocumentRepository documentRepository;
+    private final StoreMapper storeMapper;
+
+    public StoreServiceImpl(StoreRepository storeRepository,
+                            StoreCategoryRepository categoryRepository,
+                            StoreDocumentRepository documentRepository,
+                            StoreMapper storeMapper) {
+        this.storeRepository = storeRepository;
+        this.categoryRepository = categoryRepository;
+        this.documentRepository = documentRepository;
+        this.storeMapper = storeMapper;
+    }
+
+    @Override
+    public StoreMetricsDto getMetrics() {
+        long total    = storeRepository.count();
+        long active   = storeRepository.countByStatus("ACTIVE");
+        long inactive = storeRepository.countByStatus("INACTIVE");
+        long pending  = storeRepository.countByStatus("PENDING_VERIFICATION");
+        long suspended = storeRepository.countByStatus("SUSPENDED");
+        long verified = storeRepository.countByEmailVerifiedTrue();
+        return new StoreMetricsDto(total, active, inactive, pending, suspended, verified);
+    }
+
+    @Override
+    public Page<StoreDto> searchStores(String status, String q, Pageable pageable) {
+        String statusParam = (status == null || status.isBlank() || status.equalsIgnoreCase("ALL")) ? null : status.toUpperCase();
+        String qParam = (q == null || q.isBlank()) ? null : q.trim();
+        return storeRepository.searchStores(statusParam, qParam, pageable)
+                .map(s -> storeMapper.toDto(s, resolveCategoryName(s.getStoreCategoryId())));
+    }
+
+    @Override
+    public StoreDto getById(Long id) {
+        StoreEntity entity = storeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Local no encontrado con ID: " + id));
+        return storeMapper.toDto(entity, resolveCategoryName(entity.getStoreCategoryId()));
+    }
+
+    @Override
+    @Transactional
+    public StoreDto createStore(CreateStoreCommand command) {
+        if (storeRepository.existsByEmail(command.email())) {
+            throw new IllegalArgumentException("El correo ya esta registrado para otro local.");
+        }
+        StoreEntity entity = new StoreEntity();
+        entity.setName(command.name());
+        entity.setStoreCategoryId(command.storeCategoryId());
+        entity.setPhone(command.phone());
+        entity.setEmail(command.email());
+        entity.setWebsite(command.website());
+        entity.setAddress(command.address());
+        entity.setTaxId(command.taxId());
+        entity.setStatus("PENDING_VERIFICATION");
+        entity.setEmailVerified(false);
+        StoreEntity saved = storeRepository.save(entity);
+        return storeMapper.toDto(saved, resolveCategoryName(saved.getStoreCategoryId()));
+    }
+
+    @Override
+    @Transactional
+    public StoreDto updateStore(Long id, UpdateStoreCommand command) {
+        StoreEntity entity = storeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Local no encontrado con ID: " + id));
+        entity.setName(command.name());
+        entity.setStoreCategoryId(command.storeCategoryId());
+        entity.setPhone(command.phone());
+        entity.setWebsite(command.website());
+        entity.setAddress(command.address());
+        entity.setTaxId(command.taxId());
+        if (!entity.getEmail().equalsIgnoreCase(command.email()) && storeRepository.existsByEmail(command.email())) {
+            throw new IllegalArgumentException("El correo ya esta registrado para otro local.");
+        }
+        entity.setEmail(command.email());
+        return storeMapper.toDto(storeRepository.save(entity), resolveCategoryName(entity.getStoreCategoryId()));
+    }
+
+    @Override
+    @Transactional
+    public StoreDto changeStatus(Long id, String newStatus) {
+        if (!VALID_STATUSES.contains(newStatus.toUpperCase())) {
+            throw new IllegalArgumentException("Estado invalido: " + newStatus);
+        }
+        StoreEntity entity = storeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Local no encontrado con ID: " + id));
+        entity.setStatus(newStatus.toUpperCase());
+        return storeMapper.toDto(storeRepository.save(entity), resolveCategoryName(entity.getStoreCategoryId()));
+    }
+
+    @Override
+    @Transactional
+    public StoreDto verifyEmail(Long id) {
+        StoreEntity entity = storeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Local no encontrado con ID: " + id));
+        entity.setEmailVerified(true);
+        return storeMapper.toDto(storeRepository.save(entity), resolveCategoryName(entity.getStoreCategoryId()));
+    }
+
+    @Override
+    public List<StoreDocumentDto> getDocuments(Long storeId) {
+        if (!storeRepository.existsById(storeId)) {
+            throw new EntityNotFoundException("Local no encontrado con ID: " + storeId);
+        }
+        return documentRepository.findByStoreId(storeId).stream()
+                .map(storeMapper::toDocumentDto).toList();
+    }
+
+    @Override
+    @Transactional
+    public StoreDocumentDto reviewDocument(Long storeId, Long docId, ReviewDocumentCommand command) {
+        StoreDocumentEntity doc = documentRepository.findById(docId)
+                .orElseThrow(() -> new EntityNotFoundException("Documento no encontrado con ID: " + docId));
+        if (!doc.getStoreId().equals(storeId)) {
+            throw new IllegalArgumentException("El documento no pertenece al local indicado.");
+        }
+        String newStatus = command.status().toUpperCase();
+        if (!Set.of("APPROVED", "REJECTED").contains(newStatus)) {
+            throw new IllegalArgumentException("Estado de documento invalido. Use APPROVED o REJECTED.");
+        }
+        if ("REJECTED".equals(newStatus) && (command.rejectionReason() == null || command.rejectionReason().isBlank())) {
+            throw new IllegalArgumentException("Se requiere motivo de rechazo.");
+        }
+        doc.setStatus(newStatus);
+        doc.setRejectionReason(command.rejectionReason());
+        doc.setVerifiedAt(LocalDateTime.now());
+        return storeMapper.toDocumentDto(documentRepository.save(doc));
+    }
+
+    @Override
+    public List<StoreCategoryDto> listCategories() {
+        return categoryRepository.findByActiveTrue().stream()
+                .map(storeMapper::toCategoryDto).toList();
+    }
+
+    @Override
+    @Transactional
+    public StoreCategoryDto createCategory(CreateStoreCategoryCommand command) {
+        if (categoryRepository.existsByNameIgnoreCase(command.name())) {
+            throw new IllegalArgumentException("Ya existe una categoria con ese nombre.");
+        }
+        StoreCategoryEntity entity = new StoreCategoryEntity();
+        entity.setName(command.name());
+        entity.setDescription(command.description());
+        entity.setActive(true);
+        return storeMapper.toCategoryDto(categoryRepository.save(entity));
+    }
+
+    @Override
+    @Transactional
+    public StoreCategoryDto updateCategory(Long id, CreateStoreCategoryCommand command) {
+        StoreCategoryEntity entity = categoryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Categoria no encontrada con ID: " + id));
+        entity.setName(command.name());
+        entity.setDescription(command.description());
+        return storeMapper.toCategoryDto(categoryRepository.save(entity));
+    }
+
+    @Override
+    @Transactional
+    public void deleteCategory(Long id) {
+        StoreCategoryEntity entity = categoryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Categoria no encontrada con ID: " + id));
+        entity.setActive(false);
+        categoryRepository.save(entity);
+    }
+
+    private String resolveCategoryName(Long categoryId) {
+        if (categoryId == null) return null;
+        return categoryRepository.findById(categoryId).map(StoreCategoryEntity::getName).orElse(null);
+    }
+}
