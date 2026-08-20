@@ -267,7 +267,8 @@ Puedes personalizar la configuración del backend mediante variables de entorno 
 | `SPRING_DATASOURCE_USERNAME` | `postgres` | Usuario de la base de datos. |
 | `SPRING_DATASOURCE_PASSWORD` | `postgres` | Contraseña de la base de datos. |
 | `JWT_SECRET` | *Clave de 256 bits por defecto* | Clave secreta para firmar tokens JWT. |
-| `JWT_EXPIRATION_MS` | `28800000` (8 horas) | Tiempo de vida del token en milisegundos. |
+| `JWT_EXPIRATION_MS` | `900000` (15 minutos) | Tiempo de vida del access token en milisegundos. |
+| `JWT_REFRESH_EXPIRATION_MS` | `604800000` (7 días) | Tiempo de vida del refresh token en milisegundos. |
 | `BILLING_PROVIDER` | `factus` | Proveedor de facturación (`factus` o `mock`). |
 | `FACTUS_URL` | `https://api-sandbox.factus.com.co` | Endpoint de la API de Factus. |
 | `FACTUS_CLIENT_ID` | *Sandbox Client ID* | Identificador de cliente en Factus. |

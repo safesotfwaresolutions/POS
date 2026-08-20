@@ -1,49 +1,35 @@
-<!-- doc-version: 1.0 | last-updated: 2026-07-08 -->
+<!-- doc-version: 1.3 | last-updated: 2026-08-20 -->
 # Seguridad del Sistema
 
-## Autenticación (JWT)
-- **Tipo**: Stateless, token JWT firmado con HMAC-SHA256
-- **Endpoint público**: `POST /api/v1/auth/login` (único sin token)
-- **Transporte / Mecanismo dual**:
-  - **Cookies Web**: `Set-Cookie: jwt_token=<token>; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=28800` (Protección máxima XSS y mitigación CSRF)
-  - **Encabezado HTTP**: `Authorization: Bearer <token>` (Compatibilidad con Swagger UI, Postman y clientes REST externos)
-- **Payload JWT**: `sub` (username), `role` (ROLE_*), `iat`, `exp`
-- **Expiración**: 8 horas desde emisión (configurable via `JWT_EXPIRATION_MS`)
-- **Almacenamiento cliente**: 
-  - Token seguro en Cookie `HttpOnly` (inaccesible por JavaScript).
-  - `localStorage` / `sessionStorage` reservado únicamente para metadatos cosméticos de interfaz (`username`, `role`), nunca secretos criptográficos.
+## Autenticación (JWT + Refresh Token)
+- **Access token**: JWT firmado con HMAC-SHA256, stateless, de vida corta (`security.jwt.expiration-ms`, 15 minutos por defecto).
+- **Refresh token**: valor opaco aleatorio (Base64URL, 48 bytes) de vida larga (`security.jwt.refresh-expiration-ms`, 7 días por defecto). Se persiste **solo como hash SHA-256** en la tabla `refresh_tokens` (referenciada a `users` por `user_id`), por lo que es revocable y una fuga de la tabla no permite reconstruir tokens válidos.
+- **Rotación (single-use)**: cada llamada a `POST /api/v1/auth/refresh` revoca el refresh token usado (con bloqueo pesimista para serializar rotaciones concurrentes) y emite uno nuevo dentro de la misma **familia** (`family_id`).
+- **Detección de reuso (RFC 6819)**: si se presenta un refresh token ya rotado (revocado), se asume robo y se **revoca la familia completa** (toda la sesión), no solo ese token. Un usuario desactivado durante una sesión activa también provoca la revocación de su familia en el siguiente `refresh`.
+- **Ciclo de vida**: en cada login se purgan los tokens caducados/revocados del usuario para acotar el crecimiento de la tabla.
+- **Endpoints públicos**:
+  - `POST /api/v1/auth/login` — emite access + refresh token (body y cookies `HttpOnly`).
+  - `POST /api/v1/auth/refresh` — renueva el access token a partir del refresh token (cookie `HttpOnly` o campo `refreshToken` en el body).
+  - `GET /api/v1/legal/{slug}` (lectura pública de políticas y términos)
+  - `POST /api/v1/support/tickets` (radicación pública de PQRs y bugs)
+  - `GET /api/v1/support/tickets/track/{ticketNumber}` (tracking público)
+- **Cierre de sesión**: `POST /api/v1/auth/logout` revoca el refresh token asociado y limpia ambas cookies.
+- **Cookies**: `jwt_token` (path `/`) para el access token y `refresh_token` (path `/api/v1/auth`, alcance restringido a los endpoints de sesión), ambas `HttpOnly`.
+- **Payload JWT**: `sub` (username), `role` (SUPER_ADMIN, ADMINISTRATOR, SUPERVISOR, SELLER), `storeId` (Long, null para SUPER_ADMIN), `iat`, `exp`
 
-## Contraseñas (BCrypt)
-- Algoritmo: `BCryptPasswordEncoder`
-- Factor de costo: 10
-- Nunca almacenar en texto plano
-- Validación: `passwordEncoder.matches(raw, encoded)`
-
-## Autorización (RBAC)
-- Roles estáticos: `ADMINISTRATOR`, `SUPERVISOR`, `SELLER`
-- Todas las rutas `/api/v1/**` requieren autenticación excepto `/api/v1/auth/login`
-- Anotación `@PreAuthorize("hasRole('...')")` en cada método de Controller
+## Roles del Sistema (RBAC)
+- **SUPER_ADMIN**: Equipo interno de la plataforma SaaS. Control total sobre Back Office (`/api/v1/backoffice/**`) y gestión exclusiva de categorías (`/api/v1/categories` POST, PUT, DELETE). No pertenece a ningún local (`store_id = null`).
+- **ADMINISTRATOR**: Administrador/Dueño de un local específico.
+- **SUPERVISOR**: Encargado de tienda de un local específico.
+- **SELLER**: Vendedor / cajero de un local específico.
 
 ### Matriz de Permisos
-| Módulo | Admin | Supervisor | Vendedor |
-|---|---|---|---|
-| Usuarios | CRUD | - | - |
-| Productos | CRUD | CRU | R |
-| Categorías | CRUD | CRU | R |
-| Inventario | CRUD | CRU | R |
-| Compras | CRUD | CRU | - |
-| Ventas | CRUD | CRUD | CRU |
-| Clientes | CRUD | CRU | CRU |
-| Proveedores | CRUD | CRU | - |
-| Reportes | R | R (solo stock) | - |
-| Configuración | CRU | R | - |
-
-## Protecciones
-| Amenaza | Mitigación |
-|---|---|
-| SQL Injection | Prepared Statements (JPA/Hibernate) |
-| CORS | Whitelist de orígenes + `allowCredentials(true)` controlado |
-| XSS | Token blindado en Cookie `HttpOnly` + `textContent` en UI |
-| CSRF | Atributo `SameSite=Strict` en Cookies + Header check |
-| Fuerza bruta | Bloqueo tras 5 intentos fallidos (15 min) |
-| Data leaks | Validación exhaustiva de payloads en backend |
+| Módulo | SUPER_ADMIN | Admin Local | Supervisor | Vendedor | Público |
+|---|---|---|---|---|---|
+| Back Office (Locales / Métricas) | CRUD | - | - | - | - |
+| Categorías (Globales) | CRUD | R | R | R | - |
+| Textos Legales | CRUD / Publicar | R | R | R | R (Vigente) |
+| Soporte / PQRs / Bugs | CRUD / Resolver | R (Propios) | - | - | Crear / R (Radicado) |
+| Usuarios Local | CRUD | CRUD (Local) | - | - | - |
+| Productos Local | R | CRUD | CRU | R | - |
+| Ventas Local | R | CRUD | CRUD | CRU | - |

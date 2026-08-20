@@ -1,4 +1,4 @@
-<!-- doc-version: 1.0 | last-updated: 2026-07-08 -->
+<!-- doc-version: 1.1 | last-updated: 2026-08-20 -->
 # Proyecto POS — Contexto General
 
 ## Resumen
@@ -7,7 +7,7 @@ Aplicación web backend (API REST) para gestión de ventas en efectivo e inventa
 ## Stack Tecnológico
 - **Backend**: Java 21, Spring Boot, Spring Security, Spring Data JPA
 - **Base de Datos**: PostgreSQL 16 (producción), H2 (desarrollo y tests)
-- **Autenticación**: JWT (HMAC-SHA256, 8h expiración)
+- **Autenticación**: JWT (HMAC-SHA256, access token 15 min + refresh token rotativo)
 - **Facturación Electrónica**: Factus API (Estándar DIAN Colombia)
 - **Build**: Maven
 

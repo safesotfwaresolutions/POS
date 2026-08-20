@@ -1,4 +1,4 @@
-<!-- doc-version: 1.0 | last-updated: 2026-07-08 -->
+<!-- doc-version: 1.1 | last-updated: 2026-08-20 -->
 # Despliegue y Configuración
 
 ## Requisitos del Servidor
@@ -20,7 +20,8 @@
 | DB_USERNAME | Usuario de BD | pos_db_user |
 | DB_PASSWORD | Contraseña de BD | (secreto) |
 | JWT_SECRET | Clave simétrica JWT (≥256 bits) | (secreto) |
-| JWT_EXPIRATION_MS | TTL del token en ms (8h) | 28800000 |
+| JWT_EXPIRATION_MS | TTL del access token en ms (15 min) | 900000 |
+| JWT_REFRESH_EXPIRATION_MS | TTL del refresh token en ms (7 días) | 604800000 |
 | UPLOAD_DIR | Directorio de imágenes | /var/lib/app-pos/uploads |
 
 ## Compilación Tradicional (Nativa)

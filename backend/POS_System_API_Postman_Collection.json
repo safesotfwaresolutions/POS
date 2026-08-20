@@ -78,7 +78,7 @@
               "host": ["{{BASE_URL}}"],
               "path": ["api", "v1", "auth", "login"]
             },
-            "description": "Autentica al usuario y guarda el JWT Token automáticamente en la variable de colección `{{TOKEN}}`.\n\nEl token tiene vigencia de **8 horas** por defecto."
+            "description": "Autentica al usuario y guarda el JWT Token automáticamente en la variable de colección `{{TOKEN}}`.\n\nEl token tiene vigencia de **15 minutos** por defecto."
           },
           "response": []
         },
@@ -858,7 +858,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"businessName\": \"Tienda ScienceBot\",\n    \"address\": \"Calle 123 # 45-67, Bogotá\",\n    \"phone\": \"+57 1 234 5678\",\n    \"taxId\": \"900987654-1\",\n    \"email\": \"info@tienda.com\",\n    \"logoUrl\": \"https://storage.example.com/logo.png\"\n}",
+              "raw": "{\n    \"businessName\": \"Mi Tienda\",\n    \"address\": \"Calle 123 # 45-67, Bogotá\",\n    \"phone\": \"+57 1 234 5678\",\n    \"taxId\": \"900987654-1\",\n    \"email\": \"info@tienda.com\",\n    \"logoUrl\": \"https://storage.example.com/logo.png\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {

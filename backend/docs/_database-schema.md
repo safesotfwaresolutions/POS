@@ -1,4 +1,4 @@
-<!-- doc-version: 1.0 | last-updated: 2026-07-08 -->
+<!-- doc-version: 1.1 | last-updated: 2026-08-20 -->
 # Esquema de Base de Datos — Vista Global
 
 ## Diagrama Entidad-Relación
@@ -8,6 +8,7 @@ erDiagram
     USERS ||--o{ PURCHASES : registra
     USERS ||--o{ SALES : registra
     USERS ||--o{ INVENTORY_MOVEMENTS : audita
+    USERS ||--o{ REFRESH_TOKENS : posee
     CATEGORIES ||--o{ PRODUCTS : clasifica
     PRODUCTS ||--o{ PURCHASE_ITEMS : contiene
     PRODUCTS ||--o{ SALE_ITEMS : contiene
@@ -17,6 +18,19 @@ erDiagram
     PURCHASES ||--o{ PURCHASE_ITEMS : desglosa
     SALES ||--o{ SALE_ITEMS : desglosa
 ```
+
+## Tabla `refresh_tokens` (módulo auth)
+Sesiones de refresh token rotativas (introducida en `V4__Refresh_Tokens.sql`).
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | BIGSERIAL PK | |
+| token_hash | VARCHAR(64) UNIQUE | SHA-256 del token opaco (nunca se guarda en claro) |
+| user_id | BIGINT | `FK_refresh_tokens_user` → `users(id)` |
+| family_id | VARCHAR(36) | Agrupa los tokens rotados de una sesión (revocación en cadena) |
+| expires_at | TIMESTAMP | |
+| revoked | BOOLEAN | |
+| created_at / updated_at | TIMESTAMP | |
 
 ## Convenciones
 - Motor: PostgreSQL 16 (prod), H2 (dev)
@@ -37,6 +51,9 @@ erDiagram
 | IDX_sales_created_at | sales(created_at) | Historial y reportes diarios |
 | IDX_movements_product_date | inventory_movements(product_id, created_at) | Kardex de producto |
 | IDX_customers_identification | customers(identification) | Asociar cliente en POS |
+| IDX_refresh_tokens_user | refresh_tokens(user_id) | Purga y consulta de sesiones por usuario |
+| IDX_refresh_tokens_family | refresh_tokens(family_id) | Revocación de sesión completa (reuso) |
+| IDX_refresh_tokens_expires | refresh_tokens(expires_at) | Limpieza de tokens caducados |
 
 ## Migraciones de Base de Datos (Flyway)
 
