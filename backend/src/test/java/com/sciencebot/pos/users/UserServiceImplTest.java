@@ -5,7 +5,6 @@ import com.sciencebot.pos.users.internal.repositories.UserRepository;
 import com.sciencebot.pos.users.internal.services.UserServiceImpl;
 import com.sciencebot.pos.users.internal.mappers.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
-
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -23,18 +22,10 @@ import static org.mockito.Mockito.*;
 
 class UserServiceImplTest {
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private UserMapper userMapper;
-
-    @InjectMocks
-    private UserServiceImpl userService;
-
+    @Mock private UserRepository userRepository;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private UserMapper userMapper;
+    @InjectMocks private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
@@ -44,7 +35,7 @@ class UserServiceImplTest {
     @Test
     void createUser_Success() {
         CreateUserCommand command = new CreateUserCommand(
-                "Juan Perez", "juanp", "juan@tienda.com", "Password123", "SELLER"
+                "Juan Perez", "juanp", "juan@tienda.com", "Password123", "SELLER", 1L
         );
 
         when(userRepository.existsByUsername("juanp")).thenReturn(false);
@@ -59,30 +50,48 @@ class UserServiceImplTest {
         savedUser.setPassword("encodedPassword");
         savedUser.setRole("SELLER");
         savedUser.setActive(true);
+        savedUser.setStoreId(1L);
 
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        UserDto expectedDto = new UserDto(1L, "Juan Perez", "juanp", "juan@tienda.com", "SELLER", true);
+        UserDto expectedDto = new UserDto(1L, "Juan Perez", "juanp", "juan@tienda.com", "SELLER", true, 1L);
         when(userMapper.toDto(any(User.class))).thenReturn(expectedDto);
 
         UserDto result = userService.createUser(command);
-
 
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("juanp", result.username());
         assertTrue(result.active());
+        assertEquals(1L, result.storeId());
         verify(userRepository, times(1)).save(any(User.class));
     }
 
     @Test
     void createUser_WeakPassword_ThrowsException() {
         CreateUserCommand command = new CreateUserCommand(
-                "Juan Perez", "juanp", "juan@tienda.com", "weak", "SELLER"
+                "Juan Perez", "juanp", "juan@tienda.com", "weak", "SELLER", 1L
         );
-
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.createUser(command));
         assertTrue(ex.getMessage().contains("caracteres"));
+    }
+
+    @Test
+    void createUser_SuperAdminWithStoreId_ThrowsException() {
+        CreateUserCommand command = new CreateUserCommand(
+                "Super Admin", "superadmin", "sa@platform.com", "SuperAdmin1!", "SUPER_ADMIN", 1L
+        );
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.createUser(command));
+        assertTrue(ex.getMessage().contains("SUPER_ADMIN"));
+    }
+
+    @Test
+    void createUser_PosRoleWithoutStoreId_ThrowsException() {
+        CreateUserCommand command = new CreateUserCommand(
+                "Juan Perez", "juanp", "juan@tienda.com", "Password123", "SELLER", null
+        );
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.createUser(command));
+        assertTrue(ex.getMessage().contains("storeId"));
     }
 
     @Test
@@ -104,7 +113,7 @@ class UserServiceImplTest {
         when(userRepository.countByRoleAndActiveTrue("ADMINISTRATOR")).thenReturn(1L);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.deleteUser(2L));
-        assertTrue(ex.getMessage().contains("último administrador"));
+        assertTrue(ex.getMessage().contains("ultimo administrador"));
     }
 
     @Test
@@ -148,7 +157,6 @@ class UserServiceImplTest {
         SecurityContextHolder.setContext(context);
 
         ChangePasswordCommand command = new ChangePasswordCommand("WrongPassword", "NewPassword123");
-
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.changePassword(1L, command));
         assertTrue(ex.getMessage().contains("incorrecta"));
     }
@@ -165,10 +173,10 @@ class UserServiceImplTest {
 
         Authentication auth = mock(Authentication.class);
         when(auth.getName()).thenReturn("admin1");
-        org.springframework.security.core.authority.SimpleGrantedAuthority authority = 
+        org.springframework.security.core.authority.SimpleGrantedAuthority authority =
                 new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMINISTRATOR");
         doReturn(java.util.List.of(authority)).when(auth).getAuthorities();
-        
+
         SecurityContext context = mock(SecurityContext.class);
         when(context.getAuthentication()).thenReturn(auth);
         SecurityContextHolder.setContext(context);
@@ -191,17 +199,16 @@ class UserServiceImplTest {
 
         Authentication auth = mock(Authentication.class);
         when(auth.getName()).thenReturn("seller1");
-        org.springframework.security.core.authority.SimpleGrantedAuthority authority = 
+        org.springframework.security.core.authority.SimpleGrantedAuthority authority =
                 new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SELLER");
         doReturn(java.util.List.of(authority)).when(auth).getAuthorities();
-        
+
         SecurityContext context = mock(SecurityContext.class);
         when(context.getAuthentication()).thenReturn(auth);
         SecurityContextHolder.setContext(context);
 
         ChangePasswordCommand command = new ChangePasswordCommand(null, "NewPassword123");
-
-        assertThrows(org.springframework.security.access.AccessDeniedException.class, 
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
                 () -> userService.changePassword(1L, command));
     }
 }

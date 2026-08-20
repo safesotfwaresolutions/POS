@@ -15,8 +15,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     boolean existsByIdentification(String identification);
     
     @Query("SELECT c FROM Customer c WHERE " +
-           "(:search IS NULL OR " +
            "LOWER(c.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(c.identification) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "LOWER(c.identification) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Customer> searchCustomers(@Param("search") String search, Pageable pageable);
 }

@@ -88,6 +88,9 @@ public class SupplierServiceImpl implements SupplierFacade {
     @Override
     public Page<SupplierDto> searchSuppliers(String search, Pageable pageable) {
         String cleanSearch = (search == null || search.isBlank()) ? null : search.trim();
+        if (cleanSearch == null) {
+            return supplierRepository.findAll(pageable).map(supplierMapper::toDto);
+        }
         return supplierRepository.searchSuppliers(cleanSearch, pageable).map(supplierMapper::toDto);
     }
 }

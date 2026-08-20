@@ -56,24 +56,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            try {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-                if (userDetails.isEnabled() && jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+        try {
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                try {
+                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+                    if (userDetails.isEnabled() && jwtService.isTokenValid(jwt, userDetails)) {
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                        Long storeId = jwtService.extractStoreId(jwt);
+                        TenantContext.setStoreId(storeId);
+                    }
+                } catch (Exception e) {
+                    // Ignored
                 }
-            } catch (Exception e) {
-                // User details load failed or user not found/active
             }
+
+            filterChain.doFilter(request, response);
+        } finally {
+            TenantContext.clear();
         }
-        
-        filterChain.doFilter(request, response);
     }
 
     private String extractToken(HttpServletRequest request) {

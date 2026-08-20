@@ -36,7 +36,12 @@ public class SecurityConfig {
             .csrf(abstractHttpConfigurer -> abstractHttpConfigurer.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/login").permitAll()
+                .requestMatchers("/api/v1/auth/refresh").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api/v1/legal/**").permitAll()
+                .requestMatchers("/api/v1/support/tickets").permitAll()
+                .requestMatchers("/api/v1/support/tickets/track/**").permitAll()
+                .requestMatchers("/api/v1/backoffice/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().permitAll()
             )

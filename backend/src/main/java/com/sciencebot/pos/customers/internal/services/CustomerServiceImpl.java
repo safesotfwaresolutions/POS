@@ -98,6 +98,9 @@ public class CustomerServiceImpl implements CustomerFacade {
     @Override
     public Page<CustomerDto> searchCustomers(String search, Pageable pageable) {
         String cleanSearch = (search == null || search.isBlank()) ? null : search.trim();
+        if (cleanSearch == null) {
+            return customerRepository.findAll(pageable).map(customerMapper::toDto);
+        }
         return customerRepository.searchCustomers(cleanSearch, pageable).map(customerMapper::toDto);
     }
 

@@ -32,16 +32,36 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails, String role) {
+    public String generateToken(UserDetails userDetails, String role, Long storeId) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("role", role);
+        if (storeId != null) {
+            extraClaims.put("storeId", storeId);
+        }
         return generateToken(extraClaims, userDetails);
     }
 
+    public String generateToken(UserDetails userDetails, String role) {
+        return generateToken(userDetails, role, null);
+    }
+
+    public String generateToken(String username, String role, Long storeId) {
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("role", role);
+        if (storeId != null) {
+            extraClaims.put("storeId", storeId);
+        }
+        return buildToken(extraClaims, username);
+    }
+
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        return buildToken(extraClaims, userDetails.getUsername());
+    }
+
+    private String buildToken(Map<String, Object> extraClaims, String subject) {
         return Jwts.builder()
                 .claims(extraClaims)
-                .subject(userDetails.getUsername())
+                .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSignInKey())
@@ -51,6 +71,19 @@ public class JwtService {
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (userDetails.getUsername().equals(username)) && !isTokenExpired(token);
+    }
+
+    public Long extractStoreId(String token) {
+        try {
+            Object storeIdClaim = extractAllClaims(token).get("storeId");
+            if (storeIdClaim == null) return null;
+            if (storeIdClaim instanceof Long l) return l;
+            if (storeIdClaim instanceof Integer i) return i.longValue();
+            if (storeIdClaim instanceof Number n) return n.longValue();
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private boolean isTokenExpired(String token) {
@@ -75,6 +108,6 @@ public class JwtService {
     }
 
     public long getExpirationTime() {
-        return jwtExpiration / 1000; // in seconds
+        return jwtExpiration / 1000;
     }
 }

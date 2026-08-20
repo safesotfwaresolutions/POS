@@ -18,7 +18,8 @@ public class UserMapper {
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole(),
-                user.isActive()
+                user.isActive(),
+                user.getStoreId()
         );
     }
 }

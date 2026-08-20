@@ -31,22 +31,34 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Seed default administrator
-        if (userRepository.count() == 0) {
-            CreateUserCommand adminCommand = new CreateUserCommand(
+        if (!userRepository.existsByUsername("superadmin")) {
+            userFacade.createUser(new CreateUserCommand(
+                    "Super Admin",
+                    "superadmin",
+                    "superadmin@platform.internal",
+                    "SuperAdmin123!",
+                    "SUPER_ADMIN",
+                    null
+            ));
+            System.out.println("==================================================");
+            System.out.println("SUPER_ADMIN seeded: superadmin / SuperAdmin123!");
+            System.out.println("==================================================");
+        }
+
+        if (!userRepository.existsByUsername("admin")) {
+            userFacade.createUser(new CreateUserCommand(
                     "Administrator",
                     "admin",
                     "admin@tienda.com",
                     "Password123",
-                    "ADMINISTRATOR"
-            );
-            userFacade.createUser(adminCommand);
+                    "ADMINISTRATOR",
+                    1L
+            ));
             System.out.println("==================================================");
-            System.out.println("Default administrator seeded: admin / Password123");
+            System.out.println("Default administrator seeded: admin / Password123 (store_id=1)");
             System.out.println("==================================================");
         }
 
-        // Seed General Customer (RN-CUST-001)
         if (customerFacade.getByIdentification("9999999999").isEmpty()) {
             customerFacade.createCustomer(new CreateCustomerCommand(
                     "Cliente General",
@@ -58,7 +70,6 @@ public class DatabaseSeeder implements CommandLineRunner {
             System.out.println("==================================================");
         }
 
-        // Seed default business settings (RN-SET-001)
         try {
             settingsFacade.getSettings();
         } catch (Exception e) {
@@ -76,4 +87,3 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
     }
 }
-

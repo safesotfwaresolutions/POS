@@ -13,8 +13,7 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     boolean existsByTaxId(String taxId);
     
     @Query("SELECT s FROM Supplier s WHERE " +
-           "(:search IS NULL OR " +
            "LOWER(s.companyName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(s.taxId) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "LOWER(s.taxId) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Supplier> searchSuppliers(@Param("search") String search, Pageable pageable);
 }
