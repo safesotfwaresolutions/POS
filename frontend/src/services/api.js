@@ -2,6 +2,15 @@
 
 const API_BASE_URL = '/api/v1';
 
+// Genera una clave de idempotencia (UUID). Se usa en operaciones no idempotentes
+// (ventas, compras) para que un reenvío no cree registros duplicados en el backend.
+export function newIdempotencyKey() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `idem-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 let authToken = localStorage.getItem('jwt_token') || '';
 let refreshToken = localStorage.getItem('refresh_token') || '';
 
@@ -209,9 +218,13 @@ export async function getSalesApi(page = 0, size = 20) {
   return data.content || data || [];
 }
 
-export async function createSaleApi(saleCommand) {
+export async function createSaleApi(saleCommand, idempotencyKey) {
+  // La Idempotency-Key evita ventas duplicadas si el request se reintenta (doble clic,
+  // reintento de red o renovación 401). El mismo valor se reenvía en cada reintento.
+  const key = idempotencyKey || newIdempotencyKey();
   return await fetchApi('/sales', {
     method: 'POST',
+    headers: { 'Idempotency-Key': key },
     body: JSON.stringify({
       customerId: saleCommand.customerId || null,
       items: saleCommand.items.map(item => ({
@@ -231,9 +244,11 @@ export async function getStockReportApi(belowMinStock = false) {
   return await fetchApi(`/reports/stock?belowMinStock=${belowMinStock}`);
 }
 
-export async function createPurchaseApi(purchaseData) {
+export async function createPurchaseApi(purchaseData, idempotencyKey) {
+  const key = idempotencyKey || newIdempotencyKey();
   return await fetchApi('/purchases', {
     method: 'POST',
+    headers: { 'Idempotency-Key': key },
     body: JSON.stringify(purchaseData),
   });
 }

@@ -14,7 +14,7 @@ import {
   Package,
   ChevronDown
 } from 'lucide-react';
-import { getProductsApi, getCustomersApi, createSaleApi } from '../services/api';
+import { getProductsApi, getCustomersApi, createSaleApi, newIdempotencyKey } from '../services/api';
 
 export default function POSBento() {
   const [productsList, setProductsList] = useState([]);
@@ -31,8 +31,12 @@ export default function POSBento() {
   const [cashTendered, setCashTendered] = useState('');
   const [saleCompleted, setSaleCompleted] = useState(null);
   const [showMobileCart, setShowMobileCart] = useState(false);
+  const [isSubmittingSale, setIsSubmittingSale] = useState(false);
 
   const barcodeInputRef = useRef(null);
+  // Clave de idempotencia estable para el intento de cobro en curso: se reutiliza en
+  // reintentos para que un doble clic o un reintento de red no genere ventas duplicadas.
+  const saleIdempotencyKeyRef = useRef(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -102,6 +106,7 @@ export default function POSBento() {
 
   const handleCompleteSale = async () => {
     if (cashNumber < total) return;
+    if (isSubmittingSale) return; // Evita reenvíos por doble clic mientras hay uno en curso.
 
     const saleCommand = {
       customerId: selectedCustomer?.id || null,
@@ -114,13 +119,23 @@ export default function POSBento() {
       totalAmount: total
     };
 
+    // Reutiliza la clave del intento actual si existe (reintento); si no, genera una nueva.
+    if (!saleIdempotencyKeyRef.current) {
+      saleIdempotencyKeyRef.current = newIdempotencyKey();
+    }
+
     let result = null;
+    setIsSubmittingSale(true);
     try {
-      result = await createSaleApi(saleCommand);
+      result = await createSaleApi(saleCommand, saleIdempotencyKeyRef.current);
     } catch (e) {
       alert('Error registrando la venta: ' + e.message);
       return;
+    } finally {
+      setIsSubmittingSale(false);
     }
+    // Venta confirmada: descarta la clave para que el próximo cobro use una nueva.
+    saleIdempotencyKeyRef.current = null;
 
     const completed = {
       id: result?.id ? `FAC-${result.id}` : `FAC-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -506,16 +521,16 @@ export default function POSBento() {
                 Cancelar
               </button>
               <button
-                disabled={change < 0 || cashNumber <= 0}
+                disabled={change < 0 || cashNumber <= 0 || isSubmittingSale}
                 onClick={handleCompleteSale}
                 className={`w-1/2 py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 text-white shadow-md ${
-                  change < 0 || cashNumber <= 0
+                  change < 0 || cashNumber <= 0 || isSubmittingSale
                     ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
                     : 'bg-[#006d3c] hover:bg-[#00522c] shadow-[#006d3c]/30'
                 }`}
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Confirmar Venta</span>
+                <span>{isSubmittingSale ? 'Procesando…' : 'Confirmar Venta'}</span>
               </button>
             </div>
 
