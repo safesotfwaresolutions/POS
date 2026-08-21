@@ -64,7 +64,7 @@ class PurchaseServiceImplTest {
         Purchase saved = new Purchase();
         saved.setId(10L);
         saved.setTotalAmount(BigDecimal.valueOf(11.50));
-        when(purchaseRepository.save(any(Purchase.class))).thenReturn(saved);
+        when(purchaseRepository.saveAndFlush(any(Purchase.class))).thenReturn(saved);
 
         PurchaseDto expectedDto = new PurchaseDto(10L, 1L, "Supp ABC", "FAC-01", BigDecimal.valueOf(11.50), "admin", null, List.of());
         when(purchaseMapper.toDto(any(Purchase.class))).thenReturn(expectedDto);
@@ -75,7 +75,30 @@ class PurchaseServiceImplTest {
         assertEquals(BigDecimal.valueOf(11.50), result.totalAmount());
         verify(productFacade, times(1)).updatePurchasePrice(1L, BigDecimal.valueOf(1.15));
         verify(inventoryFacade, times(1)).registerMovement(eq(1L), eq("COMPRA"), eq(10), anyString());
-        verify(purchaseRepository, times(1)).save(any(Purchase.class));
+        verify(purchaseRepository, times(1)).saveAndFlush(any(Purchase.class));
+    }
+
+    @Test
+    void registerPurchase_DuplicateIdempotencyKey_ReturnsExistingWithoutSideEffects() {
+        CreatePurchaseItemCommand item = new CreatePurchaseItemCommand(1L, 10, BigDecimal.valueOf(1.15));
+        CreatePurchaseCommand command = new CreatePurchaseCommand(1L, "FAC-01", List.of(item));
+
+        Purchase existing = new Purchase();
+        existing.setId(10L);
+        existing.setIdempotencyKey("key-abc");
+        when(purchaseRepository.findByIdempotencyKey("key-abc")).thenReturn(Optional.of(existing));
+
+        PurchaseDto existingDto = new PurchaseDto(10L, 1L, "Supp ABC", "FAC-01", BigDecimal.valueOf(11.50), "admin", null, List.of());
+        when(purchaseMapper.toDto(existing)).thenReturn(existingDto);
+
+        PurchaseDto result = purchaseService.registerPurchase(command, "key-abc");
+
+        assertNotNull(result);
+        assertEquals(10L, result.id());
+        // Reenvío idempotente: no incrementa inventario, no actualiza precios ni persiste otra compra.
+        verify(inventoryFacade, never()).registerMovement(anyLong(), anyString(), anyInt(), anyString());
+        verify(productFacade, never()).updatePurchasePrice(anyLong(), any());
+        verify(purchaseRepository, never()).saveAndFlush(any(Purchase.class));
     }
 
     @Test

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +45,10 @@ public class SaleController {
                     4. Dispara el proceso de facturación electrónica con Factus (asíncrono)
                     
                     El `customerId` es opcional — si no se envía, la venta se registra como venta a consumidor final.
+
+                    **Idempotencia:** envíe el header `Idempotency-Key` (un UUID por intento de cobro). Un
+                    reenvío con la misma clave (doble clic o reintento de red) devuelve la venta original en
+                    lugar de crear un duplicado ni descontar inventario dos veces.
                     """
     )
     @ApiResponses({
@@ -54,9 +59,23 @@ public class SaleController {
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content)
     })
-    public ResponseEntity<SaleDto> registerSale(@RequestBody CreateSaleCommand command) {
-        SaleDto created = saleFacade.registerSale(command);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<SaleDto> registerSale(
+            @Parameter(description = "Clave de idempotencia (UUID) para evitar ventas duplicadas por reenvío")
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @RequestBody CreateSaleCommand command) {
+        try {
+            SaleDto created = saleFacade.registerSale(command, idempotencyKey);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (DataIntegrityViolationException ex) {
+            // Reenvío concurrente: otro request con la misma Idempotency-Key ganó la carrera y
+            // esta transacción se revirtió por completo. Devolvemos la venta ya persistida.
+            if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+                return saleFacade.findByIdempotencyKey(idempotencyKey)
+                        .map(existing -> ResponseEntity.status(HttpStatus.CREATED).body(existing))
+                        .orElseThrow(() -> ex);
+            }
+            throw ex;
+        }
     }
 
     @GetMapping

@@ -7,8 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
+
+    Optional<Purchase> findByIdempotencyKey(String idempotencyKey);
 
     @Query("SELECT p FROM Purchase p WHERE " +
            "(:supplierId IS NULL OR p.supplierId = :supplierId) AND " +

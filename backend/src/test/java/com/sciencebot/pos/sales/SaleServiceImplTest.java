@@ -71,7 +71,7 @@ class SaleServiceImplTest {
         saved.setTotalAmount(BigDecimal.valueOf(16.00));
         saved.setCashReceived(BigDecimal.valueOf(20.00));
         saved.setCashChange(BigDecimal.valueOf(4.00));
-        when(saleRepository.save(any(Sale.class))).thenReturn(saved);
+        when(saleRepository.saveAndFlush(any(Sale.class))).thenReturn(saved);
 
         SaleDto expectedDto = new SaleDto(100L, "FACT-000001", null, "Maria Lopez", BigDecimal.valueOf(16.00), BigDecimal.valueOf(20.00), BigDecimal.valueOf(4.00), "admin", List.of());
         when(saleMapper.toDto(any(Sale.class))).thenReturn(expectedDto);
@@ -82,7 +82,31 @@ class SaleServiceImplTest {
         assertEquals(BigDecimal.valueOf(16.00), result.totalAmount());
         assertEquals(BigDecimal.valueOf(4.00), result.cashChange());
         verify(inventoryFacade, times(1)).registerMovement(eq(1L), eq("VENTA"), eq(2), anyString());
-        verify(saleRepository, times(1)).save(any(Sale.class));
+        verify(saleRepository, times(1)).saveAndFlush(any(Sale.class));
+    }
+
+    @Test
+    void registerSale_DuplicateIdempotencyKey_ReturnsExistingWithoutSideEffects() {
+        CreateSaleItemCommand item = new CreateSaleItemCommand(1L, 2);
+        CreateSaleCommand command = new CreateSaleCommand(1L, BigDecimal.valueOf(20.00), true, List.of(item));
+
+        Sale existing = new Sale();
+        existing.setId(100L);
+        existing.setInvoiceNumber("FACT-000001");
+        existing.setIdempotencyKey("key-123");
+        when(saleRepository.findByIdempotencyKey("key-123")).thenReturn(Optional.of(existing));
+
+        SaleDto existingDto = new SaleDto(100L, "FACT-000001", null, "Maria Lopez", BigDecimal.valueOf(16.00), BigDecimal.valueOf(20.00), BigDecimal.valueOf(4.00), "admin", List.of());
+        when(saleMapper.toDto(existing)).thenReturn(existingDto);
+
+        SaleDto result = saleService.registerSale(command, "key-123");
+
+        assertNotNull(result);
+        assertEquals(100L, result.id());
+        // Reenvío idempotente: no descuenta inventario, no factura ni persiste una venta nueva.
+        verify(inventoryFacade, never()).registerMovement(anyLong(), anyString(), anyInt(), anyString());
+        verify(saleRepository, never()).saveAndFlush(any(Sale.class));
+        verify(billingFacade, never()).processElectronicInvoice(any());
     }
 
     @Test

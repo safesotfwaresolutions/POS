@@ -60,6 +60,23 @@ public class SaleServiceImpl implements SaleFacade {
     @Override
     @Transactional
     public SaleDto registerSale(CreateSaleCommand command) {
+        return registerSale(command, null);
+    }
+
+    @Override
+    @Transactional
+    public SaleDto registerSale(CreateSaleCommand command, String idempotencyKey) {
+        final String key = normalizeIdempotencyKey(idempotencyKey);
+
+        // Fast-path de idempotencia: un reenvio secuencial (doble clic / reintento) con la
+        // misma clave devuelve la venta original sin volver a descontar inventario ni facturar.
+        if (key != null) {
+            Optional<SaleDto> existing = saleRepository.findByIdempotencyKey(key).map(saleMapper::toDto);
+            if (existing.isPresent()) {
+                return existing.get();
+            }
+        }
+
         if (command.items() == null || command.items().isEmpty()) {
             throw new IllegalArgumentException("La venta debe contener al menos un producto");
         }
@@ -148,8 +165,12 @@ public class SaleServiceImpl implements SaleFacade {
         sale.setTotalAmount(total);
         sale.setCashChange(command.cashReceived().subtract(total));
         sale.setItems(items);
+        sale.setIdempotencyKey(key);
 
-        Sale saved = saleRepository.save(sale);
+        // saveAndFlush fuerza la validacion de la restriccion unica (idempotency_key) ANTES
+        // de facturar: si otro reenvio concurrente gano la carrera, la violacion aborta esta
+        // transaccion (revirtiendo el descuento de inventario) antes de emitir a Factus.
+        Sale saved = saleRepository.saveAndFlush(sale);
         SaleDto saleDto = saleMapper.toDto(saved);
 
         // Si sendToFactus es true, enviamos inmediatamente a Factus.
@@ -168,8 +189,25 @@ public class SaleServiceImpl implements SaleFacade {
 
 
     @Override
+    public Optional<SaleDto> findByIdempotencyKey(String idempotencyKey) {
+        String key = normalizeIdempotencyKey(idempotencyKey);
+        if (key == null) {
+            return Optional.empty();
+        }
+        return saleRepository.findByIdempotencyKey(key).map(saleMapper::toDto);
+    }
+
+    @Override
     public Optional<SaleDto> getById(Long id) {
         return saleRepository.findById(id).map(saleMapper::toDto);
+    }
+
+    private static String normalizeIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null) {
+            return null;
+        }
+        String trimmed = idempotencyKey.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     @Override

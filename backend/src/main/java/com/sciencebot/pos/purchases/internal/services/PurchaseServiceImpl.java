@@ -53,6 +53,23 @@ public class PurchaseServiceImpl implements PurchaseFacade {
     @Override
     @Transactional
     public PurchaseDto registerPurchase(CreatePurchaseCommand command) {
+        return registerPurchase(command, null);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseDto registerPurchase(CreatePurchaseCommand command, String idempotencyKey) {
+        final String key = normalizeIdempotencyKey(idempotencyKey);
+
+        // Fast-path de idempotencia: un reenvio secuencial con la misma clave devuelve la
+        // compra original sin volver a incrementar inventario ni actualizar precios.
+        if (key != null) {
+            Optional<PurchaseDto> existing = purchaseRepository.findByIdempotencyKey(key).map(purchaseMapper::toDto);
+            if (existing.isPresent()) {
+                return existing.get();
+            }
+        }
+
         if (command.supplierId() == null) {
             throw new IllegalArgumentException("El proveedor es obligatorio");
         }
@@ -119,14 +136,35 @@ public class PurchaseServiceImpl implements PurchaseFacade {
 
         purchase.setTotalAmount(total);
         purchase.setItems(items);
+        purchase.setIdempotencyKey(key);
 
-        Purchase saved = purchaseRepository.save(purchase);
+        // saveAndFlush fuerza la validacion de las restricciones unicas (idempotency_key y
+        // supplier_id+invoice_number) dentro de esta transaccion; una violacion revierte el
+        // incremento de inventario y la actualizacion de precios ya aplicados arriba.
+        Purchase saved = purchaseRepository.saveAndFlush(purchase);
         return purchaseMapper.toDto(saved);
+    }
+
+    @Override
+    public Optional<PurchaseDto> findByIdempotencyKey(String idempotencyKey) {
+        String key = normalizeIdempotencyKey(idempotencyKey);
+        if (key == null) {
+            return Optional.empty();
+        }
+        return purchaseRepository.findByIdempotencyKey(key).map(purchaseMapper::toDto);
     }
 
     @Override
     public Optional<PurchaseDto> getById(Long id) {
         return purchaseRepository.findById(id).map(purchaseMapper::toDto);
+    }
+
+    private static String normalizeIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null) {
+            return null;
+        }
+        String trimmed = idempotencyKey.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     @Override
