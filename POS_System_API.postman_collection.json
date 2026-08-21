@@ -1,0 +1,2757 @@
+{
+  "info": {
+    "_postman_id": "pos-system-api-v1-collection",
+    "name": "POS System API - ScienceBot",
+    "description": "Colección completa de endpoints para el sistema POS (Punto de Venta, Inventario, Facturación Electrónica DIAN Factus, Parámetros Dinámicos y SaaS Back Office Multi-inquilino).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearer_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "bearer_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 01. Autenticación",
+      "description": "Endpoints de inicio de sesión, renovación de token JWT y cierre de sesión.",
+      "item": [
+        {
+          "name": "Login - Administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    if (data.token) {",
+                  "        pm.environment.set('bearer_token', data.token);",
+                  "        pm.collectionVariables.set('bearer_token', data.token);",
+                  "        console.log('Token JWT actualizado en variables.');",
+                  "    }",
+                  "    if (data.refreshToken) {",
+                  "        pm.environment.set('refresh_token', data.refreshToken);",
+                  "        pm.collectionVariables.set('refresh_token', data.refreshToken);",
+                  "        console.log('Refresh Token actualizado en variables.');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Inicia sesión como Administrador de la tienda (storeId=1). Guarda automáticamente el token Bearer y Refresh token en el entorno de Postman."
+          }
+        },
+        {
+          "name": "Login - Super Administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    if (data.token) {",
+                  "        pm.environment.set('bearer_token', data.token);",
+                  "        pm.collectionVariables.set('bearer_token', data.token);",
+                  "        console.log('Token JWT (SuperAdmin) actualizado en variables.');",
+                  "    }",
+                  "    if (data.refreshToken) {",
+                  "        pm.environment.set('refresh_token', data.refreshToken);",
+                  "        pm.collectionVariables.set('refresh_token', data.refreshToken);",
+                  "        console.log('Refresh Token (SuperAdmin) actualizado en variables.');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"superadmin\",\n  \"password\": \"SuperAdmin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Inicia sesión como SUPER_ADMIN de la plataforma SaaS (acceso a Back Office, métricas globales, gestión de locales y textos legales)."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    if (data.token) {",
+                  "        pm.environment.set('bearer_token', data.token);",
+                  "        pm.collectionVariables.set('bearer_token', data.token);",
+                  "    }",
+                  "    if (data.refreshToken) {",
+                  "        pm.environment.set('refresh_token', data.refreshToken);",
+                  "        pm.collectionVariables.set('refresh_token', data.refreshToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Emite un nuevo token de acceso usando el refresh token activo (rotación de refresh tokens)."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revoca el refresh token y limpia cookies de sesión."
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 02. Usuarios",
+      "description": "Gestión de usuarios del sistema (solo rol ADMINISTRATOR).",
+      "item": [
+        {
+          "name": "Listar Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users?page=0&size=20&sort=id,asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Número de página (0-index)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Cantidad por página"
+                },
+                {
+                  "key": "sort",
+                  "value": "id,asc",
+                  "description": "Ordenamiento"
+                }
+              ]
+            },
+            "description": "Retorna la lista paginada de usuarios registrados."
+          }
+        },
+        {
+          "name": "Obtener Usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del usuario"
+                }
+              ]
+            },
+            "description": "Obtiene el detalle completo de un usuario por su ID."
+          }
+        },
+        {
+          "name": "Crear Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Carlos Martínez\",\n  \"username\": \"carlos.m\",\n  \"email\": \"carlos@empresa.com\",\n  \"password\": \"MiClaveSegura123!\",\n  \"role\": \"SELLER\",\n  \"storeId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "description": "Crea un nuevo usuario con roles: ADMINISTRATOR, SUPERVISOR, SELLER."
+          }
+        },
+        {
+          "name": "Actualizar Usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Carlos Martínez Pérez\",\n  \"email\": \"carlos.martinez@empresa.com\",\n  \"role\": \"SUPERVISOR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "2",
+                  "description": "ID del usuario a actualizar"
+                }
+              ]
+            },
+            "description": "Actualiza el nombre, correo y rol de un usuario existente."
+          }
+        },
+        {
+          "name": "Cambiar Estado de Usuario (Activar/Desactivar)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "2",
+                  "description": "ID del usuario"
+                }
+              ]
+            },
+            "description": "Activa o desactiva el acceso de un usuario al sistema."
+          }
+        },
+        {
+          "name": "Cambiar Contraseña de Usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"MiClaveSegura123!\",\n  \"newPassword\": \"NuevaClave456!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id",
+                "password"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "2",
+                  "description": "ID del usuario"
+                }
+              ]
+            },
+            "description": "Cambia la contraseña del usuario. currentPassword es opcional si quien ejecuta es ADMINISTRATOR."
+          }
+        },
+        {
+          "name": "Eliminar Usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "2",
+                  "description": "ID del usuario a eliminar"
+                }
+              ]
+            },
+            "description": "Elimina permanentemente un usuario del sistema."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏷️ 03. Categorías",
+      "description": "Catálogo de categorías de productos (escritura exclusiva SUPER_ADMIN, lectura para roles del POS).",
+      "item": [
+        {
+          "name": "Listar Categorías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ]
+            },
+            "description": "Retorna la lista de todas las categorías con el conteo de productos asociados."
+          }
+        },
+        {
+          "name": "Crear Categoría",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bebidas y Refrescos\",\n  \"description\": \"Gaseosas, jugos, aguas y bebidas hidratantes\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ]
+            },
+            "description": "Crea una nueva categoría de productos. Requiere rol SUPER_ADMIN."
+          }
+        },
+        {
+          "name": "Actualizar Categoría",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bebidas, Licores y Refrescos\",\n  \"description\": \"Gaseosas, cervezas, licores, aguas y jugos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID de la categoría"
+                }
+              ]
+            },
+            "description": "Actualiza el nombre y descripción de una categoría. Requiere rol SUPER_ADMIN."
+          }
+        },
+        {
+          "name": "Eliminar Categoría",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID de la categoría"
+                }
+              ]
+            },
+            "description": "Elimina una categoría si no tiene productos asociados. Requiere rol SUPER_ADMIN."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 04. Productos",
+      "description": "Catálogo de productos, precios de venta/compra, stock y códigos de barra.",
+      "item": [
+        {
+          "name": "Buscar / Listar Productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?search=Arroz&categoryId=1&active=true&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Arroz",
+                  "description": "Búsqueda por nombre, código interno o código de barras"
+                },
+                {
+                  "key": "categoryId",
+                  "value": "1",
+                  "description": "Filtrar por categoría"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (0-index)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Tamaño de página"
+                }
+              ]
+            },
+            "description": "Busca y pagina productos con filtros opcionales."
+          }
+        },
+        {
+          "name": "Obtener Producto por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del producto"
+                }
+              ]
+            },
+            "description": "Obtiene el detalle completo de un producto."
+          }
+        },
+        {
+          "name": "Crear Producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"internalCode\": \"PROD-001\",\n  \"barcode\": \"7702011477014\",\n  \"name\": \"Arroz Diana 500g\",\n  \"categoryId\": 1,\n  \"purchasePrice\": 2500,\n  \"salePrice\": 3200,\n  \"minStock\": 20,\n  \"description\": \"Arroz blanco seleccionado 500g\",\n  \"imageUrl\": \"https://images.example.com/arroz.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            },
+            "description": "Crea un nuevo producto en el catálogo. Requiere ADMINISTRATOR o SUPERVISOR."
+          }
+        },
+        {
+          "name": "Actualizar Producto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Arroz Diana 500g Premium\",\n  \"description\": \"Arroz blanco calidad superior de primera\",\n  \"categoryId\": 1,\n  \"purchasePrice\": 2800,\n  \"salePrice\": 3500,\n  \"barcode\": \"7702011477014\",\n  \"minStock\": 25,\n  \"imageUrl\": \"https://images.example.com/arroz_premium.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del producto"
+                }
+              ]
+            },
+            "description": "Actualiza los campos de un producto existente."
+          }
+        },
+        {
+          "name": "Cambiar Estado del Producto (Activar/Desactivar)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del producto"
+                }
+              ]
+            },
+            "description": "Activa o desactiva un producto del catálogo para el punto de venta."
+          }
+        },
+        {
+          "name": "Eliminar Producto",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del producto a eliminar"
+                }
+              ]
+            },
+            "description": "Elimina permanentemente un producto. Solo ADMINISTRATOR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 05. Inventario",
+      "description": "Movimientos manuales de inventario (entradas, salidas, ajustes y devoluciones) y consulta histórica.",
+      "item": [
+        {
+          "name": "Consultar Movimientos de Inventario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/movements?productId=1&movementType=ENTRY&dateFrom=2025-01-01T00:00:00&dateTo=2025-12-31T23:59:59&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "movements"
+              ],
+              "query": [
+                {
+                  "key": "productId",
+                  "value": "1",
+                  "description": "ID del producto"
+                },
+                {
+                  "key": "movementType",
+                  "value": "ENTRY",
+                  "description": "ENTRY, EXIT, ADJUSTMENT, RETURN"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2025-01-01T00:00:00",
+                  "description": "Fecha inicial ISO 8601"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2025-12-31T23:59:59",
+                  "description": "Fecha final ISO 8601"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (0-index)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Tamaño de página"
+                }
+              ]
+            },
+            "description": "Consulta el historial de movimientos de inventario con filtros."
+          }
+        },
+        {
+          "name": "Registrar Movimiento de Inventario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"movementType\": \"ENTRY\",\n  \"quantity\": 50,\n  \"reason\": \"Ingreso inicial de mercancía o ajuste físico\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/movements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "movements"
+              ]
+            },
+            "description": "Registra un movimiento manual (ENTRY, EXIT, ADJUSTMENT, RETURN). Requiere ADMINISTRATOR o SUPERVISOR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 06. Clientes",
+      "description": "Directorio de clientes para ventas nominadas y facturación electrónica.",
+      "item": [
+        {
+          "name": "Buscar / Listar Clientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers?search=Juan&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Juan",
+                  "description": "Texto de búsqueda (nombre, identificación, email)"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (0-index)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Tamaño de página"
+                }
+              ]
+            },
+            "description": "Busca y lista clientes registrados."
+          }
+        },
+        {
+          "name": "Obtener Cliente por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del cliente"
+                }
+              ]
+            },
+            "description": "Obtiene el detalle de un cliente por su ID."
+          }
+        },
+        {
+          "name": "Crear Cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Juan García López\",\n  \"identification\": \"1020304050\",\n  \"email\": \"juan.garcia@email.com\",\n  \"phone\": \"+57 310 123 4567\",\n  \"address\": \"Calle 123 # 45-67, Bogotá\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ]
+            },
+            "description": "Registra un nuevo cliente en el sistema."
+          }
+        },
+        {
+          "name": "Actualizar Cliente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Juan García López\",\n  \"email\": \"juan.garcia.nuevo@email.com\",\n  \"phone\": \"+57 310 987 6543\",\n  \"address\": \"Calle 123 # 45-67 Apto 502, Bogotá\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del cliente"
+                }
+              ]
+            },
+            "description": "Actualiza los datos de un cliente existente."
+          }
+        },
+        {
+          "name": "Eliminar Cliente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del cliente a eliminar"
+                }
+              ]
+            },
+            "description": "Elimina permanentemente un cliente. Solo ADMINISTRATOR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏭 07. Proveedores",
+      "description": "Directorio de proveedores para el registro de compras y órdenes.",
+      "item": [
+        {
+          "name": "Buscar / Listar Proveedores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/suppliers?search=Distribuidora&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "suppliers"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Distribuidora",
+                  "description": "Búsqueda por razón social, NIT o contacto"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (0-index)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Tamaño de página"
+                }
+              ]
+            },
+            "description": "Lista y filtra proveedores con paginación."
+          }
+        },
+        {
+          "name": "Obtener Proveedor por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/suppliers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "suppliers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del proveedor"
+                }
+              ]
+            },
+            "description": "Obtiene el detalle completo de un proveedor."
+          }
+        },
+        {
+          "name": "Crear Proveedor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Distribuidora Central S.A.S.\",\n  \"taxId\": \"900123456-7\",\n  \"contactName\": \"María Rodríguez\",\n  \"email\": \"contacto@distribcentral.com\",\n  \"phone\": \"+57 601 234 5678\",\n  \"address\": \"Zona Industrial # 15-30, Bogotá\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/suppliers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "suppliers"
+              ]
+            },
+            "description": "Registra un nuevo proveedor. Requiere ADMINISTRATOR o SUPERVISOR."
+          }
+        },
+        {
+          "name": "Actualizar Proveedor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Distribuidora Central de Colombia S.A.S.\",\n  \"contactName\": \"María Rodríguez\",\n  \"email\": \"ventas@distribcentral.com\",\n  \"phone\": \"+57 601 234 5678\",\n  \"address\": \"Zona Industrial Manzana 4 Bodega 12, Bogotá\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/suppliers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "suppliers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del proveedor"
+                }
+              ]
+            },
+            "description": "Actualiza los datos de un proveedor existente."
+          }
+        },
+        {
+          "name": "Eliminar Proveedor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/suppliers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "suppliers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del proveedor a eliminar"
+                }
+              ]
+            },
+            "description": "Elimina permanentemente un proveedor si no tiene compras registradas. Solo ADMINISTRATOR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧾 08. Compras",
+      "description": "Órdenes de compra a proveedores con actualización automática de stock y costo de compra.",
+      "item": [
+        {
+          "name": "Buscar / Listar Compras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases?supplierId=1&dateFrom=2025-01-01T00:00:00&dateTo=2025-12-31T23:59:59&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ],
+              "query": [
+                {
+                  "key": "supplierId",
+                  "value": "1",
+                  "description": "Filtrar por proveedor"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2025-01-01T00:00:00",
+                  "description": "Fecha inicial ISO 8601"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2025-12-31T23:59:59",
+                  "description": "Fecha final ISO 8601"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (0-index)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Tamaño de página"
+                }
+              ]
+            },
+            "description": "Lista compras con filtros y paginación."
+          }
+        },
+        {
+          "name": "Obtener Compra por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID de la compra"
+                }
+              ]
+            },
+            "description": "Obtiene el detalle completo de una compra con sus ítems."
+          }
+        },
+        {
+          "name": "Registrar Compra (con Idempotencia)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID único para evitar compras duplicadas"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplierId\": 1,\n  \"invoiceNumber\": \"FAC-PROV-98765\",\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 100,\n      \"unitCost\": 2500\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            },
+            "description": "Registra una compra aumentando el stock y actualizando el costo unitario de los productos. Admite header Idempotency-Key."
+          }
+        }
+      ]
+    },
+    {
+      "name": "💰 09. Ventas",
+      "description": "Registro de transacciones de venta en POS con deducción de stock y facturación electrónica opcional.",
+      "item": [
+        {
+          "name": "Buscar / Listar Ventas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sales?customerId=1&dateFrom=2025-01-01T00:00:00&dateTo=2025-12-31T23:59:59&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sales"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "1",
+                  "description": "Filtrar por cliente (opcional)"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2025-01-01T00:00:00",
+                  "description": "Fecha inicial ISO 8601"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2025-12-31T23:59:59",
+                  "description": "Fecha final ISO 8601"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (0-index)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Tamaño de página"
+                }
+              ]
+            },
+            "description": "Lista ventas con filtros de fecha y cliente."
+          }
+        },
+        {
+          "name": "Obtener Venta por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sales/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sales",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID de la venta"
+                }
+              ]
+            },
+            "description": "Retorna el detalle completo de una venta."
+          }
+        },
+        {
+          "name": "Registrar Venta (con Idempotencia)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID único para evitar ventas duplicadas"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"cashReceived\": 10000,\n  \"sendToFactus\": false,\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 2\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sales"
+              ]
+            },
+            "description": "Crea una nueva venta, valida y descuenta inventario con bloqueo pesimista y calcula el cambio. Soporta Idempotency-Key."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📄 10. Facturación Electrónica DIAN",
+      "description": "Consulta y reintentos de facturas electrónicas emitidas a través de Factus / DIAN.",
+      "item": [
+        {
+          "name": "Consultar Factura Electrónica por ID de Venta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/billing/sales/:saleId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "billing",
+                "sales",
+                ":saleId"
+              ],
+              "variable": [
+                {
+                  "key": "saleId",
+                  "value": "1",
+                  "description": "ID de la venta asociada"
+                }
+              ]
+            },
+            "description": "Consulta el estado, CUFE, QR y URL del PDF emitido en Factus."
+          }
+        },
+        {
+          "name": "Reintentar Facturación Electrónica Fallida",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/billing/sales/:saleId/retry",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "billing",
+                "sales",
+                ":saleId",
+                "retry"
+              ],
+              "variable": [
+                {
+                  "key": "saleId",
+                  "value": "1",
+                  "description": "ID de la venta a reintentar"
+                }
+              ]
+            },
+            "description": "Reintenta el envío de la factura electrónica si el estado previo fue ERROR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📈 11. Reportes y Analítica",
+      "description": "Consultas analíticas optimizadas con JdbcClient (Ventas, Ranking, Stock, Rentabilidad y Compras).",
+      "item": [
+        {
+          "name": "Reporte de Ventas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/sales?dateFrom=2025-01-01T00:00:00&dateTo=2025-12-31T23:59:59",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "sales"
+              ],
+              "query": [
+                {
+                  "key": "dateFrom",
+                  "value": "2025-01-01T00:00:00",
+                  "description": "Fecha inicio ISO 8601"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2025-12-31T23:59:59",
+                  "description": "Fecha fin ISO 8601"
+                }
+              ]
+            },
+            "description": "Muestra total vendido, número de transacciones y desglose por vendedor. Solo ADMINISTRATOR."
+          }
+        },
+        {
+          "name": "Reporte de Productos Más Vendidos (Top)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/top-products?dateFrom=2025-01-01T00:00:00&dateTo=2025-12-31T23:59:59&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "top-products"
+              ],
+              "query": [
+                {
+                  "key": "dateFrom",
+                  "value": "2025-01-01T00:00:00",
+                  "description": "Fecha inicio ISO 8601"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2025-12-31T23:59:59",
+                  "description": "Fecha fin ISO 8601"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Límite del ranking"
+                }
+              ]
+            },
+            "description": "Ranking de productos más vendidos en el período. Solo ADMINISTRATOR."
+          }
+        },
+        {
+          "name": "Reporte de Stock e Inventario Bajo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/stock?belowMinStock=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "stock"
+              ],
+              "query": [
+                {
+                  "key": "belowMinStock",
+                  "value": "true",
+                  "description": "true = solo bajo stock mínimo, false = todos"
+                }
+              ]
+            },
+            "description": "Reporte del stock actual con alertas de reabastecimiento. ADMINISTRATOR o SUPERVISOR."
+          }
+        },
+        {
+          "name": "Reporte de Rentabilidad por Producto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/profitability?dateFrom=2025-01-01T00:00:00&dateTo=2025-12-31T23:59:59",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "profitability"
+              ],
+              "query": [
+                {
+                  "key": "dateFrom",
+                  "value": "2025-01-01T00:00:00",
+                  "description": "Fecha inicio ISO 8601"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2025-12-31T23:59:59",
+                  "description": "Fecha fin ISO 8601"
+                }
+              ]
+            },
+            "description": "Margen y ganancia bruta por producto. Solo ADMINISTRATOR."
+          }
+        },
+        {
+          "name": "Reporte de Compras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/purchases?dateFrom=2025-01-01T00:00:00&dateTo=2025-12-31T23:59:59",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "purchases"
+              ],
+              "query": [
+                {
+                  "key": "dateFrom",
+                  "value": "2025-01-01T00:00:00",
+                  "description": "Fecha inicio ISO 8601"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2025-12-31T23:59:59",
+                  "description": "Fecha fin ISO 8601"
+                }
+              ]
+            },
+            "description": "Resumen del gasto total en compras a proveedores. Solo ADMINISTRATOR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚙️ 12. Configuración del Negocio",
+      "description": "Parámetros globales del comercio (nombre, dirección, NIT, logo, datos fiscales).",
+      "item": [
+        {
+          "name": "Obtener Configuración Actual",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings"
+              ]
+            },
+            "description": "Retorna los datos del negocio para encabezados de factura y reportes."
+          }
+        },
+        {
+          "name": "Actualizar Configuración del Negocio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"Supermercado El Éxito\",\n  \"address\": \"Carrera 7 # 32-10, Bogotá\",\n  \"phone\": \"+57 601 555 1234\",\n  \"taxId\": \"900987654-1\",\n  \"email\": \"contacto@elexito.com\",\n  \"logoUrl\": \"https://images.example.com/logo.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings"
+              ]
+            },
+            "description": "Actualiza los datos del comercio. Solo ADMINISTRATOR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧩 13. Parámetros y Catálogos Dinámicos",
+      "description": "Motor dinámico de configuración: temas (PAYMENT_METHODS, RETURN_REASONS, etc.) y sus valores administrables.",
+      "item": [
+        {
+          "name": "Listar Todos los Temas (Topics)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings/parameters/topics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "parameters",
+                "topics"
+              ]
+            },
+            "description": "Lista todos los temas de parámetros registrados."
+          }
+        },
+        {
+          "name": "Crear Tema (Topic)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"DELIVERY_ZONES\",\n  \"name\": \"Zonas de Entrega\",\n  \"description\": \"Zonas de despacho a domicilio con recargo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings/parameters/topics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "parameters",
+                "topics"
+              ]
+            },
+            "description": "Crea un nuevo tema de parámetros. Solo ADMINISTRATOR."
+          }
+        },
+        {
+          "name": "Listar Valores de un Tema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings/parameters/topics/:code/values",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "parameters",
+                "topics",
+                ":code",
+                "values"
+              ],
+              "variable": [
+                {
+                  "key": "code",
+                  "value": "PAYMENT_METHODS",
+                  "description": "Código del tema (ej. PAYMENT_METHODS)"
+                }
+              ]
+            },
+            "description": "Retorna los valores ordenados de un tema específico."
+          }
+        },
+        {
+          "name": "Agregar Valor a un Tema",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"NEQUI\",\n  \"label\": \"Nequi / Daviplata\",\n  \"extraValue\": \"TRANSFER_ELECTRONIC\",\n  \"sortOrder\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings/parameters/topics/:code/values",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "parameters",
+                "topics",
+                ":code",
+                "values"
+              ],
+              "variable": [
+                {
+                  "key": "code",
+                  "value": "PAYMENT_METHODS",
+                  "description": "Código del tema"
+                }
+              ]
+            },
+            "description": "Agrega un nuevo valor al catálogo del tema. Solo ADMINISTRATOR."
+          }
+        },
+        {
+          "name": "Actualizar Valor de Parámetro",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Nequi / Daviplata / Dale\",\n  \"extraValue\": \"TRANSFER_ELECTRONIC\",\n  \"sortOrder\": 1,\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings/parameters/values/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "parameters",
+                "values",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del valor a actualizar"
+                }
+              ]
+            },
+            "description": "Actualiza la etiqueta, datos extra, orden o estado de un valor."
+          }
+        },
+        {
+          "name": "Desactivar Valor de Parámetro (Borrado Lógico)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings/parameters/values/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "parameters",
+                "values",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del valor a desactivar"
+                }
+              ]
+            },
+            "description": "Marca el valor como inactivo (active=false). Solo ADMINISTRATOR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 14. Back Office - Locales SaaS",
+      "description": "Gestión global de inquilinos/locales de la plataforma SaaS (solo rol SUPER_ADMIN).",
+      "item": [
+        {
+          "name": "Métricas Globales SaaS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "metrics"
+              ]
+            },
+            "description": "KPIs del SaaS: total de locales, activos, pendientes de verificación y usuarios globales."
+          }
+        },
+        {
+          "name": "Buscar / Listar Locales",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/stores?status=ACTIVE&q=Tienda&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "stores"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "ACTIVE, INACTIVE, SUSPENDED, PENDING_VERIFICATION"
+                },
+                {
+                  "key": "q",
+                  "value": "Tienda",
+                  "description": "Texto de búsqueda"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (0-index)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Tamaño de página"
+                }
+              ]
+            },
+            "description": "Lista locales registrados en la plataforma con filtros."
+          }
+        },
+        {
+          "name": "Obtener Local por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/stores/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "stores",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del local"
+                }
+              ]
+            },
+            "description": "Obtiene el detalle completo de un local registrado."
+          }
+        },
+        {
+          "name": "Crear Nuevo Local",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tienda Centro\",\n  \"storeCategoryId\": 1,\n  \"phone\": \"+57 311 000 1122\",\n  \"email\": \"contacto@tiendacentro.com\",\n  \"website\": \"https://tiendacentro.com\",\n  \"address\": \"Calle 50 # 10-20, Cali\",\n  \"taxId\": \"901234567-8\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/stores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "stores"
+              ]
+            },
+            "description": "Registra un nuevo local/tienda en la plataforma SaaS."
+          }
+        },
+        {
+          "name": "Actualizar Datos del Local",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tienda Centro Principal\",\n  \"storeCategoryId\": 1,\n  \"phone\": \"+57 311 000 1122\",\n  \"email\": \"contacto@tiendacentro.com\",\n  \"website\": \"https://tiendacentro.com\",\n  \"address\": \"Calle 50 # 10-20 Local 101, Cali\",\n  \"taxId\": \"901234567-8\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/stores/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "stores",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del local"
+                }
+              ]
+            },
+            "description": "Actualiza los datos comerciales de un local."
+          }
+        },
+        {
+          "name": "Cambiar Estado del Local",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/stores/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "stores",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del local"
+                }
+              ]
+            },
+            "description": "Cambia el estado del local: ACTIVE, INACTIVE, SUSPENDED, PENDING_VERIFICATION."
+          }
+        },
+        {
+          "name": "Verificar Correo del Local",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/stores/:id/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "stores",
+                ":id",
+                "verify-email"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del local"
+                }
+              ]
+            },
+            "description": "Marca el correo del local como verificado."
+          }
+        },
+        {
+          "name": "Listar Documentos del Local",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/stores/:storeId/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "stores",
+                ":storeId",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "storeId",
+                  "value": "1",
+                  "description": "ID del local"
+                }
+              ]
+            },
+            "description": "Lista los documentos RUT, Cámara de Comercio, etc. subidos por el local."
+          }
+        },
+        {
+          "name": "Revisar Documento del Local (Aprobar/Rechazar)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"rejectionReason\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/stores/:storeId/documents/:docId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "stores",
+                ":storeId",
+                "documents",
+                ":docId"
+              ],
+              "variable": [
+                {
+                  "key": "storeId",
+                  "value": "1",
+                  "description": "ID del local"
+                },
+                {
+                  "key": "docId",
+                  "value": "1",
+                  "description": "ID del documento"
+                }
+              ]
+            },
+            "description": "Aprueba (APPROVED) o rechaza (REJECTED) un documento adjuntando motivo de rechazo."
+          }
+        },
+        {
+          "name": "Listar Categorías de Locales",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/store-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "store-categories"
+              ]
+            },
+            "description": "Lista las categorías de rubro o tipo de local comercial."
+          }
+        },
+        {
+          "name": "Crear Categoría de Local",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Supermercados y Abarrotes\",\n  \"description\": \"Comercio minorista de víveres y productos de consumo masivo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/store-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "store-categories"
+              ]
+            },
+            "description": "Crea una nueva categoría de locales."
+          }
+        },
+        {
+          "name": "Actualizar Categoría de Local",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Supermercados, Abarrotes y Minimarkets\",\n  \"description\": \"Comercio minorista y minimarkets de consumo masivo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/store-categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "store-categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID de la categoría de local"
+                }
+              ]
+            },
+            "description": "Actualiza el nombre y descripción de una categoría de local."
+          }
+        },
+        {
+          "name": "Desactivar Categoría de Local",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/store-categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "store-categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID de la categoría de local"
+                }
+              ]
+            },
+            "description": "Desactiva una categoría de local del sistema."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📜 15. Textos Legales y CMS",
+      "description": "Gestión de políticas de privacidad, términos de servicio y cookies (público y Back Office).",
+      "item": [
+        {
+          "name": "Consultar Texto Legal Publicado (Público)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/legal/:slug",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "legal",
+                ":slug"
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "terminos-y-condiciones",
+                  "description": "Slug del documento (ej. terminos-y-condiciones)"
+                }
+              ]
+            },
+            "description": "Endpoint público para obtener el documento legal activo."
+          }
+        },
+        {
+          "name": "Listar Documentos Legales (Back Office)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/legal-documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "legal-documents"
+              ]
+            },
+            "description": "Lista todos los documentos legales y sus versiones. Requiere SUPER_ADMIN."
+          }
+        },
+        {
+          "name": "Obtener Documento Legal por ID (Back Office)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/legal-documents/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "legal-documents",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del documento legal"
+                }
+              ]
+            },
+            "description": "Obtiene el contenido completo de un documento legal."
+          }
+        },
+        {
+          "name": "Crear Documento Legal (Back Office)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"politica-privacidad\",\n  \"title\": \"Política de Privacidad y Tratamiento de Datos Personales\",\n  \"content\": \"# Política de Privacidad\\n\\nEn cumplimiento de la Ley 1581 de 2012...\",\n  \"version\": \"1.0\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/legal-documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "legal-documents"
+              ]
+            },
+            "description": "Crea un nuevo documento legal en borrador. Requiere SUPER_ADMIN."
+          }
+        },
+        {
+          "name": "Actualizar Documento Legal (Back Office)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"politica-privacidad\",\n  \"title\": \"Política de Privacidad y Tratamiento de Datos Personales\",\n  \"content\": \"# Política de Privacidad (Actualizada)\\n\\nEn cumplimiento de la Ley 1581 de 2012 y decretos reglamentarios...\",\n  \"version\": \"1.1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/legal-documents/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "legal-documents",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del documento"
+                }
+              ]
+            },
+            "description": "Actualiza el contenido o versión de un documento legal existente."
+          }
+        },
+        {
+          "name": "Publicar / Despublicar Documento Legal (Back Office)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/legal-documents/:id/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "legal-documents",
+                ":id",
+                "publish"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del documento legal"
+                }
+              ]
+            },
+            "description": "Alterna el estado publicado de un documento legal."
+          }
+        },
+        {
+          "name": "Eliminar Documento Legal (Back Office)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/legal-documents/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "legal-documents",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del documento a eliminar"
+                }
+              ]
+            },
+            "description": "Elimina un documento legal (solo permitido si no está publicado)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎫 16. Soporte y PQRs",
+      "description": "Radicación de PQRs, reportes de bugs, seguimiento público y mesa de ayuda Back Office.",
+      "item": [
+        {
+          "name": "Radicar Ticket / PQR (Público)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"PETITION\",\n  \"priority\": \"MEDIUM\",\n  \"title\": \"Consulta sobre facturación electrónica DIAN\",\n  \"description\": \"Deseo conocer los pasos para habilitar el rango de numeración DIAN en producción.\",\n  \"contactName\": \"Carlos Mendoza\",\n  \"contactEmail\": \"carlos.m@empresa.com\",\n  \"contactPhone\": \"+57 312 345 6789\",\n  \"storeId\": 1,\n  \"systemInfo\": \"Browser: Chrome 120, OS: Windows 11\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/support/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "support",
+                "tickets"
+              ]
+            },
+            "description": "Radicación pública de PQRs o reportes de fallas por parte de clientes o tiendas."
+          }
+        },
+        {
+          "name": "Consultar Estado de Ticket por Radicado (Público)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/support/tickets/track/:ticketNumber",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "support",
+                "tickets",
+                "track",
+                ":ticketNumber"
+              ],
+              "variable": [
+                {
+                  "key": "ticketNumber",
+                  "value": "TICK-20250101-0001",
+                  "description": "Número de radicado del ticket"
+                }
+              ]
+            },
+            "description": "Consulta pública del estado y resolución de un ticket por su número de radicado."
+          }
+        },
+        {
+          "name": "Métricas de Soporte (Back Office)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/support/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "support",
+                "metrics"
+              ]
+            },
+            "description": "Estadísticas de tickets abiertos, bugs críticos y tiempos de respuesta. Requiere SUPER_ADMIN."
+          }
+        },
+        {
+          "name": "Buscar / Listar Tickets (Back Office)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/support/tickets?type=BUG&status=OPEN&priority=HIGH&storeId=1&q=Factura&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "support",
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "BUG",
+                  "description": "PETITION, COMPLAINT, CLAIM, SUGGESTION, BUG"
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN",
+                  "description": "OPEN, IN_PROGRESS, RESOLVED, CLOSED"
+                },
+                {
+                  "key": "priority",
+                  "value": "HIGH",
+                  "description": "LOW, MEDIUM, HIGH, CRITICAL"
+                },
+                {
+                  "key": "storeId",
+                  "value": "1",
+                  "description": "ID del local"
+                },
+                {
+                  "key": "q",
+                  "value": "Factura",
+                  "description": "Texto de búsqueda"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (0-index)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Tamaño de página"
+                }
+              ]
+            },
+            "description": "Bandeja de gestión de tickets con filtros avanzados para el equipo de soporte."
+          }
+        },
+        {
+          "name": "Ver Detalle de Ticket (Back Office)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/support/tickets/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "support",
+                "tickets",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del ticket"
+                }
+              ]
+            },
+            "description": "Detalle completo del ticket para atención por parte del administrador."
+          }
+        },
+        {
+          "name": "Actualizar Estado / Resolución de Ticket (Back Office)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"RESOLVED\",\n  \"priority\": \"HIGH\",\n  \"resolutionNotes\": \"Se ajustaron los parámetros de resolución DIAN en el módulo de facturación.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/backoffice/support/tickets/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "backoffice",
+                "support",
+                "tickets",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "ID del ticket"
+                }
+              ]
+            },
+            "description": "Actualiza el estado (IN_PROGRESS, RESOLVED, CLOSED) y registra notas de resolución."
+          }
+        }
+      ]
+    }
+  ]
+}
