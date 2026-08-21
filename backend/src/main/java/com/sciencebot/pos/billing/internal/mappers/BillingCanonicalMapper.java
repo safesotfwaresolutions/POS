@@ -35,10 +35,12 @@ public class BillingCanonicalMapper {
         return new InvoiceRequest(
                 sale.id(),
                 sale.invoiceNumber(),
+                "1",  // 1 = Contado (Estándar DIAN)
                 "10", // 10 = Efectivo (Estándar DIAN)
                 customerData,
                 items,
-                sale.totalAmount()
+                sale.totalAmount(),
+                "Factura emitida desde Sistema POS"
         );
     }
 
@@ -47,27 +49,61 @@ public class BillingCanonicalMapper {
             Optional<CustomerDto> customerOpt = customerFacade.getByIdentification(customerIdentifier);
             if (customerOpt.isPresent()) {
                 CustomerDto customer = customerOpt.get();
+                String rawId = customer.identification() != null ? customer.identification().trim() : "";
+                
+                // Limpieza de identificación (sin guión ni DV si vinieran incluidos)
+                String idClean = rawId.replaceAll("[^0-9a-zA-Z]", "");
+                String dv = "";
+                if (rawId.contains("-")) {
+                    String[] parts = rawId.split("-");
+                    if (parts.length > 1) {
+                        idClean = parts[0].trim();
+                        dv = parts[1].trim();
+                    }
+                }
+
+                // Determinación de persona jurídica vs natural
+                boolean isNit = idClean.length() == 9 || (rawId.contains("-") && !dv.isBlank());
+                String docCode = isNit ? "31" : "13"; // 31 = NIT, 13 = Cédula de ciudadanía
+                String orgCode = isNit ? "1" : "2";   // 1 = Jurídica, 2 = Natural
+                String company = isNit ? customer.fullName() : null;
+                String names = !isNit ? customer.fullName() : null;
+
                 return new CustomerBillingData(
-                        customer.identification(),
-                        "",
-                        customer.fullName(),
+                        docCode,
+                        idClean,
+                        dv,
+                        orgCode,
+                        "ZZ",
+                        List.of("R-99-PN"),
+                        names,
+                        company,
+                        null,
                         (customer.email() != null && !customer.email().isBlank()) ? customer.email() : "cliente@tienda.com",
-                        13, // 13 = Persona Natural (DIAN)
-                        21, // 21 = Consumidor Final / No Responsable (DIAN)
-                        null
+                        customer.phone(),
+                        customer.address(),
+                        "CO",
+                        "11001" // Código estándar Bogotá / Municipio
                 );
             }
         }
 
         // Consumidor Final genérico estándar DIAN
         return new CustomerBillingData(
+                "13",
                 "222222222222",
                 "",
+                "2",
+                "ZZ",
+                List.of("R-99-PN"),
                 "Consumidor Final",
+                null,
+                null,
                 "consumidorfinal@tienda.com",
-                13,
-                21,
-                null
+                null,
+                null,
+                "CO",
+                "11001"
         );
     }
 
@@ -80,10 +116,15 @@ public class BillingCanonicalMapper {
                 list.add(new InvoiceItemData(
                         productCode,
                         item.productName(),
-                        item.quantity(),
+                        BigDecimal.valueOf(item.quantity()),
                         item.unitPrice(),
                         BigDecimal.ZERO,
-                        item.subtotal()
+                        item.subtotal(),
+                        "94",  // 94 = Unidad estándar DIAN
+                        "999", // 999 = Estándar del contribuyente
+                        "01",  // 01 = IVA estándar DIAN
+                        BigDecimal.ZERO,
+                        false
                 ));
             }
         }

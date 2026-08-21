@@ -40,6 +40,8 @@ public class BillingServiceImpl implements BillingFacade {
     private final BillingCanonicalMapper canonicalMapper;
     private final ElectronicInvoiceMapper invoiceMapper;
     private final SaleFacade saleFacade;
+    /** Proxy propio: permite que retryInvoice atraviese el interceptor transaccional. */
+    private BillingFacade self;
     private final Map<String, ElectronicInvoicingProvider> providersMap;
 
     @Value("${billing.provider:factus}")
@@ -50,12 +52,14 @@ public class BillingServiceImpl implements BillingFacade {
             BillingCanonicalMapper canonicalMapper,
             ElectronicInvoiceMapper invoiceMapper,
             @Lazy SaleFacade saleFacade,
+            @Lazy BillingFacade self,
             List<ElectronicInvoicingProvider> providers
     ) {
         this.repository = repository;
         this.canonicalMapper = canonicalMapper;
         this.invoiceMapper = invoiceMapper;
         this.saleFacade = saleFacade;
+        this.self = self;
         this.providersMap = providers.stream()
                 .collect(Collectors.toMap(
                         p -> p.getProviderName().toLowerCase(),
@@ -64,29 +68,46 @@ public class BillingServiceImpl implements BillingFacade {
                 ));
     }
 
+    /**
+     * Emite (o reintenta) la factura electrónica de una venta.
+     *
+     * <p>Todo el flujo corre en una única transacción que mantiene un bloqueo pesimista sobre
+     * la fila de la factura mientras dura la emisión. Esto serializa las emisiones concurrentes
+     * de una misma venta (p. ej. venta con {@code sendToFactus} + reintento manual al tiempo) y
+     * garantiza que el guard {@code VALIDATED} se evalúe sobre un estado consistente, evitando
+     * emitir dos veces la misma factura legal ante la DIAN. El bloqueo es por fila (por venta),
+     * de modo que facturas de ventas distintas no compiten entre sí.
+     *
+     * <p>Usa {@code REQUIRED}: cuando lo dispara una venta se une a su transacción (así el
+     * {@code INSERT} en electronic_invoices ve la venta recién persistida y respeta la FK).
+     * Un fallo del proveedor NO revierte la venta porque la excepción de I/O se captura aquí
+     * y se traduce a una factura en estado {@code ERROR} reintentable; nunca escapa para marcar
+     * la transacción como rollback-only.
+     */
     @Override
+    @Transactional
     public ElectronicInvoiceDto processElectronicInvoice(SaleDto sale) {
         Objects.requireNonNull(sale, "El objeto SaleDto no puede ser nulo");
         if (sale.id() == null) {
             throw new IllegalArgumentException("El ID de la venta es obligatorio para facturar");
         }
 
-        // 1. Obtener o crear registro inicial de factura
-        ElectronicInvoice einvoice = getOrCreateInitialInvoice(sale.id());
+        // 1. Obtener (con bloqueo) o crear el registro de factura de esta venta.
+        ElectronicInvoice einvoice = lockOrCreateInvoice(sale.id());
 
-        // Guard de idempotencia: Si ya está validada, no volver a emitir
+        // 2. Guard de idempotencia bajo bloqueo: si ya está validada, no volver a emitir.
         if ("VALIDATED".equalsIgnoreCase(einvoice.getStatus())) {
             log.info("La venta ID {} ya posee una factura electrónica VALIDATED ({})", sale.id(), einvoice.getFactusNumber());
             return invoiceMapper.toDto(einvoice);
         }
 
-        // 2. Resolver la estrategia activa de facturación (Strategy Pattern)
+        // 3. Resolver la estrategia activa de facturación (Strategy Pattern)
         ElectronicInvoicingProvider provider = resolveProvider();
 
-        // 3. Mapear a solicitud canónica agnóstica
+        // 4. Mapear a solicitud canónica agnóstica
         InvoiceRequest request = canonicalMapper.toInvoiceRequest(sale);
 
-        // 4. Ejecutar llamada I/O a través del adaptador fuera de la transacción principal
+        // 5. Ejecutar la llamada I/O al proveedor (el bloqueo de la fila serializa reintentos).
         InvoiceResult result;
         try {
             result = provider.emitInvoice(request);
@@ -95,11 +116,9 @@ public class BillingServiceImpl implements BillingFacade {
             result = InvoiceResult.error("Error en proveedor " + provider.getProviderName() + ": " + ex.getMessage());
         }
 
-        // 5. Aplicar resultados normalizados en la entidad
+        // 6. Aplicar resultados normalizados y persistir en la misma transacción.
         applyResultToEntity(einvoice, result);
-
-        // 6. Persistir estado en BD
-        ElectronicInvoice saved = updateInvoiceStatus(einvoice);
+        ElectronicInvoice saved = repository.save(einvoice);
         return invoiceMapper.toDto(saved);
     }
 
@@ -130,9 +149,29 @@ public class BillingServiceImpl implements BillingFacade {
             throw new IllegalArgumentException("La factura ya está validada y no puede reintentarse");
         }
 
-        return processElectronicInvoice(sale);
+        // Vía el proxy para que aplique @Transactional(REQUIRES_NEW) y el bloqueo pesimista;
+        // una llamada directa (this.) se saltaría el interceptor transaccional.
+        return self.processElectronicInvoice(sale);
     }
 
+    /**
+     * Obtiene la factura de la venta con bloqueo pesimista, o la crea si no existe.
+     * Se ejecuta dentro de la transacción de {@link #processElectronicInvoice} para
+     * mantener el bloqueo durante toda la emisión. El {@code saveAndFlush} en la creación
+     * fuerza la restricción única {@code sale_id}: si dos emisiones iniciales concurren,
+     * la perdedora falla en el flush ANTES de llamar al proveedor (no hay doble emisión).
+     */
+    private ElectronicInvoice lockOrCreateInvoice(Long saleId) {
+        return repository.findBySaleIdForUpdate(saleId)
+                .orElseGet(() -> {
+                    ElectronicInvoice newInv = new ElectronicInvoice();
+                    newInv.setSaleId(saleId);
+                    newInv.setStatus("PENDING");
+                    return repository.saveAndFlush(newInv);
+                });
+    }
+
+    /** Variante de solo lectura para consultas (getBySaleId): no bloquea. */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ElectronicInvoice getOrCreateInitialInvoice(Long saleId) {
         return repository.findBySaleId(saleId)
@@ -142,11 +181,6 @@ public class BillingServiceImpl implements BillingFacade {
                     newInv.setStatus("PENDING");
                     return repository.save(newInv);
                 });
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public ElectronicInvoice updateInvoiceStatus(ElectronicInvoice einvoice) {
-        return repository.save(einvoice);
     }
 
     private ElectronicInvoicingProvider resolveProvider() {

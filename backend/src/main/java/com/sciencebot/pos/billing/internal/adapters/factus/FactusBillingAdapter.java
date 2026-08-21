@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Adaptador de Facturación Electrónica para el proveedor Factus (API REST DIAN).
- * Encapsula la comunicación HTTP, autenticación OAuth2 y normalización de errores de Factus.
+ * Adaptador de Facturación Electrónica para el proveedor Factus (API REST DIAN v2).
+ * Encapsula la comunicación HTTP, autenticación OAuth2 y normalización de respuestas/errores de Factus.
  */
 @Component("factusBillingProvider")
 public class FactusBillingAdapter implements ElectronicInvoicingProvider {
@@ -83,7 +83,7 @@ public class FactusBillingAdapter implements ElectronicInvoicingProvider {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restClient.post()
-                    .uri(targetUrl + "/v1/bills/validate")
+                    .uri(targetUrl + "/v2/bills/validate")
                     .header("Authorization", "Bearer " + token)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(payload)
@@ -93,17 +93,30 @@ public class FactusBillingAdapter implements ElectronicInvoicingProvider {
             if (isBillResponseValid(response)) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> data = (Map<String, Object>) response.get("data");
-                @SuppressWarnings("unchecked")
-                Map<String, Object> bill = (Map<String, Object>) data.get("bill");
 
-                String number = (String) bill.get("number");
-                String cufe = (String) bill.get("cufe");
-                String qr = (String) bill.get("qr");
-                String publicUrl = (String) bill.get("public_url");
+                // Factus v2 ubica los campos en 'data' y los links en 'data.links'; v1 usaba 'data.bill'
+                @SuppressWarnings("unchecked")
+                Map<String, Object> billMap = (data.get("bill") instanceof Map<?, ?> bm)
+                        ? (Map<String, Object>) bm
+                        : data;
+
+                String number = (String) billMap.get("number");
+                String cufe = (String) billMap.get("cufe");
+
+                String qr = null;
+                String publicUrl = null;
+
+                if (data.get("links") instanceof Map<?, ?> linksMap) {
+                    qr = (String) linksMap.get("qr");
+                    publicUrl = (String) linksMap.get("public_url");
+                } else {
+                    qr = (String) billMap.get("qr");
+                    publicUrl = (String) billMap.get("public_url");
+                }
 
                 return InvoiceResult.success(number, cufe, qr, publicUrl);
             } else {
-                return InvoiceResult.error("Respuesta de Factus incompleta o sin nodo 'bill'");
+                return InvoiceResult.error("Respuesta de Factus incompleta o sin datos de factura");
             }
 
         } catch (HttpClientErrorException ex) {
@@ -133,7 +146,8 @@ public class FactusBillingAdapter implements ElectronicInvoicingProvider {
         if (!(response.get("data") instanceof Map<?, ?> data)) {
             return false;
         }
-        return data.containsKey("bill") && data.get("bill") instanceof Map<?, ?>;
+        return data.containsKey("number") || data.containsKey("cufe") ||
+                (data.containsKey("bill") && data.get("bill") instanceof Map<?, ?>);
     }
 
     private String truncateError(String message) {

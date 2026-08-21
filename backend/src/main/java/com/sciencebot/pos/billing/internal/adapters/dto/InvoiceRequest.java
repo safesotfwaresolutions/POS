@@ -6,8 +6,22 @@ import java.util.List;
 public record InvoiceRequest(
         Long saleId,
         String invoiceNumber,
+        String paymentForm,
         String paymentMethodCode,
         CustomerBillingData customer,
         List<InvoiceItemData> items,
-        BigDecimal totalAmount
-) {}
+        BigDecimal totalAmount,
+        String observation
+) {
+    // Constructor de conveniencia para compatibilidad con llamadas existentes
+    public InvoiceRequest(
+            Long saleId,
+            String invoiceNumber,
+            String paymentMethodCode,
+            CustomerBillingData customer,
+            List<InvoiceItemData> items,
+            BigDecimal totalAmount
+    ) {
+        this(saleId, invoiceNumber, "1", paymentMethodCode, customer, items, totalAmount, null);
+    }
+}

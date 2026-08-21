@@ -59,8 +59,11 @@ class BillingServiceImplTest {
                 canonicalMapper,
                 invoiceMapper,
                 saleFacade,
+                null, // self proxy: se inyecta debajo para simular el proxy transaccional
                 List.of(mockAdapter, customProvider)
         );
+        // En Spring, 'self' es el proxy del propio bean; en el test apuntamos a la instancia real.
+        ReflectionTestUtils.setField(billingService, "self", billingService);
     }
 
     @Test
@@ -73,7 +76,7 @@ class BillingServiceImplTest {
         pendingEntity.setSaleId(1L);
         pendingEntity.setStatus("PENDING");
 
-        when(repository.findBySaleId(1L)).thenReturn(Optional.of(pendingEntity));
+        when(repository.findBySaleIdForUpdate(1L)).thenReturn(Optional.of(pendingEntity));
         when(repository.save(any(ElectronicInvoice.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         CustomerBillingData customerData = new CustomerBillingData("222222222222", "", "Consumidor Final", "a@a.com", 13, 21, null);
@@ -101,7 +104,7 @@ class BillingServiceImplTest {
         validatedEntity.setStatus("VALIDATED");
         validatedEntity.setFactusNumber("SETP-001");
 
-        when(repository.findBySaleId(1L)).thenReturn(Optional.of(validatedEntity));
+        when(repository.findBySaleIdForUpdate(1L)).thenReturn(Optional.of(validatedEntity));
         ElectronicInvoiceDto validatedDto = new ElectronicInvoiceDto(10L, 1L, "SETP-001", "cufe", "qr", "VALIDATED", null, "pdf", LocalDateTime.now());
         when(invoiceMapper.toDto(validatedEntity)).thenReturn(validatedDto);
 
