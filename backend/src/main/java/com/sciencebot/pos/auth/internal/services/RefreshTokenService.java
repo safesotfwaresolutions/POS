@@ -35,6 +35,15 @@ public class RefreshTokenService {
     @Value("${security.jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
 
+    /**
+     * Ventana de gracia tras rotar un token. Si el token ya rotado se vuelve a presentar
+     * dentro de esta ventana, se asume un reintento de red benigno (la respuesta con el
+     * token nuevo se perdió) y NO se revoca la familia: así un reintento no cierra la sesion.
+     * Pasada la ventana, un token revocado presentado de nuevo se trata como reuso (robo).
+     */
+    @Value("${security.jwt.refresh-reuse-grace-ms:15000}")
+    private long reuseGraceMs;
+
     public RefreshTokenService(RefreshTokenRepository repository) {
         this.repository = repository;
     }
@@ -66,7 +75,11 @@ public class RefreshTokenService {
                 .orElseThrow(() -> new BadCredentialsException("Refresh token invalido"));
 
         if (current.isRevoked()) {
-            // Token ya rotado presentado de nuevo => robo probable: mata la sesion completa.
+            // Token ya rotado presentado de nuevo. Dentro de la ventana de gracia se asume un
+            // reintento de red benigno (no se revoca la familia); fuera de ella, robo probable.
+            if (isWithinReuseGrace(current)) {
+                throw new BadCredentialsException("Refresh token ya rotado; reintente con el token vigente");
+            }
             repository.revokeFamily(current.getFamilyId());
             throw new BadCredentialsException("Refresh token reutilizado; sesion revocada por seguridad");
         }
@@ -99,6 +112,19 @@ public class RefreshTokenService {
         if (familyId != null) {
             repository.revokeFamily(familyId);
         }
+    }
+
+    /**
+     * True si el token fue rotado (revocado) hace menos de {@code reuseGraceMs}. Usa
+     * {@code updatedAt}, que se fija en el instante de la rotacion. Con la ventana en 0
+     * el comportamiento vuelve a ser deteccion de reuso estricta.
+     */
+    private boolean isWithinReuseGrace(RefreshToken token) {
+        if (reuseGraceMs <= 0 || token.getUpdatedAt() == null) {
+            return false;
+        }
+        LocalDateTime threshold = LocalDateTime.now().minus(Duration.ofMillis(reuseGraceMs));
+        return token.getUpdatedAt().isAfter(threshold);
     }
 
     private RefreshToken newToken(String rawToken, Long userId, String familyId) {
