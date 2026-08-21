@@ -7,6 +7,8 @@ import com.sciencebot.pos.settings.internal.mappers.SettingsMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -14,10 +16,13 @@ public class SettingsServiceImpl implements SettingsFacade {
 
     private final SettingsRepository settingsRepository;
     private final SettingsMapper settingsMapper;
+    private final ParameterService parameterService;
 
-    public SettingsServiceImpl(SettingsRepository settingsRepository, SettingsMapper settingsMapper) {
+    public SettingsServiceImpl(SettingsRepository settingsRepository, SettingsMapper settingsMapper,
+                               ParameterService parameterService) {
         this.settingsRepository = settingsRepository;
         this.settingsMapper = settingsMapper;
+        this.parameterService = parameterService;
     }
 
     @Override
@@ -67,5 +72,17 @@ public class SettingsServiceImpl implements SettingsFacade {
             setting.setLogoUrl(defaultSettings.logoUrl());
             settingsRepository.save(setting);
         }
+    }
+
+    // --- Catálogos dinámicos: delegación al servicio de parámetros del módulo ---
+
+    @Override
+    public List<ParameterValueDto> getActiveValuesByTopic(String topicCode) {
+        return parameterService.getActiveValuesByTopic(topicCode);
+    }
+
+    @Override
+    public Optional<ParameterValueDto> getValueByTopicAndCode(String topicCode, String valueCode) {
+        return parameterService.getValueByTopicAndCode(topicCode, valueCode);
     }
 }
