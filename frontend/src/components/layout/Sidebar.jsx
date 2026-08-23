@@ -7,12 +7,13 @@ import {
   Tag, 
   Users, 
   FileText, 
-  Settings, 
+  Settings,
   HelpCircle,
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -28,6 +29,9 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
     { path: '/customers', label: 'Clientes', icon: Users },
     { path: '/invoicing', label: 'Facturación DIAN', icon: FileText },
     { path: '/settings', label: 'Configuración', icon: Settings },
+    ...(user?.role === 'SUPER_ADMIN'
+      ? [{ path: '/backoffice', label: 'Backoffice', icon: ShieldCheck }]
+      : []),
   ];
 
   const handleLogout = async () => {

@@ -14,9 +14,10 @@ import ProductsBento from './pages/ProductsBento';
 import CustomersBento from './pages/CustomersBento';
 import InvoicingBento from './pages/InvoicingBento';
 import SettingsBento from './pages/SettingsBento';
+import BackofficeBento from './pages/BackofficeBento';
 
 function ProtectedLayout() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     return localStorage.getItem('pos_sidebar_collapsed') === 'true';
@@ -61,6 +62,9 @@ function ProtectedLayout() {
             <Route path="/customers" element={<CustomersBento />} />
             <Route path="/invoicing" element={<InvoicingBento />} />
             <Route path="/settings" element={<SettingsBento />} />
+            {user?.role === 'SUPER_ADMIN' && (
+              <Route path="/backoffice" element={<BackofficeBento />} />
+            )}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
