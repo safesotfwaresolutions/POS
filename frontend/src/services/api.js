@@ -344,3 +344,64 @@ export async function updateBackofficeStoreCategoryApi(id, name, description = '
 export async function deleteBackofficeStoreCategoryApi(id) {
   return await fetchApi(`/backoffice/store-categories/${id}`, { method: 'DELETE' });
 }
+
+// ----------------------------------------------------
+// BACKOFFICE API (SUPER_ADMIN — CMS de textos legales)
+// ----------------------------------------------------
+export async function getBackofficeLegalDocumentsApi() {
+  return await fetchApi('/backoffice/legal-documents');
+}
+
+export async function getBackofficeLegalDocumentApi(id) {
+  return await fetchApi(`/backoffice/legal-documents/${id}`);
+}
+
+export async function createBackofficeLegalDocumentApi(documentData) {
+  return await fetchApi('/backoffice/legal-documents', {
+    method: 'POST',
+    body: JSON.stringify(documentData),
+  });
+}
+
+export async function updateBackofficeLegalDocumentApi(id, documentData) {
+  return await fetchApi(`/backoffice/legal-documents/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(documentData),
+  });
+}
+
+export async function deleteBackofficeLegalDocumentApi(id) {
+  return await fetchApi(`/backoffice/legal-documents/${id}`, { method: 'DELETE' });
+}
+
+export async function toggleBackofficeLegalDocumentPublishApi(id) {
+  return await fetchApi(`/backoffice/legal-documents/${id}/publish`, { method: 'PATCH' });
+}
+
+// ----------------------------------------------------
+// BACKOFFICE API (SUPER_ADMIN — Soporte y PQRs)
+// ----------------------------------------------------
+export async function getBackofficeSupportMetricsApi() {
+  return await fetchApi('/backoffice/support/metrics');
+}
+
+export async function getBackofficeSupportTicketsApi({ type = '', status = '', priority = '', storeId = '', q = '', page = 0, size = 20 } = {}) {
+  const params = new URLSearchParams({ page, size });
+  if (type && type !== 'ALL') params.append('type', type);
+  if (status && status !== 'ALL') params.append('status', status);
+  if (priority && priority !== 'ALL') params.append('priority', priority);
+  if (storeId) params.append('storeId', storeId);
+  if (q) params.append('q', q);
+  return await fetchApi(`/backoffice/support/tickets?${params.toString()}`);
+}
+
+export async function getBackofficeSupportTicketApi(id) {
+  return await fetchApi(`/backoffice/support/tickets/${id}`);
+}
+
+export async function updateBackofficeSupportTicketApi(id, ticketData) {
+  return await fetchApi(`/backoffice/support/tickets/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(ticketData),
+  });
+}

@@ -18,6 +18,8 @@ import InvoicingBento from './pages/InvoicingBento';
 import SettingsBento from './pages/SettingsBento';
 import StoresBento from './pages/backoffice/StoresBento';
 import CategoriesBento from './pages/backoffice/CategoriesBento';
+import LegalDocumentsBento from './pages/backoffice/LegalDocumentsBento';
+import SupportTicketsBento from './pages/backoffice/SupportTicketsBento';
 
 function ProtectedLayout() {
   const { isAuthenticated, user } = useAuth();
@@ -120,6 +122,8 @@ function BackofficeProtectedLayout() {
           <Routes>
             <Route path="/" element={<StoresBento />} />
             <Route path="/categories" element={<CategoriesBento />} />
+            <Route path="/legal-documents" element={<LegalDocumentsBento />} />
+            <Route path="/support" element={<SupportTicketsBento />} />
             <Route path="*" element={<Navigate to="/backoffice" replace />} />
           </Routes>
         </main>
