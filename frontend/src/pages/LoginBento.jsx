@@ -14,8 +14,8 @@ export default function LoginBento() {
     e.preventDefault();
     setError('');
     try {
-      await login(username, password);
-      navigate('/');
+      const loggedInUser = await login(username, password);
+      navigate(loggedInUser?.role === 'SUPER_ADMIN' ? '/backoffice' : '/');
     } catch (err) {
       setError(err.message || 'Error de autenticación. Verifica tu usuario y contraseña.');
     }

@@ -5,6 +5,8 @@ import { ThemeProvider } from './context/ThemeContext';
 
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
+import BackofficeSidebar from './components/backoffice/Sidebar';
+import BackofficeHeader from './components/backoffice/Header';
 
 import LoginBento from './pages/LoginBento';
 import DashboardBento from './pages/DashboardBento';
@@ -14,7 +16,8 @@ import ProductsBento from './pages/ProductsBento';
 import CustomersBento from './pages/CustomersBento';
 import InvoicingBento from './pages/InvoicingBento';
 import SettingsBento from './pages/SettingsBento';
-import BackofficeBento from './pages/BackofficeBento';
+import StoresBento from './pages/backoffice/StoresBento';
+import CategoriesBento from './pages/backoffice/CategoriesBento';
 
 function ProtectedLayout() {
   const { isAuthenticated, user } = useAuth();
@@ -35,11 +38,15 @@ function ProtectedLayout() {
     return <Navigate to="/login" replace />;
   }
 
+  if (user?.role === 'SUPER_ADMIN') {
+    return <Navigate to="/backoffice" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f9fc] dark:bg-[#0f172a] text-[#191c1e] dark:text-gray-100 flex transition-colors duration-300">
       {/* Expandable / Collapsible Sidebar */}
-      <Sidebar 
-        isOpen={mobileSidebarOpen} 
+      <Sidebar
+        isOpen={mobileSidebarOpen}
         onClose={() => setMobileSidebarOpen(false)}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebarCollapse}
@@ -49,8 +56,8 @@ function ProtectedLayout() {
       <div className={`pl-0 transition-all duration-300 flex-1 flex flex-col min-w-0 ${
         sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'
       }`}>
-        <Header 
-          onToggleMobileMenu={() => setMobileSidebarOpen(prev => !prev)} 
+        <Header
+          onToggleMobileMenu={() => setMobileSidebarOpen(prev => !prev)}
         />
 
         <main className="p-4 sm:p-6 lg:p-8 flex-1 overflow-x-hidden">
@@ -62,10 +69,58 @@ function ProtectedLayout() {
             <Route path="/customers" element={<CustomersBento />} />
             <Route path="/invoicing" element={<InvoicingBento />} />
             <Route path="/settings" element={<SettingsBento />} />
-            {user?.role === 'SUPER_ADMIN' && (
-              <Route path="/backoffice" element={<BackofficeBento />} />
-            )}
             <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function BackofficeProtectedLayout() {
+  const { isAuthenticated, user } = useAuth();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('pos_backoffice_sidebar_collapsed') === 'true';
+  });
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('pos_backoffice_sidebar_collapsed', next ? 'true' : 'false');
+      return next;
+    });
+  };
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'SUPER_ADMIN') {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f7f9fc] dark:bg-[#0f172a] text-[#191c1e] dark:text-gray-100 flex transition-colors duration-300">
+      <BackofficeSidebar
+        isOpen={mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={toggleSidebarCollapse}
+      />
+
+      <div className={`pl-0 transition-all duration-300 flex-1 flex flex-col min-w-0 ${
+        sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'
+      }`}>
+        <BackofficeHeader
+          onToggleMobileMenu={() => setMobileSidebarOpen(prev => !prev)}
+        />
+
+        <main className="p-4 sm:p-6 lg:p-8 flex-1 overflow-x-hidden">
+          <Routes>
+            <Route path="/" element={<StoresBento />} />
+            <Route path="/categories" element={<CategoriesBento />} />
+            <Route path="*" element={<Navigate to="/backoffice" replace />} />
           </Routes>
         </main>
       </div>
@@ -80,6 +135,7 @@ export default function App() {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginBento />} />
+            <Route path="/backoffice/*" element={<BackofficeProtectedLayout />} />
             <Route path="/*" element={<ProtectedLayout />} />
           </Routes>
         </AuthProvider>

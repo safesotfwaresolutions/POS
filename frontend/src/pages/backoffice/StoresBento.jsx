@@ -7,13 +7,11 @@ import {
   Mail,
   MailCheck,
   FileText,
-  Tags,
   AlertCircle,
   X,
   Check,
   Ban,
   Clock,
-  ShieldCheck,
   Building2
 } from 'lucide-react';
 import {
@@ -25,11 +23,8 @@ import {
   verifyBackofficeStoreEmailApi,
   getBackofficeStoreDocumentsApi,
   reviewBackofficeStoreDocumentApi,
-  getBackofficeStoreCategoriesApi,
-  createBackofficeStoreCategoryApi,
-  updateBackofficeStoreCategoryApi,
-  deleteBackofficeStoreCategoryApi
-} from '../services/api';
+  getBackofficeStoreCategoriesApi
+} from '../../services/api';
 
 const STATUSES = ['ACTIVE', 'INACTIVE', 'PENDING_VERIFICATION', 'SUSPENDED'];
 
@@ -79,7 +74,7 @@ function MetricCard({ label, value, icon: Icon, accent }) {
   );
 }
 
-export default function BackofficeBento() {
+export default function StoresBento() {
   const [metrics, setMetrics] = useState(null);
   const [stores, setStores] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -98,10 +93,6 @@ export default function BackofficeBento() {
   const [docsLoading, setDocsLoading] = useState(false);
   const [rejectingDoc, setRejectingDoc] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
-
-  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
-  const [categoryForm, setCategoryForm] = useState({ id: null, name: '', description: '' });
-  const [categoryError, setCategoryError] = useState('');
 
   const loadMetrics = useCallback(async () => {
     try {
@@ -242,57 +233,20 @@ export default function BackofficeBento() {
     }
   };
 
-  // ---------- Categories ----------
-  const handleSubmitCategory = async (e) => {
-    e.preventDefault();
-    setCategoryError('');
-    try {
-      if (categoryForm.id) {
-        await updateBackofficeStoreCategoryApi(categoryForm.id, categoryForm.name, categoryForm.description);
-      } else {
-        await createBackofficeStoreCategoryApi(categoryForm.name, categoryForm.description);
-      }
-      setCategoryForm({ id: null, name: '', description: '' });
-      await loadCategories();
-    } catch (err) {
-      setCategoryError(err.message || 'Error al guardar la categoría.');
-    }
-  };
-
-  const handleDeactivateCategory = async (cat) => {
-    if (!window.confirm(`¿Desactivar la categoría "${cat.name}"?`)) return;
-    try {
-      await deleteBackofficeStoreCategoryApi(cat.id);
-      await loadCategories();
-    } catch (err) {
-      alert('Error desactivando categoría: ' + err.message);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#191c1e] dark:text-white flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-[#006d3c] dark:text-[#12b76a]" /> Backoffice SaaS
-          </h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Administración global de locales, verificación KYC y categorías</p>
+          <h1 className="text-2xl font-black text-[#191c1e] dark:text-white">Locales</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Administración global de locales y verificación KYC</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowCategoriesModal(true)}
-            className="px-4 py-2.5 bg-white dark:bg-[#1e293b] border border-[#e0e3e6] dark:border-[#334155] hover:bg-gray-50 dark:hover:bg-[#334155] text-[#191c1e] dark:text-white rounded-2xl text-xs font-bold flex items-center gap-2 cursor-pointer"
-          >
-            <Tags className="w-4 h-4" /> Categorías
-          </button>
-          <button
-            onClick={openCreateStore}
-            className="px-4 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#006d3c]/20 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Nuevo Local
-          </button>
-        </div>
+        <button
+          onClick={openCreateStore}
+          className="px-4 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#006d3c]/20 cursor-pointer"
+        >
+          <Plus className="w-4 h-4" /> Nuevo Local
+        </button>
       </div>
 
       {errorMsg && (
@@ -645,93 +599,6 @@ export default function BackofficeBento() {
                 ))}
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Categories Modal */}
-      {showCategoriesModal && (
-        <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bento-card max-w-md w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Categorías de Locales</h3>
-              <button
-                onClick={() => { setShowCategoriesModal(false); setCategoryForm({ id: null, name: '', description: '' }); setCategoryError(''); }}
-                className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {categories.length === 0 ? (
-                <p className="text-xs font-bold text-gray-400 dark:text-gray-500 text-center py-4">No hay categorías registradas.</p>
-              ) : categories.map(cat => (
-                <div key={cat.id} className="flex items-center justify-between p-3 bg-gray-50/60 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-gray-700">
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-xs text-[#191c1e] dark:text-white truncate">{cat.name}</p>
-                    {cat.description && <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{cat.description}</p>}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => setCategoryForm({ id: cat.id, name: cat.name, description: cat.description || '' })}
-                      title="Editar"
-                      className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeactivateCategory(cat)}
-                      title="Desactivar"
-                      className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
-                    >
-                      <Ban className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <form onSubmit={handleSubmitCategory} className="space-y-2 pt-3 border-t border-gray-200 dark:border-gray-700">
-              {categoryError && (
-                <div className="p-2.5 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/40 rounded-xl text-[11px] font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{categoryError}</span>
-                </div>
-              )}
-              <input
-                type="text"
-                value={categoryForm.name}
-                onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                placeholder="Nombre de la categoría"
-                className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-xs text-[#191c1e] dark:text-white"
-                required
-              />
-              <input
-                type="text"
-                value={categoryForm.description}
-                onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })}
-                placeholder="Descripción (opcional)"
-                className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
-              />
-              <div className="flex gap-2">
-                {categoryForm.id && (
-                  <button
-                    type="button"
-                    onClick={() => setCategoryForm({ id: null, name: '', description: '' })}
-                    className="flex-1 py-2.5 bg-gray-100 dark:bg-[#1e293b] text-gray-600 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                )}
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold cursor-pointer"
-                >
-                  {categoryForm.id ? 'Guardar Cambios' : '+ Nueva Categoría'}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
