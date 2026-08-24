@@ -6,6 +6,7 @@ import {
   Tags,
   ScrollText,
   LifeBuoy,
+  UserCog,
   LogOut,
   ChevronLeft,
   ChevronRight
@@ -21,6 +22,7 @@ export default function BackofficeSidebar({ isOpen, onClose, isCollapsed, onTogg
     { path: '/backoffice/categories', label: 'Categorías', icon: Tags },
     { path: '/backoffice/legal-documents', label: 'Textos Legales', icon: ScrollText },
     { path: '/backoffice/support', label: 'Soporte y PQRs', icon: LifeBuoy },
+    { path: '/backoffice/staff', label: 'Operadores', icon: UserCog },
   ];
 
   const handleLogout = async () => {

@@ -20,6 +20,7 @@ import StoresBento from './pages/backoffice/StoresBento';
 import CategoriesBento from './pages/backoffice/CategoriesBento';
 import LegalDocumentsBento from './pages/backoffice/LegalDocumentsBento';
 import SupportTicketsBento from './pages/backoffice/SupportTicketsBento';
+import StaffBento from './pages/backoffice/StaffBento';
 
 function ProtectedLayout() {
   const { isAuthenticated, user } = useAuth();
@@ -124,6 +125,7 @@ function BackofficeProtectedLayout() {
             <Route path="/categories" element={<CategoriesBento />} />
             <Route path="/legal-documents" element={<LegalDocumentsBento />} />
             <Route path="/support" element={<SupportTicketsBento />} />
+            <Route path="/staff" element={<StaffBento />} />
             <Route path="*" element={<Navigate to="/backoffice" replace />} />
           </Routes>
         </main>
