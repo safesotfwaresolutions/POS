@@ -6,7 +6,7 @@ import {
   updateBackofficeLegalDocumentApi,
   deleteBackofficeLegalDocumentApi,
   toggleBackofficeLegalDocumentPublishApi
-} from '../../services/api';
+} from '../../services/backoffice/legalApi';
 
 const EMPTY_FORM = { id: null, slug: '', title: '', content: '', version: '' };
 

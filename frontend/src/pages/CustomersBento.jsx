@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Search, Mail, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
-import { getCustomersApi, createCustomerApi } from '../services/api';
+import { getCustomersApi, createCustomerApi } from '../services/customersApi';
 
 export default function CustomersBento() {
   const [customers, setCustomers] = useState([]);

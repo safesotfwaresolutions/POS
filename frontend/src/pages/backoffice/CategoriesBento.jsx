@@ -5,7 +5,7 @@ import {
   createBackofficeStoreCategoryApi,
   updateBackofficeStoreCategoryApi,
   deleteBackofficeStoreCategoryApi
-} from '../../services/api';
+} from '../../services/backoffice/storesApi';
 
 const EMPTY_FORM = { id: null, name: '', description: '' };
 

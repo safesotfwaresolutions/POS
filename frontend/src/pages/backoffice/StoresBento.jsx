@@ -24,7 +24,7 @@ import {
   getBackofficeStoreDocumentsApi,
   reviewBackofficeStoreDocumentApi,
   getBackofficeStoreCategoriesApi
-} from '../../services/api';
+} from '../../services/backoffice/storesApi';
 
 const STATUSES = ['ACTIVE', 'INACTIVE', 'PENDING_VERIFICATION', 'SUSPENDED'];
 

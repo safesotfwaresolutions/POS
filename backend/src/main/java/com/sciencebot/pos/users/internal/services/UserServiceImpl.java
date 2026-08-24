@@ -208,6 +208,12 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
                 .map(userMapper::toDto);
     }
 
+    @Override
+    public Page<UserDto> listUsersByRole(String role, Pageable pageable) {
+        return userRepository.findAllByRole(role.toUpperCase(), pageable)
+                .map(userMapper::toDto);
+    }
+
     private void validateRole(String role) {
         if (role == null || !ALLOWED_ROLES.contains(role.toUpperCase())) {
             throw new IllegalArgumentException("Rol invalido. Roles permitidos: SUPER_ADMIN, ADMINISTRATOR, SUPERVISOR, SELLER");

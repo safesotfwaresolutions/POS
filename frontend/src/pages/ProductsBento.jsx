@@ -10,7 +10,7 @@ import {
   Check,
   AlertCircle
 } from 'lucide-react';
-import { getProductsApi, createProductApi, deleteProductApi } from '../services/api';
+import { getProductsApi, createProductApi, deleteProductApi } from '../services/productsApi';
 import BarcodeModal from '../components/BarcodeModal';
 
 export default function ProductsBento() {

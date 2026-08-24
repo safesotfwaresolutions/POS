@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getProductsApi, getSalesApi } from '../services/api';
+import { getProductsApi } from '../services/productsApi';
+import { getSalesApi } from '../services/salesApi';
 
 export default function DashboardBento() {
   const navigate = useNavigate();

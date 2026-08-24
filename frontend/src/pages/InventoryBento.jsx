@@ -9,7 +9,8 @@ import {
   RefreshCw,
   Barcode
 } from 'lucide-react';
-import { getProductsApi, createPurchaseApi } from '../services/api';
+import { getProductsApi } from '../services/productsApi';
+import { createPurchaseApi } from '../services/inventoryApi';
 import BarcodeModal from '../components/BarcodeModal';
 
 export default function InventoryBento() {

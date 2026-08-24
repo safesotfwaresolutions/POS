@@ -19,7 +19,7 @@ import {
   getBackofficeSupportTicketsApi,
   getBackofficeSupportTicketApi,
   updateBackofficeSupportTicketApi
-} from '../../services/api';
+} from '../../services/backoffice/supportApi';
 
 const TYPES = ['PETITION', 'COMPLAINT', 'CLAIM', 'SUGGESTION', 'BUG_REPORT'];
 const PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
