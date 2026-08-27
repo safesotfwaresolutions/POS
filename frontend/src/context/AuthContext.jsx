@@ -20,19 +20,25 @@ export function AuthProvider({ children }) {
 
   const [loading, setLoading] = useState(false);
 
+  const applySession = (data, fallbackUsername) => {
+    const userData = {
+      username: data.username || fallbackUsername,
+      role: data.role || 'ADMINISTRATOR',
+      fullName: data.fullName || (data.username === 'admin' ? 'Administrador Principal' : data.username || fallbackUsername),
+      storeId: data.storeId ?? null,
+      token: data.token
+    };
+    setAuthToken(data.token);
+    localStorage.setItem('pos_user', JSON.stringify(userData));
+    setUser(userData);
+    return userData;
+  };
+
   const login = async (username, password) => {
     setLoading(true);
     try {
       const data = await loginApi(username, password);
-      const userData = {
-        username: data.username || username,
-        role: data.role || 'ADMINISTRATOR',
-        fullName: data.fullName || (username === 'admin' ? 'Administrador Principal' : username),
-        token: data.token
-      };
-      setAuthToken(data.token);
-      localStorage.setItem('pos_user', JSON.stringify(userData));
-      setUser(userData);
+      const userData = applySession(data, username);
       setLoading(false);
       return userData;
     } catch (err) {
@@ -40,6 +46,9 @@ export function AuthProvider({ children }) {
       throw err;
     }
   };
+
+  // Usado tras verificar el correo (POST /auth/verify-email ya autologuea al usuario).
+  const setSessionFromResponse = (data) => applySession(data);
 
   const logout = async () => {
     setLoading(true);
@@ -50,7 +59,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, isAuthenticated: !!user, setSessionFromResponse }}>
       {children}
     </AuthContext.Provider>
   );

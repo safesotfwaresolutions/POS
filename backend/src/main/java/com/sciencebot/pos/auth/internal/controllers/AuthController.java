@@ -1,6 +1,7 @@
 package com.sciencebot.pos.auth.internal.controllers;
 
 import com.sciencebot.pos.auth.internal.services.AuthService;
+import com.sciencebot.pos.users.RegisterOwnerCommand;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -8,6 +9,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -63,6 +65,32 @@ public class AuthController {
         String username = credentials.get("username");
         String password = credentials.get("password");
         AuthService.LoginResponse response = authService.login(username, password);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie(response.token(), response.expiresIn()).toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie(response.refreshToken(), refreshExpirationMs / 1000).toString())
+                .body(response);
+    }
+
+    @PostMapping("/register")
+    @SecurityRequirements
+    @Operation(
+            summary = "Auto-registro publico",
+            description = "Crea una cuenta ADMINISTRATOR pendiente de verificar su correo y envia el enlace de verificacion."
+    )
+    public ResponseEntity<Void> register(@RequestBody RegisterOwnerCommand command) {
+        authService.register(command);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/verify-email")
+    @SecurityRequirements
+    @Operation(
+            summary = "Verificar correo",
+            description = "Consume el token del enlace de verificacion, activa el correo del usuario y lo autologuea."
+    )
+    public ResponseEntity<AuthService.LoginResponse> verifyEmail(@RequestParam String token) {
+        AuthService.LoginResponse response = authService.verifyEmail(token);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie(response.token(), response.expiresIn()).toString())

@@ -42,6 +42,13 @@ export async function verifyBackofficeStoreEmailApi(id) {
   });
 }
 
+export async function rejectBackofficeStoreApi(id, reason) {
+  return await fetchApi(`/backoffice/stores/${id}/reject`, {
+    method: 'PATCH',
+    body: JSON.stringify({ reason }),
+  });
+}
+
 export async function getBackofficeStoreDocumentsApi(storeId) {
   return await fetchApi(`/backoffice/stores/${storeId}/documents`);
 }

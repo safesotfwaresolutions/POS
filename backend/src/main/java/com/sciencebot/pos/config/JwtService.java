@@ -73,6 +73,15 @@ public class JwtService {
         return (userDetails.getUsername().equals(username)) && !isTokenExpired(token);
     }
 
+    public String extractRole(String token) {
+        try {
+            Object roleClaim = extractAllClaims(token).get("role");
+            return roleClaim == null ? null : roleClaim.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public Long extractStoreId(String token) {
         try {
             Object storeIdClaim = extractAllClaims(token).get("storeId");

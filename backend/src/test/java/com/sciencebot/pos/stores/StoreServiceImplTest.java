@@ -8,6 +8,8 @@ import com.sciencebot.pos.stores.internal.repositories.StoreCategoryRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreDocumentRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreRepository;
 import com.sciencebot.pos.stores.internal.services.StoreServiceImpl;
+import com.sciencebot.pos.users.UserDto;
+import com.sciencebot.pos.users.UserFacade;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -16,6 +18,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +33,7 @@ class StoreServiceImplTest {
     @Mock private StoreCategoryRepository categoryRepository;
     @Mock private StoreDocumentRepository documentRepository;
     @Mock private StoreMapper storeMapper;
+    @Mock private UserFacade userFacade;
     @InjectMocks private StoreServiceImpl storeService;
 
     @BeforeEach
@@ -68,7 +72,7 @@ class StoreServiceImplTest {
         saved.setEmail("tienda1@test.com");
         when(storeRepository.save(any(StoreEntity.class))).thenReturn(saved);
 
-        StoreDto dto = new StoreDto(1L, "Tienda 1", 1L, "Retail", "3001234567", "tienda1@test.com", "https://tienda1.com", "Calle 1", "900123", "PENDING_VERIFICATION", false, null);
+        StoreDto dto = new StoreDto(1L, "Tienda 1", 1L, "Retail", "3001234567", "tienda1@test.com", "https://tienda1.com", "Calle 1", "900123", "PENDING_VERIFICATION", false, null, null);
         when(storeMapper.toDto(any(), any())).thenReturn(dto);
 
         StoreDto result = storeService.createStore(command);
@@ -86,7 +90,7 @@ class StoreServiceImplTest {
 
         when(storeRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(storeRepository.save(any())).thenReturn(entity);
-        when(storeMapper.toDto(any(), any())).thenReturn(new StoreDto(1L, "Tienda", null, null, null, "t@test.com", null, null, null, "ACTIVE", false, null));
+        when(storeMapper.toDto(any(), any())).thenReturn(new StoreDto(1L, "Tienda", null, null, null, "t@test.com", null, null, null, "ACTIVE", false, null, null));
 
         StoreDto result = storeService.changeStatus(1L, "ACTIVE");
         assertNotNull(result);
@@ -97,6 +101,70 @@ class StoreServiceImplTest {
     void changeStatus_InvalidStatus_ThrowsException() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> storeService.changeStatus(1L, "INVALID"));
         assertTrue(ex.getMessage().contains("Estado invalido"));
+    }
+
+    @Test
+    void registerOwnStore_Success_AssignsStoreToOwner() {
+        CreateStoreCommand command = new CreateStoreCommand("Tienda 1", 1L, "3001234567", "tienda1@test.com", "https://tienda1.com", "Calle 1", "900123");
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, null, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+        when(storeRepository.existsByEmail("tienda1@test.com")).thenReturn(false);
+
+        StoreEntity saved = new StoreEntity();
+        saved.setId(9L);
+        saved.setName("Tienda 1");
+        when(storeRepository.save(any(StoreEntity.class))).thenReturn(saved);
+        when(storeMapper.toDto(any(), any())).thenReturn(
+                new StoreDto(9L, "Tienda 1", 1L, "Retail", "3001234567", "tienda1@test.com", "https://tienda1.com", "Calle 1", "900123", "PENDING_VERIFICATION", false, null, null));
+
+        StoreDto result = storeService.registerOwnStore("carlos", command);
+
+        assertNotNull(result);
+        assertEquals(9L, result.id());
+        verify(userFacade, times(1)).assignStore(5L, 9L);
+    }
+
+    @Test
+    void registerOwnStore_OwnerAlreadyHasStore_ThrowsException() {
+        CreateStoreCommand command = new CreateStoreCommand("Tienda 1", 1L, "3001234567", "tienda1@test.com", "https://tienda1.com", "Calle 1", "900123");
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 2L, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+
+        assertThrows(IllegalArgumentException.class, () -> storeService.registerOwnStore("carlos", command));
+        verify(storeRepository, never()).save(any());
+    }
+
+    @Test
+    void registerOwnStore_NotAdministrator_ThrowsAccessDenied() {
+        CreateStoreCommand command = new CreateStoreCommand("Tienda 1", 1L, "3001234567", "tienda1@test.com", "https://tienda1.com", "Calle 1", "900123");
+        UserDto owner = new UserDto(5L, "Sofia", "sofia", "sofia@test.com", "SELLER", true, 1L, true);
+        when(userFacade.findByUsername("sofia")).thenReturn(Optional.of(owner));
+
+        assertThrows(AccessDeniedException.class, () -> storeService.registerOwnStore("sofia", command));
+    }
+
+    @Test
+    void rejectStore_WithReason_Success() {
+        StoreEntity entity = new StoreEntity();
+        entity.setId(1L);
+        entity.setStatus("PENDING_VERIFICATION");
+
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(storeRepository.save(any())).thenReturn(entity);
+        when(storeMapper.toDto(any(), any())).thenReturn(
+                new StoreDto(1L, "Tienda", null, null, null, "t@test.com", null, null, null, "REJECTED", false, "Documentos incompletos", null));
+
+        StoreDto result = storeService.rejectStore(1L, "Documentos incompletos");
+
+        assertNotNull(result);
+        assertEquals("REJECTED", result.status());
+        assertEquals("Documentos incompletos", result.rejectionReason());
+    }
+
+    @Test
+    void rejectStore_WithoutReason_ThrowsException() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> storeService.rejectStore(1L, " "));
+        assertTrue(ex.getMessage().contains("motivo"));
     }
 
     @Test

@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
         return new PosUserDetails(
                 user.getUsername(),
                 user.getPassword(),
-                user.isActive(),
+                user.isActive() && user.isEmailVerified(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole())),
                 user.getStoreId()
         );
@@ -211,6 +211,59 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
     @Override
     public Page<UserDto> listUsersByRole(String role, Pageable pageable) {
         return userRepository.findAllByRole(role.toUpperCase(), pageable)
+                .map(userMapper::toDto);
+    }
+
+    @Override
+    @Transactional
+    public UserDto registerPendingAdmin(RegisterOwnerCommand command) {
+        validatePasswordStrength(command.password());
+
+        if (userRepository.existsByUsername(command.username())) {
+            throw new IllegalArgumentException("El nombre de usuario ya esta registrado");
+        }
+        if (userRepository.existsByEmail(command.email())) {
+            throw new IllegalArgumentException("El correo electronico ya esta registrado");
+        }
+
+        User user = new User();
+        user.setFullName(command.fullName());
+        user.setUsername(command.username());
+        user.setEmail(command.email());
+        user.setPassword(passwordEncoder.encode(command.password()));
+        user.setRole("ADMINISTRATOR");
+        user.setActive(true);
+        user.setEmailVerified(false);
+        user.setStoreId(null);
+
+        User saved = userRepository.save(user);
+        return userMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public UserDto markEmailVerified(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + userId));
+        user.setEmailVerified(true);
+        return userMapper.toDto(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public UserDto assignStore(Long userId, Long storeId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + userId));
+        if (user.getStoreId() != null) {
+            throw new IllegalArgumentException("El usuario ya tiene un local asignado.");
+        }
+        user.setStoreId(storeId);
+        return userMapper.toDto(userRepository.save(user));
+    }
+
+    @Override
+    public Page<UserDto> listPendingVerificationUsers(Pageable pageable) {
+        return userRepository.findAllByRoleAndEmailVerifiedFalse("ADMINISTRATOR", pageable)
                 .map(userMapper::toDto);
     }
 

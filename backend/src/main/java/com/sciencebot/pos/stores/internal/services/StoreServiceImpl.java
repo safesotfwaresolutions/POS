@@ -8,9 +8,12 @@ import com.sciencebot.pos.stores.internal.mappers.StoreMapper;
 import com.sciencebot.pos.stores.internal.repositories.StoreCategoryRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreDocumentRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreRepository;
+import com.sciencebot.pos.users.UserDto;
+import com.sciencebot.pos.users.UserFacade;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,21 +25,24 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class StoreServiceImpl implements StoreFacade {
 
-    private static final Set<String> VALID_STATUSES = Set.of("ACTIVE", "INACTIVE", "PENDING_VERIFICATION", "SUSPENDED");
+    private static final Set<String> VALID_STATUSES = Set.of("ACTIVE", "INACTIVE", "PENDING_VERIFICATION", "SUSPENDED", "REJECTED");
 
     private final StoreRepository storeRepository;
     private final StoreCategoryRepository categoryRepository;
     private final StoreDocumentRepository documentRepository;
     private final StoreMapper storeMapper;
+    private final UserFacade userFacade;
 
     public StoreServiceImpl(StoreRepository storeRepository,
                             StoreCategoryRepository categoryRepository,
                             StoreDocumentRepository documentRepository,
-                            StoreMapper storeMapper) {
+                            StoreMapper storeMapper,
+                            UserFacade userFacade) {
         this.storeRepository = storeRepository;
         this.categoryRepository = categoryRepository;
         this.documentRepository = documentRepository;
         this.storeMapper = storeMapper;
+        this.userFacade = userFacade;
     }
 
     @Override
@@ -121,6 +127,46 @@ public class StoreServiceImpl implements StoreFacade {
         StoreEntity entity = storeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Local no encontrado con ID: " + id));
         entity.setEmailVerified(true);
+        return storeMapper.toDto(storeRepository.save(entity), resolveCategoryName(entity.getStoreCategoryId()));
+    }
+
+    @Override
+    @Transactional
+    public StoreDto registerOwnStore(String ownerUsername, CreateStoreCommand command) {
+        UserDto owner = userFacade.findByUsername(ownerUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + ownerUsername));
+        if (!"ADMINISTRATOR".equals(owner.role())) {
+            throw new AccessDeniedException("Solo un ADMINISTRATOR puede registrar un local.");
+        }
+        if (owner.storeId() != null) {
+            throw new IllegalArgumentException("Ya tienes un local registrado.");
+        }
+
+        StoreDto created = createStore(command);
+        userFacade.assignStore(owner.id(), created.id());
+        return created;
+    }
+
+    @Override
+    public StoreDto getOwnStore(String ownerUsername) {
+        UserDto owner = userFacade.findByUsername(ownerUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + ownerUsername));
+        if (owner.storeId() == null) {
+            throw new EntityNotFoundException("Aun no has registrado un local.");
+        }
+        return getById(owner.storeId());
+    }
+
+    @Override
+    @Transactional
+    public StoreDto rejectStore(Long id, String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Se requiere motivo de rechazo.");
+        }
+        StoreEntity entity = storeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Local no encontrado con ID: " + id));
+        entity.setStatus("REJECTED");
+        entity.setRejectionReason(reason);
         return storeMapper.toDto(storeRepository.save(entity), resolveCategoryName(entity.getStoreCategoryId()));
     }
 

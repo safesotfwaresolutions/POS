@@ -17,6 +17,8 @@ public record UserDto(
     String role,
     @Schema(description = "Si el usuario puede acceder al sistema", example = "true")
     boolean active,
-    @Schema(description = "ID del local al que pertenece. Nulo para SUPER_ADMIN.", example = "1")
-    Long storeId
+    @Schema(description = "ID del local al que pertenece. Nulo para SUPER_ADMIN o para un ADMINISTRATOR que aun no ha creado su local.", example = "1")
+    Long storeId,
+    @Schema(description = "Si el usuario ya verifico su correo electronico", example = "true")
+    boolean emailVerified
 ) {}

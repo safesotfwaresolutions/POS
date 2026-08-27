@@ -29,6 +29,8 @@ public class StoreEntity {
     private String status = "PENDING_VERIFICATION";
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at", nullable = false)

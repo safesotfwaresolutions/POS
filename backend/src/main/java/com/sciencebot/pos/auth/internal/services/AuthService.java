@@ -2,8 +2,11 @@ package com.sciencebot.pos.auth.internal.services;
 
 import com.sciencebot.pos.config.JwtService;
 import com.sciencebot.pos.config.PosUserDetails;
+import com.sciencebot.pos.shared.email.EmailSender;
+import com.sciencebot.pos.users.RegisterOwnerCommand;
 import com.sciencebot.pos.users.UserDto;
 import com.sciencebot.pos.users.UserFacade;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -22,16 +25,57 @@ public class AuthService {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final UserFacade userFacade;
+    private final EmailVerificationService emailVerificationService;
+    private final EmailSender emailSender;
+
+    @Value("${app.frontend-url:http://localhost:3000}")
+    private String frontendUrl;
 
     private final ConcurrentHashMap<String, LockoutDetails> lockoutCache = new ConcurrentHashMap<>();
 
     public AuthService(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder,
-                       JwtService jwtService, RefreshTokenService refreshTokenService, UserFacade userFacade) {
+                       JwtService jwtService, RefreshTokenService refreshTokenService, UserFacade userFacade,
+                       EmailVerificationService emailVerificationService, EmailSender emailSender) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.userFacade = userFacade;
+        this.emailVerificationService = emailVerificationService;
+        this.emailSender = emailSender;
+    }
+
+    /** Auto-registro publico: crea al futuro dueno pendiente de verificar su correo y le envia el enlace. */
+    public void register(RegisterOwnerCommand command) {
+        UserDto created = userFacade.registerPendingAdmin(command);
+        String rawToken = emailVerificationService.issue(created.id());
+        String link = frontendUrl + "/verify-email?token=" + rawToken;
+        emailSender.send(
+                created.email(),
+                "Verifica tu correo - ProPOS",
+                "<p>Hola " + created.fullName() + ",</p>"
+                        + "<p>Gracias por registrarte en ProPOS. Confirma tu correo para activar tu cuenta:</p>"
+                        + "<p><a href=\"" + link + "\">Verificar mi correo</a></p>"
+                        + "<p>Si no fuiste tu, ignora este mensaje.</p>"
+        );
+    }
+
+    /** Consume el token de verificacion, activa el correo del usuario y lo autologuea. */
+    public LoginResponse verifyEmail(String rawToken) {
+        Long userId = emailVerificationService.consume(rawToken);
+        UserDto user = userFacade.markEmailVerified(userId);
+
+        String token = jwtService.generateToken(user.username(), user.role(), user.storeId());
+        String refreshToken = refreshTokenService.issue(user.id());
+
+        return new LoginResponse(
+                token,
+                refreshToken,
+                user.username(),
+                user.role(),
+                user.storeId(),
+                jwtService.getExpirationTime()
+        );
     }
 
     public LoginResponse login(String username, String password) {
@@ -52,6 +96,12 @@ public class AuthService {
         }
 
         if (!userDetails.isEnabled()) {
+            boolean unverified = userFacade.findByUsername(cleanUsername)
+                    .map(u -> !u.emailVerified())
+                    .orElse(false);
+            if (unverified) {
+                throw new DisabledException("Debes verificar tu correo electronico antes de iniciar sesion.");
+            }
             throw new DisabledException("Cuenta de usuario desactivada");
         }
 

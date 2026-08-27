@@ -115,6 +115,17 @@ export default function LoginBento() {
           </button>
         </form>
 
+        <p className="text-center text-xs text-gray-400 font-semibold">
+          ¿No tienes cuenta?{' '}
+          <button
+            type="button"
+            onClick={() => navigate('/register')}
+            className="text-[#12b76a] font-extrabold hover:underline cursor-pointer"
+          >
+            Regístrate
+          </button>
+        </p>
+
       </div>
     </div>
   );

@@ -13,6 +13,12 @@ public interface StoreFacade {
     StoreDto changeStatus(Long id, String newStatus);
     StoreDto verifyEmail(Long id);
     StoreDto getById(Long id);
+    /** Auto-registro self-service: crea el local del ADMINISTRATOR autenticado (que aun no tiene uno). */
+    StoreDto registerOwnStore(String ownerUsername, CreateStoreCommand command);
+    /** Local del ADMINISTRATOR autenticado. */
+    StoreDto getOwnStore(String ownerUsername);
+    /** Rechaza un local pendiente con un motivo obligatorio. */
+    StoreDto rejectStore(Long id, String reason);
     List<StoreDocumentDto> getDocuments(Long storeId);
     StoreDocumentDto reviewDocument(Long storeId, Long docId, ReviewDocumentCommand command);
     List<StoreCategoryDto> listCategories();

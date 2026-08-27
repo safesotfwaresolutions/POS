@@ -25,6 +25,7 @@ public class StoreMapper {
                 entity.getTaxId(),
                 entity.getStatus(),
                 entity.isEmailVerified(),
+                entity.getRejectionReason(),
                 entity.getCreatedAt()
         );
     }

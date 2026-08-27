@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleDisabled(DisabledException ex) {
         Map<String, String> response = new HashMap<>();
         response.put("error", "Forbidden");
-        response.put("message", "Cuenta de usuario desactivada");
+        response.put("message", ex.getMessage() != null ? ex.getMessage() : "Cuenta de usuario desactivada");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 

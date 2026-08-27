@@ -14,4 +14,13 @@ public interface UserFacade {
     UserDto getById(Long id);
     Page<UserDto> listUsers(Pageable pageable);
     Page<UserDto> listUsersByRole(String role, Pageable pageable);
+
+    /** Auto-registro publico: crea un ADMINISTRATOR sin local (storeId=null) y con el correo sin verificar. */
+    UserDto registerPendingAdmin(RegisterOwnerCommand command);
+    /** Marca el correo del usuario como verificado (llamado al consumir el token de verificacion). */
+    UserDto markEmailVerified(Long userId);
+    /** Asigna el local recien creado a un ADMINISTRATOR que aun no tenia uno. Falla si ya tenia storeId. */
+    UserDto assignStore(Long userId, Long storeId);
+    /** Usuarios ADMINISTRATOR que aun no verifican su correo (para el panel de pendientes del backoffice). */
+    Page<UserDto> listPendingVerificationUsers(Pageable pageable);
 }

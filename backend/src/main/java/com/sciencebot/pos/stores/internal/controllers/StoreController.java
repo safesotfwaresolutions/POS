@@ -68,6 +68,13 @@ public class StoreController {
         return ResponseEntity.ok(storeFacade.changeStatus(id, body.get("status")));
     }
 
+    @PatchMapping("/api/v1/backoffice/stores/{id}/reject")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Rechazar un local pendiente (requiere motivo)")
+    public ResponseEntity<StoreDto> rejectStore(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(storeFacade.rejectStore(id, body.get("reason")));
+    }
+
     @PatchMapping("/api/v1/backoffice/stores/{id}/verify-email")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "Marcar correo del local como verificado")

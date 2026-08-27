@@ -14,5 +14,6 @@ public record StoreDto(
     String taxId,
     String status,
     boolean emailVerified,
+    String rejectionReason,
     LocalDateTime createdAt
 ) {}

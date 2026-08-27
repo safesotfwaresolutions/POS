@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { getOwnStoreApi } from './services/storesApi';
 
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -9,6 +10,10 @@ import BackofficeSidebar from './components/backoffice/Sidebar';
 import BackofficeHeader from './components/backoffice/Header';
 
 import LoginBento from './pages/LoginBento';
+import RegisterBento from './pages/RegisterBento';
+import VerifyEmailBento from './pages/VerifyEmailBento';
+import PendingStoreReviewBento from './pages/PendingStoreReviewBento';
+import StoreOnboardingBento from './pages/onboarding/StoreOnboardingBento';
 import DashboardBento from './pages/DashboardBento';
 import POSBento from './pages/POSBento';
 import InventoryBento from './pages/InventoryBento';
@@ -21,6 +26,28 @@ import CategoriesBento from './pages/backoffice/CategoriesBento';
 import LegalDocumentsBento from './pages/backoffice/LegalDocumentsBento';
 import SupportTicketsBento from './pages/backoffice/SupportTicketsBento';
 import StaffBento from './pages/backoffice/StaffBento';
+import OnboardingBento from './pages/backoffice/OnboardingBento';
+
+/** Mientras el ADMINISTRATOR no tenga un local ACTIVE, bloquea el POS y muestra el estado. */
+function RequireActiveStore({ children }) {
+  const [store, setStore] = useState(undefined); // undefined = cargando
+
+  useEffect(() => {
+    let cancelled = false;
+    getOwnStoreApi()
+      .then(data => { if (!cancelled) setStore(data); })
+      .catch(() => { if (!cancelled) setStore(null); });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (store === undefined) {
+    return null;
+  }
+  if (!store || store.status !== 'ACTIVE') {
+    return <PendingStoreReviewBento store={store} />;
+  }
+  return children;
+}
 
 function ProtectedLayout() {
   const { isAuthenticated, user } = useAuth();
@@ -45,6 +72,34 @@ function ProtectedLayout() {
     return <Navigate to="/backoffice" replace />;
   }
 
+  if (user?.role === 'ADMINISTRATOR' && !user?.storeId) {
+    return <Navigate to="/onboarding/store" replace />;
+  }
+
+  if (user?.role === 'ADMINISTRATOR') {
+    return (
+      <RequireActiveStore>
+        <ProtectedLayoutContent
+          mobileSidebarOpen={mobileSidebarOpen}
+          setMobileSidebarOpen={setMobileSidebarOpen}
+          sidebarCollapsed={sidebarCollapsed}
+          toggleSidebarCollapse={toggleSidebarCollapse}
+        />
+      </RequireActiveStore>
+    );
+  }
+
+  return (
+    <ProtectedLayoutContent
+      mobileSidebarOpen={mobileSidebarOpen}
+      setMobileSidebarOpen={setMobileSidebarOpen}
+      sidebarCollapsed={sidebarCollapsed}
+      toggleSidebarCollapse={toggleSidebarCollapse}
+    />
+  );
+}
+
+function ProtectedLayoutContent({ mobileSidebarOpen, setMobileSidebarOpen, sidebarCollapsed, toggleSidebarCollapse }) {
   return (
     <div className="min-h-screen bg-[#f7f9fc] dark:bg-[#0f172a] text-[#191c1e] dark:text-gray-100 flex transition-colors duration-300">
       {/* Expandable / Collapsible Sidebar */}
@@ -126,6 +181,7 @@ function BackofficeProtectedLayout() {
             <Route path="/legal-documents" element={<LegalDocumentsBento />} />
             <Route path="/support" element={<SupportTicketsBento />} />
             <Route path="/staff" element={<StaffBento />} />
+            <Route path="/onboarding" element={<OnboardingBento />} />
             <Route path="*" element={<Navigate to="/backoffice" replace />} />
           </Routes>
         </main>
@@ -141,6 +197,9 @@ export default function App() {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginBento />} />
+            <Route path="/register" element={<RegisterBento />} />
+            <Route path="/verify-email" element={<VerifyEmailBento />} />
+            <Route path="/onboarding/store" element={<StoreOnboardingBento />} />
             <Route path="/backoffice/*" element={<BackofficeProtectedLayout />} />
             <Route path="/*" element={<ProtectedLayout />} />
           </Routes>

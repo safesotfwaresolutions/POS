@@ -7,6 +7,7 @@ import {
   ScrollText,
   LifeBuoy,
   UserCog,
+  Clock,
   LogOut,
   ChevronLeft,
   ChevronRight
@@ -19,6 +20,7 @@ export default function BackofficeSidebar({ isOpen, onClose, isCollapsed, onTogg
 
   const navItems = [
     { path: '/backoffice', label: 'Locales', icon: Store, end: true },
+    { path: '/backoffice/onboarding', label: 'Pendientes', icon: Clock },
     { path: '/backoffice/categories', label: 'Categorías', icon: Tags },
     { path: '/backoffice/legal-documents', label: 'Textos Legales', icon: ScrollText },
     { path: '/backoffice/support', label: 'Soporte y PQRs', icon: LifeBuoy },

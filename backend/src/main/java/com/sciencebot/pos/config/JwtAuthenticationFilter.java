@@ -71,6 +71,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                         Long storeId = jwtService.extractStoreId(jwt);
                         TenantContext.setStoreId(storeId);
+
+                        if (storeId == null && "ADMINISTRATOR".equals(jwtService.extractRole(jwt))
+                                && !isOnboardingPath(request)) {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            response.getWriter().write(
+                                    "{\"error\":\"StoreOnboardingRequired\",\"message\":\"Completa el registro de tu local antes de continuar.\"}");
+                            return;
+                        }
                     }
                 } catch (Exception e) {
                     // Ignored
@@ -81,6 +90,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } finally {
             TenantContext.clear();
         }
+    }
+
+    /**
+     * Rutas permitidas a un ADMINISTRATOR que aun no ha creado su local (storeId nulo en el JWT):
+     * autenticacion y el propio endpoint de registro/consulta del local.
+     */
+    private boolean isOnboardingPath(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+        if (path.startsWith(request.getContextPath() + "/api/v1/auth/")) {
+            return true;
+        }
+        String storesPath = request.getContextPath() + "/api/v1/stores";
+        if (path.equals(storesPath) && "POST".equalsIgnoreCase(method)) {
+            return true;
+        }
+        return path.equals(storesPath + "/me") && "GET".equalsIgnoreCase(method);
     }
 
     private String extractToken(HttpServletRequest request) {

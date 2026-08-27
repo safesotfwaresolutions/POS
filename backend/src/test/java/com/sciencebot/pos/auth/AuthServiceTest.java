@@ -1,9 +1,12 @@
 package com.sciencebot.pos.auth;
 
 import com.sciencebot.pos.auth.internal.services.AuthService;
+import com.sciencebot.pos.auth.internal.services.EmailVerificationService;
 import com.sciencebot.pos.auth.internal.services.RefreshTokenService;
 import com.sciencebot.pos.config.JwtService;
 import com.sciencebot.pos.config.PosUserDetails;
+import com.sciencebot.pos.shared.email.EmailSender;
+import com.sciencebot.pos.users.RegisterOwnerCommand;
 import com.sciencebot.pos.users.UserDto;
 import com.sciencebot.pos.users.UserFacade;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +36,8 @@ class AuthServiceTest {
     @Mock private JwtService jwtService;
     @Mock private RefreshTokenService refreshTokenService;
     @Mock private UserFacade userFacade;
+    @Mock private EmailVerificationService emailVerificationService;
+    @Mock private EmailSender emailSender;
     @InjectMocks private AuthService authService;
 
     @BeforeEach
@@ -41,7 +46,11 @@ class AuthServiceTest {
     }
 
     private static UserDto userDto(boolean active) {
-        return new UserDto(7L, "Admin", "admin", "admin@pos.com", "ADMINISTRATOR", active, 1L);
+        return new UserDto(7L, "Admin", "admin", "admin@pos.com", "ADMINISTRATOR", active, 1L, true);
+    }
+
+    private static UserDto unverifiedUserDto() {
+        return new UserDto(7L, "Admin", "admin", "admin@pos.com", "ADMINISTRATOR", true, null, false);
     }
 
     @Test
@@ -117,5 +126,52 @@ class AuthServiceTest {
 
         LockedException ex = assertThrows(LockedException.class, () -> authService.login("admin", "wrong"));
         assertTrue(ex.getMessage().contains("bloqueada"));
+    }
+
+    @Test
+    void login_UnverifiedEmail_ThrowsSpecificMessage() {
+        PosUserDetails userDetails = new PosUserDetails(
+                "admin", "encodedPassword", false, // enabled=false porque emailVerified=false
+                List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATOR")),
+                null
+        );
+        when(userDetailsService.loadUserByUsername("admin")).thenReturn(userDetails);
+        when(userFacade.findByUsername("admin")).thenReturn(Optional.of(unverifiedUserDto()));
+
+        DisabledException ex = assertThrows(DisabledException.class, () -> authService.login("admin", "Password123"));
+        assertTrue(ex.getMessage().contains("verificar tu correo"));
+    }
+
+    @Test
+    void register_Success_CreatesUserAndSendsVerificationEmail() {
+        RegisterOwnerCommand command = new RegisterOwnerCommand("Carlos Martinez", "carlos.m", "carlos@empresa.com", "Password123");
+        UserDto created = new UserDto(3L, "Carlos Martinez", "carlos.m", "carlos@empresa.com", "ADMINISTRATOR", true, null, false);
+
+        when(userFacade.registerPendingAdmin(command)).thenReturn(created);
+        when(emailVerificationService.issue(3L)).thenReturn("raw-token");
+
+        authService.register(command);
+
+        verify(userFacade).registerPendingAdmin(command);
+        verify(emailVerificationService).issue(3L);
+        verify(emailSender).send(eq("carlos@empresa.com"), anyString(), contains("raw-token"));
+    }
+
+    @Test
+    void verifyEmail_Success_MarksVerifiedAndAutoLogsIn() {
+        UserDto verified = new UserDto(3L, "Carlos Martinez", "carlos.m", "carlos@empresa.com", "ADMINISTRATOR", true, null, true);
+
+        when(emailVerificationService.consume("raw-token")).thenReturn(3L);
+        when(userFacade.markEmailVerified(3L)).thenReturn(verified);
+        when(jwtService.generateToken("carlos.m", "ADMINISTRATOR", null)).thenReturn("newAccess");
+        when(jwtService.getExpirationTime()).thenReturn(900L);
+        when(refreshTokenService.issue(3L)).thenReturn("newRefresh");
+
+        AuthService.LoginResponse response = authService.verifyEmail("raw-token");
+
+        assertEquals("newAccess", response.token());
+        assertEquals("newRefresh", response.refreshToken());
+        assertEquals("carlos.m", response.username());
+        assertNull(response.storeId());
     }
 }

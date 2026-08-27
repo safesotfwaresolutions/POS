@@ -14,6 +14,24 @@ export async function loginApi(username, password) {
   return data;
 }
 
+export async function registerApi(payload) {
+  return fetchApi('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function verifyEmailApi(token) {
+  const data = await fetchApi(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+  if (data && data.token) {
+    setAuthToken(data.token);
+  }
+  if (data && data.refreshToken) {
+    setRefreshToken(data.refreshToken);
+  }
+  return data;
+}
+
 export async function logoutApi() {
   try {
     await fetchApi('/auth/logout', {
