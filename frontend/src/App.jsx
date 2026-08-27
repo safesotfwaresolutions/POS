@@ -23,6 +23,7 @@ import InvoicingBento from './pages/InvoicingBento';
 import SettingsBento from './pages/SettingsBento';
 import StoresBento from './pages/backoffice/StoresBento';
 import CategoriesBento from './pages/backoffice/CategoriesBento';
+import ProductCategoriesBento from './pages/backoffice/ProductCategoriesBento';
 import LegalDocumentsBento from './pages/backoffice/LegalDocumentsBento';
 import SupportTicketsBento from './pages/backoffice/SupportTicketsBento';
 import StaffBento from './pages/backoffice/StaffBento';
@@ -178,6 +179,7 @@ function BackofficeProtectedLayout() {
           <Routes>
             <Route path="/" element={<StoresBento />} />
             <Route path="/categories" element={<CategoriesBento />} />
+            <Route path="/product-categories" element={<ProductCategoriesBento />} />
             <Route path="/legal-documents" element={<LegalDocumentsBento />} />
             <Route path="/support" element={<SupportTicketsBento />} />
             <Route path="/staff" element={<StaffBento />} />

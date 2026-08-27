@@ -1,9 +1,10 @@
 import { fetchApi } from './http';
 
-export async function getProductsApi(search = '', categoryId = null, page = 0, size = 50) {
+export async function getProductsApi(search = '', categoryId = null, page = 0, size = 50, active = true) {
   const params = new URLSearchParams({ page, size });
   if (search) params.append('search', search);
   if (categoryId) params.append('categoryId', categoryId);
+  if (active !== null) params.append('active', active);
 
   const data = await fetchApi(`/products?${params.toString()}`);
   return data.content || data || [];
@@ -17,10 +18,9 @@ export async function createProductApi(productData) {
       description: productData.description || productData.name,
       internalCode: productData.internalCode,
       barcode: productData.barcode,
-      categoryId: productData.categoryId || 1,
+      categoryId: productData.categoryId,
       purchasePrice: parseFloat(productData.purchasePrice || productData.price * 0.7),
       salePrice: parseFloat(productData.price || productData.salePrice),
-      quantityAvailable: parseInt(productData.stock || productData.quantityAvailable || 0),
       minStock: parseInt(productData.minStock || 5),
     }),
   });

@@ -11,3 +11,14 @@ export async function createCategoryApi(name, description = '') {
     body: JSON.stringify({ name, description }),
   });
 }
+
+export async function updateCategoryApi(id, name, description = '') {
+  return await fetchApi(`/categories/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name, description }),
+  });
+}
+
+export async function deleteCategoryApi(id) {
+  return await fetchApi(`/categories/${id}`, { method: 'DELETE' });
+}

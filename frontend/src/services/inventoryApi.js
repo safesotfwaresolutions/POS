@@ -4,6 +4,13 @@ export async function getStockReportApi(belowMinStock = false) {
   return await fetchApi(`/reports/stock?belowMinStock=${belowMinStock}`);
 }
 
+export async function createInventoryMovementApi(productId, movementType, quantity, reason = '') {
+  return await fetchApi('/inventory/movements', {
+    method: 'POST',
+    body: JSON.stringify({ productId, movementType, quantity, reason }),
+  });
+}
+
 export async function createPurchaseApi(purchaseData, idempotencyKey) {
   const key = idempotencyKey || newIdempotencyKey();
   return await fetchApi('/purchases', {

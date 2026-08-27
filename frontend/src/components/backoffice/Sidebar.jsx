@@ -4,6 +4,7 @@ import {
   ShieldCheck,
   Store,
   Tags,
+  Package,
   ScrollText,
   LifeBuoy,
   UserCog,
@@ -21,7 +22,8 @@ export default function BackofficeSidebar({ isOpen, onClose, isCollapsed, onTogg
   const navItems = [
     { path: '/backoffice', label: 'Locales', icon: Store, end: true },
     { path: '/backoffice/onboarding', label: 'Pendientes', icon: Clock },
-    { path: '/backoffice/categories', label: 'Categorías', icon: Tags },
+    { path: '/backoffice/categories', label: 'Categorías de Locales', icon: Tags },
+    { path: '/backoffice/product-categories', label: 'Categorías de Producto', icon: Package },
     { path: '/backoffice/legal-documents', label: 'Textos Legales', icon: ScrollText },
     { path: '/backoffice/support', label: 'Soporte y PQRs', icon: LifeBuoy },
     { path: '/backoffice/staff', label: 'Operadores', icon: UserCog },
