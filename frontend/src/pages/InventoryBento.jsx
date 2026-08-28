@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Package,
   AlertTriangle,
@@ -11,16 +12,19 @@ import {
 } from 'lucide-react';
 import { getProductsApi } from '../services/productsApi';
 import { createPurchaseApi } from '../services/inventoryApi';
+import { getSuppliersApi } from '../services/suppliersApi';
 import { useModal } from '../context/ModalContext';
 import BarcodeModal from '../components/BarcodeModal';
 
 export default function InventoryBento() {
   const { notify } = useModal();
   const [productsList, setProductsList] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [increaseAmount, setIncreaseAmount] = useState('');
   const [barcodeProduct, setBarcodeProduct] = useState(null);
 
@@ -37,20 +41,37 @@ export default function InventoryBento() {
     }
   };
 
+  const loadSuppliers = async () => {
+    try {
+      setSuppliers(await getSuppliersApi());
+    } catch (e) {
+      console.warn('Error cargando proveedores:', e);
+      setSuppliers([]);
+    }
+  };
+
   useEffect(() => {
     loadInventory();
+    loadSuppliers();
   }, []);
 
   const lowStockCount = productsList.filter(p => (p.quantityAvailable ?? p.stock ?? 0) <= (p.minStock || 5)).length;
 
+  const openPurchaseModal = (product) => {
+    setSelectedProduct(product);
+    setSelectedSupplierId('');
+    setIncreaseAmount('');
+    setShowPurchaseModal(true);
+  };
+
   const handleStockIncrease = async (e) => {
     e.preventDefault();
     const qty = parseInt(increaseAmount);
-    if (!selectedProduct || isNaN(qty) || qty <= 0) return;
+    if (!selectedProduct || !selectedSupplierId || isNaN(qty) || qty <= 0) return;
 
     try {
       await createPurchaseApi({
-        supplierId: 1,
+        supplierId: Number(selectedSupplierId),
         items: [{
           productId: selectedProduct.id,
           quantity: qty,
@@ -84,8 +105,7 @@ export default function InventoryBento() {
         <button
           onClick={() => {
             if (productsList.length > 0) {
-              setSelectedProduct(productsList[0]);
-              setShowPurchaseModal(true);
+              openPurchaseModal(productsList[0]);
             } else {
               notify('Debes crear primero un producto en el catálogo.', { danger: false });
             }
@@ -209,10 +229,7 @@ export default function InventoryBento() {
                             <Barcode className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => {
-                              setSelectedProduct(item);
-                              setShowPurchaseModal(true);
-                            }}
+                            onClick={() => openPurchaseModal(item)}
                             className="px-2.5 py-1 bg-emerald-50 dark:bg-[#12b76a]/10 hover:bg-[#006d3c] hover:text-white text-[#006d3c] dark:text-[#12b76a] rounded-xl text-[11px] font-bold transition-all cursor-pointer"
                           >
                             + Cargar Stock
@@ -234,6 +251,32 @@ export default function InventoryBento() {
           <form onSubmit={handleStockIncrease} className="bento-card max-w-sm w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
             <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Registrar Compra / Carga de Stock</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Producto: <span className="font-bold text-[#006d3c] dark:text-[#12b76a]">{selectedProduct.name}</span></p>
+
+            {suppliers.length === 0 && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>
+                  Aún no tienes proveedores registrados.{' '}
+                  <Link to="/suppliers" className="underline">Crea uno aquí</Link> antes de registrar una compra.
+                </span>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-600 dark:text-gray-300">Proveedor:</label>
+              <select
+                value={selectedSupplierId}
+                onChange={(e) => setSelectedSupplierId(e.target.value)}
+                className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-sm font-bold text-[#191c1e] dark:text-white focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
+                required
+                disabled={suppliers.length === 0}
+              >
+                <option value="" disabled>Selecciona un proveedor...</option>
+                {suppliers.map(s => (
+                  <option key={s.id} value={s.id}>{s.companyName}</option>
+                ))}
+              </select>
+            </div>
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-600 dark:text-gray-300">Cantidad Comprada:</label>
@@ -258,7 +301,8 @@ export default function InventoryBento() {
               </button>
               <button
                 type="submit"
-                className="w-1/2 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold"
+                disabled={suppliers.length === 0}
+                className="w-1/2 py-2.5 bg-[#006d3c] hover:bg-[#00522c] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl text-xs font-extrabold"
               >
                 Registrar Compra
               </button>

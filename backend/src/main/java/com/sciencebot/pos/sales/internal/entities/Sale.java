@@ -40,6 +40,10 @@ public class Sale {
     @Column(name = "cash_change", nullable = false, precision = 12, scale = 2)
     private BigDecimal cashChange;
 
+    /** Código del valor del tema de parámetros PAYMENT_METHODS (CASH, NEQUI, CARD, TRANSFER...). */
+    @Column(name = "payment_method", nullable = false, length = 30)
+    private String paymentMethod = "CASH";
+
     @Column(name = "user_id", nullable = false)
     private Long userId;
 

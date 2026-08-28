@@ -57,7 +57,8 @@ public class SaleMapper {
                 sale.getCashReceived(),
                 sale.getCashChange(),
                 username,
-                itemDtos
+                itemDtos,
+                sale.getPaymentMethod()
         );
     }
 

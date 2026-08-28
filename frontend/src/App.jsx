@@ -18,6 +18,7 @@ import StoreOnboardingBento from './pages/onboarding/StoreOnboardingBento';
 import DashboardBento from './pages/DashboardBento';
 import POSBento from './pages/POSBento';
 import InventoryBento from './pages/InventoryBento';
+import SuppliersBento from './pages/SuppliersBento';
 import ProductsBento from './pages/ProductsBento';
 import CustomersBento from './pages/CustomersBento';
 import InvoicingBento from './pages/InvoicingBento';
@@ -25,6 +26,7 @@ import SettingsBento from './pages/SettingsBento';
 import StoresBento from './pages/backoffice/StoresBento';
 import CategoriesBento from './pages/backoffice/CategoriesBento';
 import ProductCategoriesBento from './pages/backoffice/ProductCategoriesBento';
+import ParametersBento from './pages/backoffice/ParametersBento';
 import LegalDocumentsBento from './pages/backoffice/LegalDocumentsBento';
 import SupportTicketsBento from './pages/backoffice/SupportTicketsBento';
 import StaffBento from './pages/backoffice/StaffBento';
@@ -125,6 +127,7 @@ function ProtectedLayoutContent({ mobileSidebarOpen, setMobileSidebarOpen, sideb
             <Route path="/" element={<DashboardBento />} />
             <Route path="/pos" element={<POSBento />} />
             <Route path="/inventory" element={<InventoryBento />} />
+            <Route path="/suppliers" element={<SuppliersBento />} />
             <Route path="/products" element={<ProductsBento />} />
             <Route path="/customers" element={<CustomersBento />} />
             <Route path="/invoicing" element={<InvoicingBento />} />
@@ -181,6 +184,7 @@ function BackofficeProtectedLayout() {
             <Route path="/" element={<StoresBento />} />
             <Route path="/categories" element={<CategoriesBento />} />
             <Route path="/product-categories" element={<ProductCategoriesBento />} />
+            <Route path="/parameters" element={<ParametersBento />} />
             <Route path="/legal-documents" element={<LegalDocumentsBento />} />
             <Route path="/support" element={<SupportTicketsBento />} />
             <Route path="/staff" element={<StaffBento />} />

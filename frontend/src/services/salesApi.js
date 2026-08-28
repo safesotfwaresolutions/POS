@@ -19,7 +19,8 @@ export async function createSaleApi(saleCommand, idempotencyKey) {
         quantity: item.quantity,
         unitPrice: item.unitPrice
       })),
-      cashReceived: saleCommand.cashReceived
+      cashReceived: saleCommand.cashReceived,
+      paymentMethod: saleCommand.paymentMethod || 'CASH'
     }),
   });
 }

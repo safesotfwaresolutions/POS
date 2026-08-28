@@ -114,6 +114,7 @@ public class SaleServiceImpl implements SaleFacade {
         sale.setTotalAmount(BigDecimal.ZERO);
         sale.setCashReceived(command.cashReceived());
         sale.setCashChange(BigDecimal.ZERO);
+        sale.setPaymentMethod(normalizePaymentMethod(command.paymentMethod()));
 
         // Generate invoice number from database sequence
         Long seq = saleRepository.getNextInvoiceSeq();
@@ -200,6 +201,10 @@ public class SaleServiceImpl implements SaleFacade {
     @Override
     public Optional<SaleDto> getById(Long id) {
         return saleRepository.findById(id).map(saleMapper::toDto);
+    }
+
+    private static String normalizePaymentMethod(String paymentMethod) {
+        return (paymentMethod == null || paymentMethod.isBlank()) ? "CASH" : paymentMethod.trim().toUpperCase();
     }
 
     private static String normalizeIdempotencyKey(String idempotencyKey) {

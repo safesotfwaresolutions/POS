@@ -17,6 +17,8 @@ import {
 import { getProductsApi } from '../services/productsApi';
 import { getCustomersApi } from '../services/customersApi';
 import { createSaleApi } from '../services/salesApi';
+import { getCategoriesApi } from '../services/categoriesApi';
+import { getParameterValuesApi } from '../services/parametersApi';
 import { newIdempotencyKey } from '../services/http';
 import { useModal } from '../context/ModalContext';
 
@@ -24,8 +26,10 @@ export default function POSBento() {
   const { notify } = useModal();
   const [productsList, setProductsList] = useState([]);
   const [customersList, setCustomersList] = useState([]);
-  const [categoriesList] = useState(['Todos', 'Bebidas', 'Lácteos', 'Panadería', 'Abarrotes', 'Snacks']);
+  const [categoriesList, setCategoriesList] = useState(['Todos']);
   const [selectedCategory, setSelectedCategory] = useState('Todos');
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('CASH');
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -53,6 +57,16 @@ export default function POSBento() {
       if (Array.isArray(custs)) {
         setCustomersList(custs);
         if (custs.length > 0) setSelectedCustomer(custs[0]);
+      }
+
+      const cats = await getCategoriesApi();
+      if (Array.isArray(cats)) {
+        setCategoriesList(['Todos', ...cats.map(c => c.name)]);
+      }
+
+      const methods = await getParameterValuesApi('PAYMENT_METHODS');
+      if (Array.isArray(methods)) {
+        setPaymentMethods(methods.filter(m => m.active));
       }
     } catch (e) {
       console.warn('Error cargando catálogo POS:', e);
@@ -121,7 +135,8 @@ export default function POSBento() {
         unitPrice: item.price
       })),
       cashReceived: cashNumber,
-      totalAmount: total
+      totalAmount: total,
+      paymentMethod: selectedPaymentMethod
     };
 
     // Reutiliza la clave del intento actual si existe (reintento); si no, genera una nueva.
@@ -159,6 +174,7 @@ export default function POSBento() {
     setShowMobileCart(false);
     setCart([]);
     setCashTendered('');
+    setSelectedPaymentMethod('CASH');
     await loadData();
   };
 
@@ -457,7 +473,7 @@ export default function POSBento() {
                 <div className="p-2 bg-[#006d3c] text-white rounded-2xl">
                   <Banknote className="w-5 h-5" />
                 </div>
-                <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Cobro en Efectivo</h3>
+                <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Cobrar Venta</h3>
               </div>
               <button onClick={() => setShowCheckoutModal(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
                 <X className="w-5 h-5" />
@@ -471,40 +487,76 @@ export default function POSBento() {
               </h2>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-extrabold text-gray-700 dark:text-gray-300 block">
-                Efectivo Recibido del Cliente:
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-2.5 text-gray-400 dark:text-gray-500 font-bold">$</span>
-                <input
-                  type="number"
-                  value={cashTendered}
-                  onChange={(e) => setCashTendered(e.target.value)}
-                  placeholder="Ingrese monto pagado..."
-                  className="w-full pl-8 pr-4 py-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-base font-black text-[#191c1e] dark:text-white focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
-                  autoFocus
-                />
+            {paymentMethods.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-xs font-extrabold text-gray-700 dark:text-gray-300 block">
+                  Método de Pago:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {paymentMethods.map(m => (
+                    <button
+                      key={m.code}
+                      type="button"
+                      onClick={() => {
+                        setSelectedPaymentMethod(m.code);
+                        setCashTendered(m.code === 'CASH' ? '' : total.toString());
+                      }}
+                      className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        selectedPaymentMethod === m.code
+                          ? 'bg-[#006d3c] border-[#006d3c] text-white'
+                          : 'bg-gray-100 dark:bg-[#1e293b] border-transparent text-[#191c1e] dark:text-white hover:border-[#12b76a]'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                {[total, 20000, 50000, 100000].map(val => (
-                  <button
-                    key={val}
-                    onClick={() => setCashTendered(val.toString())}
-                    className="py-1.5 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-[#191c1e] dark:text-white rounded-xl text-xs font-bold"
-                  >
-                    ${(val / 1000).toFixed(0)}k
-                  </button>
-                ))}
+            {selectedPaymentMethod === 'CASH' ? (
+              <div className="space-y-2">
+                <label className="text-xs font-extrabold text-gray-700 dark:text-gray-300 block">
+                  Efectivo Recibido del Cliente:
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-gray-400 dark:text-gray-500 font-bold">$</span>
+                  <input
+                    type="number"
+                    value={cashTendered}
+                    onChange={(e) => setCashTendered(e.target.value)}
+                    placeholder="Ingrese monto pagado..."
+                    className="w-full pl-8 pr-4 py-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-base font-black text-[#191c1e] dark:text-white focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                  {[total, 20000, 50000, 100000].map(val => (
+                    <button
+                      key={val}
+                      onClick={() => setCashTendered(val.toString())}
+                      className="py-1.5 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-[#191c1e] dark:text-white rounded-xl text-xs font-bold"
+                    >
+                      ${(val / 1000).toFixed(0)}k
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 font-semibold text-center">
+                Pago electrónico/digital — se registra por el monto exacto de la venta, sin cambio.
+              </p>
+            )}
 
+            {selectedPaymentMethod === 'CASH' && (
             <div className={`p-4 rounded-2xl border ${
               change >= 0 ? 'bg-emerald-50 dark:bg-[#12b76a]/10 border-emerald-200 dark:border-[#12b76a]/30' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/40'
             }`}>
               <div className="flex justify-between items-center">
-                <span className="text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase">Devuelta / Cambio:</span>
+                <span className="text-xs font-extrabold text-gray-600 dark:text-gray-300 uppercase">
+                  Devuelta / Cambio:
+                </span>
                 <span className={`text-xl sm:text-2xl font-black tabular-nums ${
                   change >= 0 ? 'text-[#006d3c] dark:text-[#12b76a]' : 'text-red-600 dark:text-red-400'
                 }`}>
@@ -517,6 +569,7 @@ export default function POSBento() {
                 </p>
               )}
             </div>
+            )}
 
             <div className="flex items-center gap-3 pt-2">
               <button

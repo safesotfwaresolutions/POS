@@ -56,7 +56,7 @@ class SaleServiceImplTest {
     @Test
     void registerSale_Success() {
         CreateSaleItemCommand item = new CreateSaleItemCommand(1L, 2);
-        CreateSaleCommand command = new CreateSaleCommand(1L, BigDecimal.valueOf(20.00), true, List.of(item));
+        CreateSaleCommand command = new CreateSaleCommand(1L, BigDecimal.valueOf(20.00), true, List.of(item), "CASH");
 
         CustomerDto customer = new CustomerDto(1L, "Maria Lopez", "123", "a@a.com", "123", "Calle", true);
         when(customerFacade.getById(1L)).thenReturn(Optional.of(customer));
@@ -73,7 +73,7 @@ class SaleServiceImplTest {
         saved.setCashChange(BigDecimal.valueOf(4.00));
         when(saleRepository.saveAndFlush(any(Sale.class))).thenReturn(saved);
 
-        SaleDto expectedDto = new SaleDto(100L, "FACT-000001", null, "Maria Lopez", BigDecimal.valueOf(16.00), BigDecimal.valueOf(20.00), BigDecimal.valueOf(4.00), "admin", List.of());
+        SaleDto expectedDto = new SaleDto(100L, "FACT-000001", null, "Maria Lopez", BigDecimal.valueOf(16.00), BigDecimal.valueOf(20.00), BigDecimal.valueOf(4.00), "admin", List.of(), "CASH");
         when(saleMapper.toDto(any(Sale.class))).thenReturn(expectedDto);
 
         SaleDto result = saleService.registerSale(command);
@@ -88,7 +88,7 @@ class SaleServiceImplTest {
     @Test
     void registerSale_DuplicateIdempotencyKey_ReturnsExistingWithoutSideEffects() {
         CreateSaleItemCommand item = new CreateSaleItemCommand(1L, 2);
-        CreateSaleCommand command = new CreateSaleCommand(1L, BigDecimal.valueOf(20.00), true, List.of(item));
+        CreateSaleCommand command = new CreateSaleCommand(1L, BigDecimal.valueOf(20.00), true, List.of(item), "CASH");
 
         Sale existing = new Sale();
         existing.setId(100L);
@@ -96,7 +96,7 @@ class SaleServiceImplTest {
         existing.setIdempotencyKey("key-123");
         when(saleRepository.findByIdempotencyKey("key-123")).thenReturn(Optional.of(existing));
 
-        SaleDto existingDto = new SaleDto(100L, "FACT-000001", null, "Maria Lopez", BigDecimal.valueOf(16.00), BigDecimal.valueOf(20.00), BigDecimal.valueOf(4.00), "admin", List.of());
+        SaleDto existingDto = new SaleDto(100L, "FACT-000001", null, "Maria Lopez", BigDecimal.valueOf(16.00), BigDecimal.valueOf(20.00), BigDecimal.valueOf(4.00), "admin", List.of(), "CASH");
         when(saleMapper.toDto(existing)).thenReturn(existingDto);
 
         SaleDto result = saleService.registerSale(command, "key-123");
@@ -112,7 +112,7 @@ class SaleServiceImplTest {
     @Test
     void registerSale_InsufficientCash_ThrowsException() {
         CreateSaleItemCommand item = new CreateSaleItemCommand(1L, 2);
-        CreateSaleCommand command = new CreateSaleCommand(1L, BigDecimal.valueOf(10.00), false, List.of(item)); // Total is 16, cash is 10
+        CreateSaleCommand command = new CreateSaleCommand(1L, BigDecimal.valueOf(10.00), false, List.of(item), "CASH"); // Total is 16, cash is 10
 
         CustomerDto customer = new CustomerDto(1L, "Maria Lopez", "123", "a@a.com", "123", "Calle", true);
         when(customerFacade.getById(1L)).thenReturn(Optional.of(customer));

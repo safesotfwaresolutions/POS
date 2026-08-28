@@ -70,7 +70,7 @@ class BillingServiceImplTest {
     void processElectronicInvoice_WithMockProvider_Success() {
         ReflectionTestUtils.setField(billingService, "activeProviderName", "mock");
 
-        SaleDto saleDto = new SaleDto(1L, "FACT-000001", null, "Cliente General", BigDecimal.valueOf(50.0), BigDecimal.valueOf(50.0), BigDecimal.ZERO, "admin", List.of());
+        SaleDto saleDto = new SaleDto(1L, "FACT-000001", null, "Cliente General", BigDecimal.valueOf(50.0), BigDecimal.valueOf(50.0), BigDecimal.ZERO, "admin", List.of(), "CASH");
         ElectronicInvoice pendingEntity = new ElectronicInvoice();
         pendingEntity.setId(10L);
         pendingEntity.setSaleId(1L);
@@ -97,7 +97,7 @@ class BillingServiceImplTest {
 
     @Test
     void processElectronicInvoice_AlreadyValidated_DoesNotCallProvider() {
-        SaleDto saleDto = new SaleDto(1L, "FACT-000001", null, "Cliente General", BigDecimal.valueOf(50.0), BigDecimal.valueOf(50.0), BigDecimal.ZERO, "admin", List.of());
+        SaleDto saleDto = new SaleDto(1L, "FACT-000001", null, "Cliente General", BigDecimal.valueOf(50.0), BigDecimal.valueOf(50.0), BigDecimal.ZERO, "admin", List.of(), "CASH");
         ElectronicInvoice validatedEntity = new ElectronicInvoice();
         validatedEntity.setId(10L);
         validatedEntity.setSaleId(1L);
@@ -118,7 +118,7 @@ class BillingServiceImplTest {
 
     @Test
     void retryInvoice_AlreadyValidated_ThrowsException() {
-        SaleDto saleDto = new SaleDto(1L, "FACT-000001", null, "Cliente General", BigDecimal.valueOf(50.0), BigDecimal.valueOf(50.0), BigDecimal.ZERO, "admin", List.of());
+        SaleDto saleDto = new SaleDto(1L, "FACT-000001", null, "Cliente General", BigDecimal.valueOf(50.0), BigDecimal.valueOf(50.0), BigDecimal.ZERO, "admin", List.of(), "CASH");
         when(saleFacade.getById(1L)).thenReturn(Optional.of(saleDto));
 
         ElectronicInvoice validatedEntity = new ElectronicInvoice();

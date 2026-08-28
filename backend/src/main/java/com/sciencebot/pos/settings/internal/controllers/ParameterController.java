@@ -29,7 +29,7 @@ public class ParameterController {
     }
 
     @GetMapping("/topics")
-    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'SUPERVISOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMINISTRATOR', 'SUPERVISOR', 'SELLER')")
     @Operation(summary = "Listar temas", description = "Retorna todos los temas de parámetros ordenados por nombre.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista de temas",
@@ -43,8 +43,8 @@ public class ParameterController {
     }
 
     @PostMapping("/topics")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
-    @Operation(summary = "Crear tema", description = "Crea un nuevo tema de parámetros. Solo **ADMINISTRATOR**.")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Crear tema", description = "Crea un nuevo tema de parámetros. Solo **SUPER_ADMIN** (los catálogos son globales para toda la plataforma).")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Tema creado",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -60,7 +60,7 @@ public class ParameterController {
     }
 
     @GetMapping("/topics/{code}/values")
-    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'SUPERVISOR', 'SELLER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMINISTRATOR', 'SUPERVISOR', 'SELLER')")
     @Operation(
             summary = "Listar valores de un tema",
             description = "Retorna los valores del tema indicado (incluye inactivos) ordenados por `sortOrder`."
@@ -79,8 +79,8 @@ public class ParameterController {
     }
 
     @PostMapping("/topics/{code}/values")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
-    @Operation(summary = "Agregar valor", description = "Agrega un valor al tema indicado. Solo **ADMINISTRATOR**.")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Agregar valor", description = "Agrega un valor al tema indicado. Solo **SUPER_ADMIN**.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Valor agregado",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -99,10 +99,10 @@ public class ParameterController {
     }
 
     @PutMapping("/values/{id}")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(
             summary = "Actualizar valor",
-            description = "Actualiza etiqueta, valor extra, orden o estado de un valor. Los campos nulos no se modifican. Solo **ADMINISTRATOR**."
+            description = "Actualiza etiqueta, valor extra, orden o estado de un valor. Los campos nulos no se modifican. Solo **SUPER_ADMIN**."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Valor actualizado",
@@ -120,10 +120,10 @@ public class ParameterController {
     }
 
     @DeleteMapping("/values/{id}")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(
             summary = "Desactivar valor",
-            description = "Borrado lógico: marca el valor como inactivo (`active = false`). Solo **ADMINISTRATOR**."
+            description = "Borrado lógico: marca el valor como inactivo (`active = false`). Solo **SUPER_ADMIN**."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Valor desactivado"),

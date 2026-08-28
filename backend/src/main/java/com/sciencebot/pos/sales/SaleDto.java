@@ -24,5 +24,7 @@ public record SaleDto(
         @Schema(description = "Username del vendedor que registró la venta", example = "seller01")
         String sellerUsername,
         @Schema(description = "Lista de productos vendidos")
-        List<SaleItemDto> items
+        List<SaleItemDto> items,
+        @Schema(description = "Código del método de pago usado (CASH, NEQUI, CARD, TRANSFER...)", example = "CASH")
+        String paymentMethod
 ) {}
