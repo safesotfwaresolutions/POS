@@ -14,7 +14,10 @@ import {
   Package,
   ChevronDown
 } from 'lucide-react';
-import { getProductsApi, getCustomersApi, createSaleApi, newIdempotencyKey } from '../services/api';
+import { getProductsApi } from '../services/productsApi';
+import { getCustomersApi } from '../services/customersApi';
+import { createSaleApi } from '../services/salesApi';
+import { newIdempotencyKey } from '../services/http';
 
 export default function POSBento() {
   const [productsList, setProductsList] = useState([]);

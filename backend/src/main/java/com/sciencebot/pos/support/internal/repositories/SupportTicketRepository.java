@@ -11,7 +11,7 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicketEnti
 
     java.util.Optional<SupportTicketEntity> findByTicketNumber(String ticketNumber);
 
-    @Query("SELECT t FROM SupportTicketEntity t WHERE (:type IS NULL OR t.type = :type) AND (:status IS NULL OR t.status = :status) AND (:priority IS NULL OR t.priority = :priority) AND (:storeId IS NULL OR t.storeId = :storeId) AND (:q IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT(\'%\',:q,\'%\')) OR LOWER(t.contactEmail) LIKE LOWER(CONCAT(\'%\',:q,\'%\')) OR LOWER(t.ticketNumber) LIKE LOWER(CONCAT(\'%\',:q,\'%\')))")
+    @Query("SELECT t FROM SupportTicketEntity t WHERE (:type IS NULL OR t.type = :type) AND (:status IS NULL OR t.status = :status) AND (:priority IS NULL OR t.priority = :priority) AND (:storeId IS NULL OR t.storeId = :storeId) AND (:q IS NULL OR LOWER(t.title) LIKE :q OR LOWER(t.contactEmail) LIKE :q OR LOWER(t.ticketNumber) LIKE :q)")
     Page<SupportTicketEntity> searchTickets(
             @Param("type") String type,
             @Param("status") String status,

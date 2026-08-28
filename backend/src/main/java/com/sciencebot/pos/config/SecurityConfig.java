@@ -14,7 +14,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -47,6 +50,15 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/backoffice/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().permitAll()
+            )
+            .exceptionHandling(ex -> ex
+                // Sin este handler, Spring Security responde 403 tanto a peticiones
+                // no autenticadas (token ausente/expirado/invalido) como a las que
+                // si estan autenticadas pero sin el rol requerido. Eso rompe el refresh
+                // automatico del frontend, que solo reintenta en 401. Aqui se separan:
+                // 401 = no autenticado, 403 = autenticado sin permisos suficientes.
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .accessDeniedHandler(new AccessDeniedHandlerImpl())
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

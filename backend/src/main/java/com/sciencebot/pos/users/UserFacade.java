@@ -13,4 +13,5 @@ public interface UserFacade {
     void changePassword(Long id, ChangePasswordCommand command);
     UserDto getById(Long id);
     Page<UserDto> listUsers(Pageable pageable);
+    Page<UserDto> listUsersByRole(String role, Pageable pageable);
 }

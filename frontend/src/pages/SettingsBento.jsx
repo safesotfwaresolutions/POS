@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Store, Key, Printer, AlertCircle } from 'lucide-react';
-import { getSettingsApi, updateSettingsApi } from '../services/api';
+import { getSettingsApi, updateSettingsApi } from '../services/settingsApi';
 
 export default function SettingsBento() {
   const [saved, setSaved] = useState(false);

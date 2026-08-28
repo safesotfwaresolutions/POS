@@ -1,6 +1,7 @@
 HELP.md
 target/
 backend/target/
+backend/data/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/

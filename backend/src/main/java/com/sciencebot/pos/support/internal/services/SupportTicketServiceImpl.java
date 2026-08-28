@@ -67,7 +67,7 @@ public class SupportTicketServiceImpl implements SupportTicketFacade {
         String t = (type == null || type.isBlank()) ? null : type.toUpperCase();
         String s = (status == null || status.isBlank()) ? null : status.toUpperCase();
         String p = (priority == null || priority.isBlank()) ? null : priority.toUpperCase();
-        String qp = (q == null || q.isBlank()) ? null : q.trim();
+        String qp = (q == null || q.isBlank()) ? null : "%" + q.trim().toLowerCase() + "%";
         return repository.searchTickets(t, s, p, storeId, qp, pageable).map(mapper::toDto);
     }
 

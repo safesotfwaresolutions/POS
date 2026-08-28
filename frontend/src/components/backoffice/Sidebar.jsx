@@ -1,33 +1,28 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  ShoppingCart,
-  Package,
-  Tag,
-  Users,
-  FileText,
-  Settings,
-  HelpCircle,
+  ShieldCheck,
+  Store,
+  Tags,
+  ScrollText,
+  LifeBuoy,
+  UserCog,
   LogOut,
   ChevronLeft,
-  ChevronRight,
-  Zap
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
+export default function BackofficeSidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/pos', label: 'Punto de Venta', icon: ShoppingCart },
-    { path: '/products', label: 'Productos', icon: Tag },
-    { path: '/inventory', label: 'Inventario', icon: Package },
-    { path: '/customers', label: 'Clientes', icon: Users },
-    { path: '/invoicing', label: 'Facturación DIAN', icon: FileText },
-    { path: '/settings', label: 'Configuración', icon: Settings },
+    { path: '/backoffice', label: 'Locales', icon: Store, end: true },
+    { path: '/backoffice/categories', label: 'Categorías', icon: Tags },
+    { path: '/backoffice/legal-documents', label: 'Textos Legales', icon: ScrollText },
+    { path: '/backoffice/support', label: 'Soporte y PQRs', icon: LifeBuoy },
+    { path: '/backoffice/staff', label: 'Operadores', icon: UserCog },
   ];
 
   const handleLogout = async () => {
@@ -42,16 +37,14 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
 
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
       {isOpen && (
-        <div 
+        <div
           onClick={onClose}
           className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden transition-opacity"
         />
       )}
 
-      {/* Sidebar - Expandable / Collapsible Sidebar */}
-      <aside 
+      <aside
         className={`fixed top-0 left-0 h-screen bg-white dark:bg-[#1e293b] text-[#191c1e] dark:text-white z-50 flex flex-col justify-between py-6 border-r border-[#e0e3e6] dark:border-[#334155] shadow-xs select-none transition-all duration-300 ${
           isCollapsed ? 'lg:w-20' : 'lg:w-64'
         } ${
@@ -59,26 +52,24 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
         }`}
       >
         <div className="flex flex-col items-center w-full px-3">
-          {/* Brand Header */}
           <div className={`flex items-center gap-3 w-full pb-4 border-b border-[#e0e3e6] dark:border-[#334155] ${
             isCollapsed ? 'justify-center' : 'px-2 justify-between'
           }`}>
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-10 h-10 rounded-2xl bg-[#006d3c] text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
-                <Zap className="w-5 h-5 fill-white" />
+                <ShieldCheck className="w-5 h-5" />
               </div>
               {(!isCollapsed || isOpen) && (
                 <div className="truncate">
                   <h1 className="font-extrabold text-base leading-tight text-[#191c1e] dark:text-white truncate">
-                    ProPOS <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]">Bento</span>
+                    ProPOS <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]">Backoffice</span>
                   </h1>
-                  <p className="text-[10px] text-gray-400 font-medium">Caja Principal</p>
+                  <p className="text-[10px] text-gray-400 font-medium">Administración SaaS</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Navigation Menu */}
           <nav className="flex flex-col gap-2 w-full mt-4">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -86,6 +77,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                 <NavLink
                   key={item.path}
                   to={item.path}
+                  end={item.end}
                   onClick={handleNavClick}
                   title={isCollapsed ? item.label : undefined}
                   className={({ isActive }) =>
@@ -108,9 +100,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
           </nav>
         </div>
 
-        {/* Bottom Tools & Collapse Toggle */}
         <div className="flex flex-col gap-2 w-full px-3 pt-3 border-t border-[#e0e3e6] dark:border-[#334155]">
-          {/* Collapse/Expand Desktop Button */}
           <button
             onClick={onToggleCollapse}
             className={`hidden lg:flex items-center gap-3 p-2.5 rounded-2xl text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#334155] transition-colors cursor-pointer ${
@@ -128,18 +118,6 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
             )}
           </button>
 
-          {/* Help Button */}
-          <button 
-            title="Soporte"
-            className={`flex items-center gap-3 p-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#334155] hover:text-[#006d3c] rounded-2xl transition-all cursor-pointer text-xs font-semibold ${
-              isCollapsed && !isOpen ? 'justify-center' : 'px-3'
-            }`}
-          >
-            <HelpCircle className="w-5 h-5 shrink-0" />
-            {(!isCollapsed || isOpen) && <span>Soporte</span>}
-          </button>
-
-          {/* Logout Button */}
           <button
             onClick={handleLogout}
             title="Cerrar Sesión"
