@@ -25,6 +25,7 @@ import {
   reviewBackofficeStoreDocumentApi,
   getBackofficeStoreCategoriesApi
 } from '../../services/backoffice/storesApi';
+import { useModal } from '../../context/ModalContext';
 
 const STATUSES = ['ACTIVE', 'INACTIVE', 'PENDING_VERIFICATION', 'SUSPENDED'];
 
@@ -75,6 +76,7 @@ function MetricCard({ label, value, icon: Icon, accent }) {
 }
 
 export default function StoresBento() {
+  const { notify } = useModal();
   const [metrics, setMetrics] = useState(null);
   const [stores, setStores] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -217,7 +219,7 @@ export default function StoresBento() {
       await reviewBackofficeStoreDocumentApi(docsStore.id, doc.id, 'APPROVED');
       setDocuments(await getBackofficeStoreDocumentsApi(docsStore.id));
     } catch (err) {
-      alert('Error aprobando documento: ' + err.message);
+      notify('Error aprobando documento: ' + err.message);
     }
   };
 
@@ -229,7 +231,7 @@ export default function StoresBento() {
       setRejectionReason('');
       setDocuments(await getBackofficeStoreDocumentsApi(docsStore.id));
     } catch (err) {
-      alert('Error rechazando documento: ' + err.message);
+      notify('Error rechazando documento: ' + err.message);
     }
   };
 

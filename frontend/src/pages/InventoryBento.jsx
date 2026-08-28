@@ -11,9 +11,11 @@ import {
 } from 'lucide-react';
 import { getProductsApi } from '../services/productsApi';
 import { createPurchaseApi } from '../services/inventoryApi';
+import { useModal } from '../context/ModalContext';
 import BarcodeModal from '../components/BarcodeModal';
 
 export default function InventoryBento() {
+  const { notify } = useModal();
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -60,7 +62,7 @@ export default function InventoryBento() {
       setIncreaseAmount('');
       await loadInventory();
     } catch (e) {
-      alert('Error registrando compra: ' + e.message);
+      notify('Error registrando compra: ' + e.message);
     }
   };
 
@@ -85,7 +87,7 @@ export default function InventoryBento() {
               setSelectedProduct(productsList[0]);
               setShowPurchaseModal(true);
             } else {
-              alert('Debes crear primero un producto en el catálogo.');
+              notify('Debes crear primero un producto en el catálogo.', { danger: false });
             }
           }}
           className="px-4 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#006d3c]/20 cursor-pointer"

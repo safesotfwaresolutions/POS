@@ -13,6 +13,7 @@ import {
 import { getProductsApi, createProductApi, deleteProductApi } from '../services/productsApi';
 import { getCategoriesApi } from '../services/categoriesApi';
 import { createInventoryMovementApi } from '../services/inventoryApi';
+import { useModal } from '../context/ModalContext';
 import BarcodeModal from '../components/BarcodeModal';
 
 const EMPTY_PRODUCT = {
@@ -26,6 +27,7 @@ const EMPTY_PRODUCT = {
 };
 
 export default function ProductsBento() {
+  const { confirm, notify } = useModal();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,12 +96,13 @@ export default function ProductsBento() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este producto?')) return;
+    const ok = await confirm('¿Seguro que deseas eliminar este producto?', { title: 'Eliminar producto' });
+    if (!ok) return;
     try {
       await deleteProductApi(id);
       await loadProducts();
     } catch (e) {
-      alert('Error eliminando producto: ' + e.message);
+      notify('Error eliminando producto: ' + e.message);
     }
   };
 

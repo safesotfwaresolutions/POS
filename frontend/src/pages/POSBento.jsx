@@ -18,8 +18,10 @@ import { getProductsApi } from '../services/productsApi';
 import { getCustomersApi } from '../services/customersApi';
 import { createSaleApi } from '../services/salesApi';
 import { newIdempotencyKey } from '../services/http';
+import { useModal } from '../context/ModalContext';
 
 export default function POSBento() {
+  const { notify } = useModal();
   const [productsList, setProductsList] = useState([]);
   const [customersList, setCustomersList] = useState([]);
   const [categoriesList] = useState(['Todos', 'Bebidas', 'Lácteos', 'Panadería', 'Abarrotes', 'Snacks']);
@@ -132,7 +134,7 @@ export default function POSBento() {
     try {
       result = await createSaleApi(saleCommand, saleIdempotencyKeyRef.current);
     } catch (e) {
-      alert('Error registrando la venta: ' + e.message);
+      notify('Error registrando la venta: ' + e.message);
       return;
     } finally {
       setIsSubmittingSale(false);
@@ -574,7 +576,7 @@ export default function POSBento() {
 
             <div className="flex gap-2 pt-2">
               <button
-                onClick={() => alert(`Imprimiendo tiquete térmico para venta ${saleCompleted.id}...`)}
+                onClick={() => notify(`Imprimiendo tiquete térmico para venta ${saleCompleted.id}...`, { title: 'Imprimir tiquete', danger: false })}
                 className="w-1/2 py-2.5 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-[#191c1e] dark:text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5"
               >
                 <Printer className="w-4 h-4" /> Imprimir Tiquete

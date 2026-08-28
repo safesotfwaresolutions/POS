@@ -7,10 +7,12 @@ import {
   deleteBackofficeLegalDocumentApi,
   toggleBackofficeLegalDocumentPublishApi
 } from '../../services/backoffice/legalApi';
+import { useModal } from '../../context/ModalContext';
 
 const EMPTY_FORM = { id: null, slug: '', title: '', content: '', version: '' };
 
 export default function LegalDocumentsBento() {
+  const { confirm } = useModal();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -78,7 +80,8 @@ export default function LegalDocumentsBento() {
   };
 
   const handleDelete = async (doc) => {
-    if (!window.confirm(`¿Eliminar el documento "${doc.title}"? Solo es posible si no está publicado.`)) return;
+    const ok = await confirm(`¿Eliminar el documento "${doc.title}"? Solo es posible si no está publicado.`, { title: 'Eliminar documento' });
+    if (!ok) return;
     setErrorMsg('');
     try {
       await deleteBackofficeLegalDocumentApi(doc.id);

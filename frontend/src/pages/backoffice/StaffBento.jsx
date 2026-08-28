@@ -9,11 +9,13 @@ import {
   deleteBackofficeStaffApi
 } from '../../services/backoffice/staffApi';
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
 
 const EMPTY_STAFF_FORM = { fullName: '', username: '', email: '', password: '' };
 
 export default function StaffBento() {
   const { user } = useAuth();
+  const { confirm } = useModal();
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -96,7 +98,8 @@ export default function StaffBento() {
   };
 
   const handleDelete = async (member) => {
-    if (!window.confirm(`¿Desactivar al operador "${member.fullName}"?`)) return;
+    const ok = await confirm(`¿Desactivar al operador "${member.fullName}"?`, { title: 'Desactivar operador' });
+    if (!ok) return;
     setErrorMsg('');
     try {
       await deleteBackofficeStaffApi(member.id);

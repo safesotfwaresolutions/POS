@@ -6,10 +6,12 @@ import {
   updateCategoryApi,
   deleteCategoryApi
 } from '../../services/categoriesApi';
+import { useModal } from '../../context/ModalContext';
 
 const EMPTY_FORM = { id: null, name: '', description: '' };
 
 export default function ProductCategoriesBento() {
+  const { confirm, notify } = useModal();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -60,12 +62,13 @@ export default function ProductCategoriesBento() {
   };
 
   const handleDelete = async (cat) => {
-    if (!window.confirm(`¿Eliminar la categoría "${cat.name}"?`)) return;
+    const ok = await confirm(`¿Eliminar la categoría "${cat.name}"?`, { title: 'Eliminar categoría' });
+    if (!ok) return;
     try {
       await deleteCategoryApi(cat.id);
       await loadCategories();
     } catch (err) {
-      alert('Error eliminando categoría: ' + err.message);
+      notify('Error eliminando categoría: ' + err.message);
     }
   };
 

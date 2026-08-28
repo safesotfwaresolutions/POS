@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ModalProvider } from './context/ModalContext';
 import { getOwnStoreApi } from './services/storesApi';
 
 import Sidebar from './components/layout/Sidebar';
@@ -196,16 +197,18 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginBento />} />
-            <Route path="/register" element={<RegisterBento />} />
-            <Route path="/verify-email" element={<VerifyEmailBento />} />
-            <Route path="/onboarding/store" element={<StoreOnboardingBento />} />
-            <Route path="/backoffice/*" element={<BackofficeProtectedLayout />} />
-            <Route path="/*" element={<ProtectedLayout />} />
-          </Routes>
-        </AuthProvider>
+        <ModalProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<LoginBento />} />
+              <Route path="/register" element={<RegisterBento />} />
+              <Route path="/verify-email" element={<VerifyEmailBento />} />
+              <Route path="/onboarding/store" element={<StoreOnboardingBento />} />
+              <Route path="/backoffice/*" element={<BackofficeProtectedLayout />} />
+              <Route path="/*" element={<ProtectedLayout />} />
+            </Routes>
+          </AuthProvider>
+        </ModalProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

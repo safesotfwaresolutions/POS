@@ -6,10 +6,12 @@ import {
   updateBackofficeStoreCategoryApi,
   deleteBackofficeStoreCategoryApi
 } from '../../services/backoffice/storesApi';
+import { useModal } from '../../context/ModalContext';
 
 const EMPTY_FORM = { id: null, name: '', description: '' };
 
 export default function CategoriesBento() {
+  const { confirm, notify } = useModal();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -60,12 +62,13 @@ export default function CategoriesBento() {
   };
 
   const handleDeactivate = async (cat) => {
-    if (!window.confirm(`¿Desactivar la categoría "${cat.name}"?`)) return;
+    const ok = await confirm(`¿Desactivar la categoría "${cat.name}"?`, { title: 'Desactivar categoría' });
+    if (!ok) return;
     try {
       await deleteBackofficeStoreCategoryApi(cat.id);
       await loadCategories();
     } catch (err) {
-      alert('Error desactivando categoría: ' + err.message);
+      notify('Error desactivando categoría: ' + err.message);
     }
   };
 
