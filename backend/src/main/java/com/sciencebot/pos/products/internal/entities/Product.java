@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "products", uniqueConstraints = {
-        @UniqueConstraint(name = "UK_products_internal_code", columnNames = "internal_code"),
-        @UniqueConstraint(name = "UK_products_barcode", columnNames = "barcode")
+        @UniqueConstraint(name = "UK_products_store_internal_code", columnNames = {"store_id", "internal_code"}),
+        @UniqueConstraint(name = "UK_products_store_barcode", columnNames = {"store_id", "barcode"})
 })
 @Getter
 @Setter
@@ -19,6 +19,10 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /** Local (tenant) dueño del producto. Ningun otro local puede ver ni modificar este registro. */
+    @Column(name = "store_id", nullable = false)
+    private Long storeId;
 
     @Column(name = "internal_code", nullable = false, length = 50)
     private String internalCode;

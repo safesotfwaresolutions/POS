@@ -1,10 +1,12 @@
 package com.sciencebot.pos.sales.internal.services;
 
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.sales.*;
 import com.sciencebot.pos.sales.internal.entities.Sale;
 import com.sciencebot.pos.sales.internal.entities.SaleItem;
 import com.sciencebot.pos.sales.internal.repositories.SaleRepository;
 import com.sciencebot.pos.sales.internal.mappers.SaleMapper;
+import com.sciencebot.pos.customers.CreateCustomerCommand;
 import com.sciencebot.pos.customers.CustomerFacade;
 import com.sciencebot.pos.customers.CustomerDto;
 import com.sciencebot.pos.products.ProductFacade;
@@ -67,11 +69,14 @@ public class SaleServiceImpl implements SaleFacade {
     @Transactional
     public SaleDto registerSale(CreateSaleCommand command, String idempotencyKey) {
         final String key = normalizeIdempotencyKey(idempotencyKey);
+        final Long storeId = requireCurrentStoreId();
 
         // Fast-path de idempotencia: un reenvio secuencial (doble clic / reintento) con la
         // misma clave devuelve la venta original sin volver a descontar inventario ni facturar.
         if (key != null) {
-            Optional<SaleDto> existing = saleRepository.findByIdempotencyKey(key).map(saleMapper::toDto);
+            Optional<SaleDto> existing = saleRepository.findByIdempotencyKey(key)
+                    .filter(s -> s.getStoreId().equals(storeId))
+                    .map(saleMapper::toDto);
             if (existing.isPresent()) {
                 return existing.get();
             }
@@ -88,8 +93,11 @@ public class SaleServiceImpl implements SaleFacade {
         final Long resolvedCustomerId;
         Long customerId = command.customerId();
         if (customerId == null) {
+            // El Cliente General es por local: si este local aun no tiene uno (p. ej. recien
+            // se registro), se crea automaticamente en lugar de fallar la venta.
             CustomerDto generalCustomer = customerFacade.getByIdentification(GENERAL_CUSTOMER_IDENTIFICATION)
-                    .orElseThrow(() -> new EntityNotFoundException("Cliente General no encontrado en el sistema"));
+                    .orElseGet(() -> customerFacade.createCustomer(new CreateCustomerCommand(
+                            "Cliente General", GENERAL_CUSTOMER_IDENTIFICATION, null, null, null)));
             resolvedCustomerId = generalCustomer.id();
         } else {
             final Long lookupId = customerId;
@@ -109,6 +117,7 @@ public class SaleServiceImpl implements SaleFacade {
                 .orElse(1L);
 
         Sale sale = new Sale();
+        sale.setStoreId(storeId);
         sale.setCustomerId(resolvedCustomerId);
         sale.setUserId(userId);
         sale.setTotalAmount(BigDecimal.ZERO);
@@ -195,12 +204,16 @@ public class SaleServiceImpl implements SaleFacade {
         if (key == null) {
             return Optional.empty();
         }
-        return saleRepository.findByIdempotencyKey(key).map(saleMapper::toDto);
+        return saleRepository.findByIdempotencyKey(key)
+                .filter(s -> s.getStoreId().equals(TenantContext.getStoreId()))
+                .map(saleMapper::toDto);
     }
 
     @Override
     public Optional<SaleDto> getById(Long id) {
-        return saleRepository.findById(id).map(saleMapper::toDto);
+        return saleRepository.findById(id)
+                .filter(s -> s.getStoreId().equals(TenantContext.getStoreId()))
+                .map(saleMapper::toDto);
     }
 
     private static String normalizePaymentMethod(String paymentMethod) {
@@ -222,7 +235,15 @@ public class SaleServiceImpl implements SaleFacade {
             LocalDateTime dateTo,
             Pageable pageable
     ) {
-        return saleRepository.searchSales(customerId, dateFrom, dateTo, pageable)
+        return saleRepository.searchSales(requireCurrentStoreId(), customerId, dateFrom, dateTo, pageable)
                 .map(saleMapper::toDto);
+    }
+
+    private static Long requireCurrentStoreId() {
+        Long storeId = TenantContext.getStoreId();
+        if (storeId == null) {
+            throw new IllegalStateException("No hay un local activo en el contexto de la solicitud");
+        }
+        return storeId;
     }
 }

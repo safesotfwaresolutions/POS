@@ -2,10 +2,12 @@ package com.sciencebot.pos.products;
 
 import com.sciencebot.pos.categories.CategoryDto;
 import com.sciencebot.pos.categories.CategoryFacade;
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.products.internal.entities.Product;
 import com.sciencebot.pos.products.internal.repositories.ProductRepository;
 import com.sciencebot.pos.products.internal.services.ProductServiceImpl;
 import com.sciencebot.pos.products.internal.mappers.ProductMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,8 @@ import static org.mockito.Mockito.*;
 
 class ProductServiceImplTest {
 
+    private static final Long STORE_ID = 1L;
+
     @Mock
     private ProductRepository productRepository;
 
@@ -37,6 +41,12 @@ class ProductServiceImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        TenantContext.setStoreId(STORE_ID);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
 
@@ -48,11 +58,12 @@ class ProductServiceImplTest {
         );
 
         when(categoryFacade.getById(1L)).thenReturn(Optional.of(new CategoryDto(1L, "Bebidas", "Bebidas", 0)));
-        when(productRepository.existsByInternalCode("PROD-001")).thenReturn(false);
-        when(productRepository.existsByBarcode("7701234567890")).thenReturn(false);
+        when(productRepository.existsByStoreIdAndInternalCode(STORE_ID, "PROD-001")).thenReturn(false);
+        when(productRepository.existsByStoreIdAndBarcode(STORE_ID, "7701234567890")).thenReturn(false);
 
         Product saved = new Product();
         saved.setId(10L);
+        saved.setStoreId(STORE_ID);
         saved.setInternalCode("PROD-001");
         saved.setBarcode("7701234567890");
         saved.setName("Coca Cola 350ml");

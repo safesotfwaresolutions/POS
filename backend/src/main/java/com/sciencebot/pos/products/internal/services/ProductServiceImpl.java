@@ -3,6 +3,7 @@ package com.sciencebot.pos.products.internal.services;
 import com.sciencebot.pos.categories.CategoryDeleteValidator;
 import com.sciencebot.pos.categories.CategoryFacade;
 import com.sciencebot.pos.categories.CategoryProductCountProvider;
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.products.*;
 import com.sciencebot.pos.products.internal.entities.Product;
 import com.sciencebot.pos.products.internal.repositories.ProductRepository;
@@ -39,6 +40,7 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
     @Override
     public Optional<ProductDto> getById(Long id) {
         Product product = productRepository.findById(id)
+                .filter(this::belongsToCurrentStore)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + id));
         return Optional.of(productMapper.toDto(product));
     }
@@ -48,14 +50,15 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
     @Transactional
     public ProductDto createProduct(CreateProductCommand command) {
         validateCommand(command.internalCode(), command.purchasePrice(), command.salePrice(), command.categoryId());
+        Long storeId = requireCurrentStoreId();
 
-        if (productRepository.existsByInternalCode(command.internalCode().trim())) {
+        if (productRepository.existsByStoreIdAndInternalCode(storeId, command.internalCode().trim())) {
             throw new IllegalArgumentException("Ya existe un producto con el código interno: " + command.internalCode().trim());
         }
 
         if (command.barcode() != null && !command.barcode().isBlank()) {
             String cleanBarcode = command.barcode().trim();
-            if (productRepository.existsByBarcode(cleanBarcode)) {
+            if (productRepository.existsByStoreIdAndBarcode(storeId, cleanBarcode)) {
                 throw new IllegalArgumentException("Ya existe un producto con el código de barras: " + cleanBarcode);
             }
         }
@@ -64,9 +67,10 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
                 .orElseThrow(() -> new IllegalArgumentException("La categoría especificada no existe"));
 
 
-        
-        
+
+
         Product product = new Product();
+        product.setStoreId(storeId);
         product.setInternalCode(command.internalCode().trim());
         product.setBarcode(command.barcode() != null ? command.barcode().trim() : null);
         product.setName(command.name().trim());
@@ -87,6 +91,7 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
     @Transactional
     public ProductDto updateProduct(Long id, UpdateProductCommand command) {
         Product product = productRepository.findById(id)
+                .filter(this::belongsToCurrentStore)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + id));
 
         validatePrices(command.purchasePrice(), command.salePrice());
@@ -96,7 +101,8 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
 
         if (command.barcode() != null && !command.barcode().isBlank()) {
             String cleanBarcode = command.barcode().trim();
-            if (!cleanBarcode.equals(product.getBarcode()) && productRepository.existsByBarcode(cleanBarcode)) {
+            if (!cleanBarcode.equals(product.getBarcode())
+                    && productRepository.existsByStoreIdAndBarcode(product.getStoreId(), cleanBarcode)) {
                 throw new IllegalArgumentException("Ya existe un producto con el código de barras: " + cleanBarcode);
             }
         }
@@ -118,6 +124,7 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
     @Transactional
     public void changeStatus(Long id, boolean active) {
         Product product = productRepository.findById(id)
+                .filter(this::belongsToCurrentStore)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + id));
         product.setActive(active);
         productRepository.save(product);
@@ -127,8 +134,9 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
     @Transactional
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
+                .filter(this::belongsToCurrentStore)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + id));
-        
+
         product.setActive(false);
         productRepository.save(product);
     }
@@ -140,17 +148,33 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
             spec = spec.and(ProductSpecifications.hasName(search));
             spec = spec.or(ProductSpecifications.hasInternalCode(search));
             spec = spec.or(ProductSpecifications.hasBarcode(search));
-        } 
+        }
         if (categoryId != null) {
             spec = spec.and(ProductSpecifications.hasCategoryId(categoryId));
         }
         if (active != null) {
             spec = spec.and(ProductSpecifications.hasActive(active));
         }
+        // Se agrega al final: and() envuelve TODO lo acumulado como una unidad, asi que esto
+        // aplica el filtro de local sin importar el arbol OR construido arriba para 'search'.
+        spec = spec.and(ProductSpecifications.hasStoreId(requireCurrentStoreId()));
 
         Page<Product> page = productRepository.findAll(spec, pageable);
         return page.map(productMapper::toDto);
-        
+
+    }
+
+    /** Un producto de otro local se trata como inexistente (evita filtrar su existencia). */
+    private boolean belongsToCurrentStore(Product product) {
+        return product.getStoreId().equals(TenantContext.getStoreId());
+    }
+
+    private static Long requireCurrentStoreId() {
+        Long storeId = TenantContext.getStoreId();
+        if (storeId == null) {
+            throw new IllegalStateException("No hay un local activo en el contexto de la solicitud");
+        }
+        return storeId;
     }
 
     @Override

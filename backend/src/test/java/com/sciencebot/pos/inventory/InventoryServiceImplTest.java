@@ -1,5 +1,6 @@
 package com.sciencebot.pos.inventory;
 
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.inventory.internal.entities.InventoryMovement;
 import com.sciencebot.pos.inventory.internal.repositories.InventoryMovementRepository;
 import com.sciencebot.pos.inventory.internal.services.InventoryServiceImpl;
@@ -7,6 +8,7 @@ import com.sciencebot.pos.inventory.internal.mappers.InventoryMapper;
 import com.sciencebot.pos.products.ProductDto;
 import com.sciencebot.pos.products.ProductFacade;
 import com.sciencebot.pos.users.UserFacade;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -38,6 +40,12 @@ class InventoryServiceImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        TenantContext.setStoreId(1L);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test

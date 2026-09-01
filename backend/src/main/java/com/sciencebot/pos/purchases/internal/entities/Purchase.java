@@ -21,6 +21,10 @@ public class Purchase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Local (tenant) donde se registro la compra. */
+    @Column(name = "store_id", nullable = false)
+    private Long storeId;
+
     @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
 

@@ -1,5 +1,6 @@
 package com.sciencebot.pos.sales;
 
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.sales.internal.entities.Sale;
 import com.sciencebot.pos.sales.internal.repositories.SaleRepository;
 import com.sciencebot.pos.sales.internal.services.SaleServiceImpl;
@@ -10,6 +11,7 @@ import com.sciencebot.pos.products.ProductDto;
 import com.sciencebot.pos.products.ProductFacade;
 import com.sciencebot.pos.inventory.InventoryFacade;
 import com.sciencebot.pos.users.UserFacade;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -23,6 +25,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class SaleServiceImplTest {
+
+    private static final Long STORE_ID = 1L;
 
     @Mock
     private SaleRepository saleRepository;
@@ -51,6 +55,12 @@ class SaleServiceImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        TenantContext.setStoreId(STORE_ID);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test
@@ -92,6 +102,7 @@ class SaleServiceImplTest {
 
         Sale existing = new Sale();
         existing.setId(100L);
+        existing.setStoreId(STORE_ID);
         existing.setInvoiceNumber("FACT-000001");
         existing.setIdempotencyKey("key-123");
         when(saleRepository.findByIdempotencyKey("key-123")).thenReturn(Optional.of(existing));

@@ -21,6 +21,10 @@ public class Sale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Local (tenant) donde se registro la venta. */
+    @Column(name = "store_id", nullable = false)
+    private Long storeId;
+
     @Column(name = "invoice_number", nullable = false, length = 50)
     private String invoiceNumber;
 

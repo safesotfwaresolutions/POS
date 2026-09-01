@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Zap, User, KeyRound, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Zap, User, KeyRound, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function LoginBento() {
   const { login, loading } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('Password123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
@@ -19,11 +19,6 @@ export default function LoginBento() {
     } catch (err) {
       setError(err.message || 'Error de autenticación. Verifica tu usuario y contraseña.');
     }
-  };
-
-  const handleUseDemoAdmin = () => {
-    setUsername('admin');
-    setPassword('Password123');
   };
 
   return (
@@ -64,7 +59,11 @@ export default function LoginBento() {
                 type="text"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
-                placeholder="admin"
+                placeholder="Ingresa tu usuario"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 className="w-full pl-10 pr-4 py-2.5 bg-[#0b1411] border border-[#1d332c] rounded-2xl text-xs font-semibold text-white placeholder-gray-500 focus:outline-none focus:border-[#12b76a] transition-all"
                 required
               />
@@ -80,29 +79,11 @@ export default function LoginBento() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
+                autoComplete="off"
                 className="w-full pl-10 pr-4 py-2.5 bg-[#0b1411] border border-[#1d332c] rounded-2xl text-xs font-semibold text-white placeholder-gray-500 focus:outline-none focus:border-[#12b76a] transition-all"
                 required
               />
             </div>
-          </div>
-
-          {/* Preset Admin Credentials Box */}
-          <div className="p-3.5 bg-[#12b76a]/10 rounded-2xl border border-[#12b76a]/20 text-xs space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="font-extrabold text-[#12b76a] flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-[#12b76a]" /> Credenciales de Acceso por Defecto:
-              </span>
-              <button
-                type="button"
-                onClick={handleUseDemoAdmin}
-                className="text-[10px] bg-[#006d3c] hover:bg-[#00522c] text-white font-extrabold px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
-              >
-                Autocompletar
-              </button>
-            </div>
-            <p className="text-[11px] text-gray-300">
-              • Usuario: <code className="text-[#12b76a] font-bold font-mono">admin</code> | Contraseña: <code className="text-[#12b76a] font-bold font-mono">Password123</code>
-            </p>
           </div>
 
           <button

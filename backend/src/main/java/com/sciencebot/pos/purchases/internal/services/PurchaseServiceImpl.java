@@ -1,5 +1,6 @@
 package com.sciencebot.pos.purchases.internal.services;
 
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.purchases.*;
 import com.sciencebot.pos.purchases.internal.entities.Purchase;
 import com.sciencebot.pos.purchases.internal.entities.PurchaseItem;
@@ -60,11 +61,14 @@ public class PurchaseServiceImpl implements PurchaseFacade {
     @Transactional
     public PurchaseDto registerPurchase(CreatePurchaseCommand command, String idempotencyKey) {
         final String key = normalizeIdempotencyKey(idempotencyKey);
+        final Long storeId = requireCurrentStoreId();
 
         // Fast-path de idempotencia: un reenvio secuencial con la misma clave devuelve la
         // compra original sin volver a incrementar inventario ni actualizar precios.
         if (key != null) {
-            Optional<PurchaseDto> existing = purchaseRepository.findByIdempotencyKey(key).map(purchaseMapper::toDto);
+            Optional<PurchaseDto> existing = purchaseRepository.findByIdempotencyKey(key)
+                    .filter(p -> p.getStoreId().equals(storeId))
+                    .map(purchaseMapper::toDto);
             if (existing.isPresent()) {
                 return existing.get();
             }
@@ -92,6 +96,7 @@ public class PurchaseServiceImpl implements PurchaseFacade {
                 .orElse(1L);
 
         Purchase purchase = new Purchase();
+        purchase.setStoreId(storeId);
         purchase.setSupplierId(command.supplierId());
         purchase.setInvoiceNumber(command.invoiceNumber() != null ? command.invoiceNumber().trim() : null);
         purchase.setUserId(userId);
@@ -151,12 +156,16 @@ public class PurchaseServiceImpl implements PurchaseFacade {
         if (key == null) {
             return Optional.empty();
         }
-        return purchaseRepository.findByIdempotencyKey(key).map(purchaseMapper::toDto);
+        return purchaseRepository.findByIdempotencyKey(key)
+                .filter(p -> p.getStoreId().equals(TenantContext.getStoreId()))
+                .map(purchaseMapper::toDto);
     }
 
     @Override
     public Optional<PurchaseDto> getById(Long id) {
-        return purchaseRepository.findById(id).map(purchaseMapper::toDto);
+        return purchaseRepository.findById(id)
+                .filter(p -> p.getStoreId().equals(TenantContext.getStoreId()))
+                .map(purchaseMapper::toDto);
     }
 
     private static String normalizeIdempotencyKey(String idempotencyKey) {
@@ -174,7 +183,15 @@ public class PurchaseServiceImpl implements PurchaseFacade {
             LocalDateTime dateTo,
             Pageable pageable
     ) {
-        return purchaseRepository.searchPurchases(supplierId, dateFrom, dateTo, pageable)
+        return purchaseRepository.searchPurchases(requireCurrentStoreId(), supplierId, dateFrom, dateTo, pageable)
                 .map(purchaseMapper::toDto);
+    }
+
+    private static Long requireCurrentStoreId() {
+        Long storeId = TenantContext.getStoreId();
+        if (storeId == null) {
+            throw new IllegalStateException("No hay un local activo en el contexto de la solicitud");
+        }
+        return storeId;
     }
 }

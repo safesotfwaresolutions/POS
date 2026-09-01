@@ -1,5 +1,6 @@
 package com.sciencebot.pos.purchases;
 
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.purchases.internal.entities.Purchase;
 import com.sciencebot.pos.purchases.internal.repositories.PurchaseRepository;
 import com.sciencebot.pos.purchases.internal.services.PurchaseServiceImpl;
@@ -10,6 +11,7 @@ import com.sciencebot.pos.products.ProductFacade;
 import com.sciencebot.pos.suppliers.SupplierDto;
 import com.sciencebot.pos.suppliers.SupplierFacade;
 import com.sciencebot.pos.users.UserFacade;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -23,6 +25,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class PurchaseServiceImplTest {
+
+    private static final Long STORE_ID = 1L;
 
     @Mock
     private PurchaseRepository purchaseRepository;
@@ -48,6 +52,12 @@ class PurchaseServiceImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        TenantContext.setStoreId(STORE_ID);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test
@@ -85,6 +95,7 @@ class PurchaseServiceImplTest {
 
         Purchase existing = new Purchase();
         existing.setId(10L);
+        existing.setStoreId(STORE_ID);
         existing.setIdempotencyKey("key-abc");
         when(purchaseRepository.findByIdempotencyKey("key-abc")).thenReturn(Optional.of(existing));
 

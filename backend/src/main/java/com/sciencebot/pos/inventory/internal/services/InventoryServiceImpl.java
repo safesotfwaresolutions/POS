@@ -1,5 +1,6 @@
 package com.sciencebot.pos.inventory.internal.services;
 
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.inventory.*;
 import com.sciencebot.pos.inventory.internal.entities.InventoryMovement;
 import com.sciencebot.pos.inventory.internal.repositories.InventoryMovementRepository;
@@ -92,6 +93,7 @@ public class InventoryServiceImpl implements InventoryFacade {
                 .orElse(1L);    
 
         InventoryMovement movement = new InventoryMovement();
+        movement.setStoreId(requireCurrentStoreId());
         movement.setProductId(productId);
         movement.setMovementType(typeUpper);
         movement.setQuantity(quantity);
@@ -113,7 +115,15 @@ public class InventoryServiceImpl implements InventoryFacade {
             Pageable pageable
     ) {
         String cleanType = (movementType == null || movementType.isBlank()) ? null : movementType.toUpperCase().trim();
-        return movementRepository.searchMovements(productId, cleanType, dateFrom, dateTo, pageable)
+        return movementRepository.searchMovements(requireCurrentStoreId(), productId, cleanType, dateFrom, dateTo, pageable)
                 .map(inventoryMapper::toDto);
+    }
+
+    private static Long requireCurrentStoreId() {
+        Long storeId = TenantContext.getStoreId();
+        if (storeId == null) {
+            throw new IllegalStateException("No hay un local activo en el contexto de la solicitud");
+        }
+        return storeId;
     }
 }
