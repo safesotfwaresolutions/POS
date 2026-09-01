@@ -113,4 +113,36 @@ class ReportServiceImplTest {
         assertEquals(BigDecimal.valueOf(250000.00), result.totalInverted());
         assertEquals(BigDecimal.valueOf(250000.00), result.purchasesBySupplier().get("Distribuidora ABC"));
     }
+
+    @Test
+    void getCashClosingReport_Success() {
+        when(reportDao.findSalesTotalsByPaymentMethod(any(), any(), any())).thenReturn(List.of(
+                new com.sciencebot.pos.reports.internal.repositories.ReportProjections.PaymentMethodTotalProjection("CASH", BigDecimal.valueOf(80000.00)),
+                new com.sciencebot.pos.reports.internal.repositories.ReportProjections.PaymentMethodTotalProjection("NEQUI", BigDecimal.valueOf(20000.00))
+        ));
+        when(reportDao.findCashSalesBySeller(any(), any(), any())).thenReturn(List.of(
+                new SellerSaleProjection("cajero1", BigDecimal.valueOf(50000.00)),
+                new SellerSaleProjection("cajero2", BigDecimal.valueOf(30000.00))
+        ));
+
+        CashClosingReportDto result = reportService.getCashClosingReport(null, null);
+
+        assertNotNull(result);
+        assertEquals(BigDecimal.valueOf(80000.00), result.expectedCash());
+        assertEquals(BigDecimal.valueOf(20000.00), result.totalByPaymentMethod().get("NEQUI"));
+        assertEquals(BigDecimal.valueOf(50000.00), result.cashBySeller().get("cajero1"));
+    }
+
+    @Test
+    void getCashClosingReport_NoCashSales_ExpectedCashIsZero() {
+        when(reportDao.findSalesTotalsByPaymentMethod(any(), any(), any())).thenReturn(List.of(
+                new com.sciencebot.pos.reports.internal.repositories.ReportProjections.PaymentMethodTotalProjection("NEQUI", BigDecimal.valueOf(20000.00))
+        ));
+        when(reportDao.findCashSalesBySeller(any(), any(), any())).thenReturn(List.of());
+
+        CashClosingReportDto result = reportService.getCashClosingReport(null, null);
+
+        assertEquals(BigDecimal.ZERO, result.expectedCash());
+        assertTrue(result.cashBySeller().isEmpty());
+    }
 }

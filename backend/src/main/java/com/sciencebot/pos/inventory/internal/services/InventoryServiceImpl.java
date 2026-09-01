@@ -25,17 +25,20 @@ public class InventoryServiceImpl implements InventoryFacade {
     private final InventoryMapper inventoryMapper;
     private final ProductFacade productFacade;
     private final UserFacade userFacade;
+    private final LowStockAlertNotifier lowStockAlertNotifier;
 
     public InventoryServiceImpl(
             InventoryMovementRepository movementRepository,
             InventoryMapper inventoryMapper,
             @Lazy ProductFacade productFacade,
-            @Lazy UserFacade userFacade
+            @Lazy UserFacade userFacade,
+            LowStockAlertNotifier lowStockAlertNotifier
     ) {
         this.movementRepository = movementRepository;
         this.inventoryMapper = inventoryMapper;
         this.productFacade = productFacade;
         this.userFacade = userFacade;
+        this.lowStockAlertNotifier = lowStockAlertNotifier;
     }
 
     @Override
@@ -64,6 +67,7 @@ public class InventoryServiceImpl implements InventoryFacade {
             case "COMPRA":
             case "AJUSTE":
             case "ADJUSTMENT":
+            case "DEVOLUCION_VENTA": // Cliente devuelve mercancía: repone stock (distinto de RETURN/DEVOLUCION, que es al proveedor).
                 delta = quantity;
                 break;
             case "SALIDA":
@@ -84,6 +88,13 @@ public class InventoryServiceImpl implements InventoryFacade {
 
         // Apply stock update in products module
         productFacade.updateStock(productId, delta);
+
+        // El stock acaba de cruzar el minimo hacia abajo (antes estaba por encima, ahora no):
+        // se avisa una sola vez en el momento en que ocurre, no en cada movimiento subsiguiente
+        // mientras siga por debajo.
+        if (newStock <= product.minStock() && previousStock > product.minStock()) {
+            lowStockAlertNotifier.notifyLowStock(requireCurrentStoreId(), product, newStock);
+        }
 
         // Get current user
         var auth = SecurityContextHolder.getContext().getAuthentication();

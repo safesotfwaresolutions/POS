@@ -73,6 +73,7 @@ public class SaleMapper {
 
         return new SaleItemDto(
                 item.getId(),
+                item.getProductId(),
                 productName,
                 item.getQuantity(),
                 item.getUnitPrice(),

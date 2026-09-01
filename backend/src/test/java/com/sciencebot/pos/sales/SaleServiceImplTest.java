@@ -2,15 +2,21 @@ package com.sciencebot.pos.sales;
 
 import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.sales.internal.entities.Sale;
+import com.sciencebot.pos.sales.internal.entities.SaleItem;
+import com.sciencebot.pos.sales.internal.entities.SaleReturn;
+import com.sciencebot.pos.sales.internal.repositories.SaleItemRepository;
 import com.sciencebot.pos.sales.internal.repositories.SaleRepository;
+import com.sciencebot.pos.sales.internal.repositories.SaleReturnRepository;
 import com.sciencebot.pos.sales.internal.services.SaleServiceImpl;
 import com.sciencebot.pos.sales.internal.mappers.SaleMapper;
+import com.sciencebot.pos.sales.internal.mappers.SaleReturnMapper;
 import com.sciencebot.pos.customers.CustomerDto;
 import com.sciencebot.pos.customers.CustomerFacade;
 import com.sciencebot.pos.products.ProductDto;
 import com.sciencebot.pos.products.ProductFacade;
 import com.sciencebot.pos.inventory.InventoryFacade;
 import com.sciencebot.pos.users.UserFacade;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class SaleServiceImplTest {
@@ -32,7 +39,16 @@ class SaleServiceImplTest {
     private SaleRepository saleRepository;
 
     @Mock
+    private SaleItemRepository saleItemRepository;
+
+    @Mock
+    private SaleReturnRepository saleReturnRepository;
+
+    @Mock
     private SaleMapper saleMapper;
+
+    @Mock
+    private SaleReturnMapper saleReturnMapper;
 
     @Mock
     private CustomerFacade customerFacade;
@@ -132,8 +148,99 @@ class SaleServiceImplTest {
         when(productFacade.getById(1L)).thenReturn(Optional.of(product));
         when(saleRepository.getNextInvoiceSeq()).thenReturn(1L);
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, 
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> saleService.registerSale(command));
         assertTrue(ex.getMessage().contains("efectivo recibido"));
+    }
+
+    // --- Devoluciones ---
+
+    private Sale saleOfStore(Long saleId, Long storeId) {
+        Sale sale = new Sale();
+        sale.setId(saleId);
+        sale.setStoreId(storeId);
+        sale.setInvoiceNumber("FACT-000100");
+        return sale;
+    }
+
+    private SaleItem saleItemOf(Long itemId, Sale sale, int quantity, BigDecimal unitPrice) {
+        SaleItem item = new SaleItem();
+        item.setId(itemId);
+        item.setSale(sale);
+        item.setProductId(1L);
+        item.setQuantity(quantity);
+        item.setUnitPrice(unitPrice);
+        return item;
+    }
+
+    @Test
+    void registerReturn_Success_RestocksAndComputesRefund() {
+        Sale sale = saleOfStore(100L, STORE_ID);
+        SaleItem saleItem = saleItemOf(1L, sale, 3, BigDecimal.valueOf(8.00));
+
+        when(saleRepository.findById(100L)).thenReturn(Optional.of(sale));
+        when(saleItemRepository.findById(1L)).thenReturn(Optional.of(saleItem));
+        when(saleReturnRepository.sumReturnedQuantityBySaleItemId(1L)).thenReturn(0);
+        when(saleReturnRepository.save(any(SaleReturn.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        SaleReturnDto expectedDto = new SaleReturnDto(1L, 100L, "FACT-000100", "Defectuoso",
+                BigDecimal.valueOf(16.00), "admin", null, List.of());
+        when(saleReturnMapper.toDto(any(SaleReturn.class), eq("FACT-000100"))).thenReturn(expectedDto);
+
+        CreateSaleReturnCommand command = new CreateSaleReturnCommand("Defectuoso",
+                List.of(new CreateSaleReturnItemCommand(1L, 2)));
+
+        SaleReturnDto result = saleService.registerReturn(100L, command);
+
+        assertNotNull(result);
+        verify(inventoryFacade, times(1)).registerMovement(eq(1L), eq("DEVOLUCION_VENTA"), eq(2), anyString());
+        verify(saleReturnRepository, times(1)).save(argThat(r -> r.getTotalRefund().compareTo(BigDecimal.valueOf(16.00)) == 0));
+    }
+
+    @Test
+    void registerReturn_ExceedsReturnableQuantity_ThrowsException() {
+        Sale sale = saleOfStore(100L, STORE_ID);
+        SaleItem saleItem = saleItemOf(1L, sale, 3, BigDecimal.valueOf(8.00));
+
+        when(saleRepository.findById(100L)).thenReturn(Optional.of(sale));
+        when(saleItemRepository.findById(1L)).thenReturn(Optional.of(saleItem));
+        // Ya se devolvieron 2 de las 3 unidades: solo queda 1 disponible para devolver.
+        when(saleReturnRepository.sumReturnedQuantityBySaleItemId(1L)).thenReturn(2);
+
+        CreateSaleReturnCommand command = new CreateSaleReturnCommand(null,
+                List.of(new CreateSaleReturnItemCommand(1L, 2)));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> saleService.registerReturn(100L, command));
+        assertTrue(ex.getMessage().contains("disponible para devolver"));
+        verify(inventoryFacade, never()).registerMovement(anyLong(), anyString(), anyInt(), anyString());
+    }
+
+    @Test
+    void registerReturn_ItemBelongsToAnotherSale_ThrowsException() {
+        Sale sale = saleOfStore(100L, STORE_ID);
+        Sale otherSale = saleOfStore(999L, STORE_ID);
+        SaleItem saleItem = saleItemOf(1L, otherSale, 3, BigDecimal.valueOf(8.00));
+
+        when(saleRepository.findById(100L)).thenReturn(Optional.of(sale));
+        when(saleItemRepository.findById(1L)).thenReturn(Optional.of(saleItem));
+
+        CreateSaleReturnCommand command = new CreateSaleReturnCommand(null,
+                List.of(new CreateSaleReturnItemCommand(1L, 1)));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> saleService.registerReturn(100L, command));
+        assertTrue(ex.getMessage().contains("no pertenece"));
+    }
+
+    @Test
+    void registerReturn_SaleFromAnotherStore_ThrowsNotFound() {
+        Sale sale = saleOfStore(100L, 2L); // otro local
+        when(saleRepository.findById(100L)).thenReturn(Optional.of(sale));
+
+        CreateSaleReturnCommand command = new CreateSaleReturnCommand(null,
+                List.of(new CreateSaleReturnItemCommand(1L, 1)));
+
+        assertThrows(EntityNotFoundException.class, () -> saleService.registerReturn(100L, command));
     }
 }

@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 public record SaleItemDto(
         @Schema(description = "Identificador del ítem", example = "1")
         Long id,
+        @Schema(description = "ID del producto vendido", example = "1")
+        Long productId,
         @Schema(description = "Nombre del producto", example = "Arroz Diana 500g")
         String productName,
         @Schema(description = "Cantidad vendida", example = "3")

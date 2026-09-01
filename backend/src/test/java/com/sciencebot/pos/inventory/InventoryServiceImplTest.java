@@ -5,6 +5,7 @@ import com.sciencebot.pos.inventory.internal.entities.InventoryMovement;
 import com.sciencebot.pos.inventory.internal.repositories.InventoryMovementRepository;
 import com.sciencebot.pos.inventory.internal.services.InventoryServiceImpl;
 import com.sciencebot.pos.inventory.internal.mappers.InventoryMapper;
+import com.sciencebot.pos.inventory.internal.services.LowStockAlertNotifier;
 import com.sciencebot.pos.products.ProductDto;
 import com.sciencebot.pos.products.ProductFacade;
 import com.sciencebot.pos.users.UserFacade;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 class InventoryServiceImplTest {
@@ -33,6 +35,9 @@ class InventoryServiceImplTest {
 
     @Mock
     private UserFacade userFacade;
+
+    @Mock
+    private LowStockAlertNotifier lowStockAlertNotifier;
 
     @InjectMocks
     private InventoryServiceImpl inventoryService;
@@ -78,8 +83,38 @@ class InventoryServiceImplTest {
         ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", BigDecimal.ONE, BigDecimal.TEN, 2, 5, true, null);
         when(productFacade.getById(1L)).thenReturn(Optional.of(product));
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, 
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> inventoryService.registerMovement(1L, "SALIDA", 5, "Merma"));
         assertTrue(ex.getMessage().contains("Inventario insuficiente"));
+    }
+
+    @Test
+    void registerMovement_StockCrossesBelowMinimum_TriggersLowStockAlert() {
+        // 8 unidades disponibles, min 5: una salida de 4 deja el stock en 4 (<= 5), cruzando
+        // el minimo desde arriba (8 > 5) hacia abajo.
+        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", BigDecimal.ONE, BigDecimal.TEN, 8, 5, true, null);
+        when(productFacade.getById(1L)).thenReturn(Optional.of(product));
+        when(movementRepository.save(any(InventoryMovement.class))).thenReturn(new InventoryMovement());
+        when(inventoryMapper.toDto(any(InventoryMovement.class)))
+                .thenReturn(new InventoryMovementDto(1L, 1L, "Product 1", "SALIDA", 4, 8, 4, "Venta", "admin", null));
+
+        inventoryService.registerMovement(1L, "SALIDA", 4, "Venta");
+
+        verify(lowStockAlertNotifier, times(1)).notifyLowStock(1L, product, 4);
+    }
+
+    @Test
+    void registerMovement_StockAlreadyBelowMinimum_DoesNotRepeatAlert() {
+        // Ya estaba en 4 (<= min 5): otra salida que lo deja en 3 NO debe re-disparar la alerta,
+        // solo el cruce inicial.
+        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", BigDecimal.ONE, BigDecimal.TEN, 4, 5, true, null);
+        when(productFacade.getById(1L)).thenReturn(Optional.of(product));
+        when(movementRepository.save(any(InventoryMovement.class))).thenReturn(new InventoryMovement());
+        when(inventoryMapper.toDto(any(InventoryMovement.class)))
+                .thenReturn(new InventoryMovementDto(1L, 1L, "Product 1", "SALIDA", 1, 4, 3, "Venta", "admin", null));
+
+        inventoryService.registerMovement(1L, "SALIDA", 1, "Venta");
+
+        verify(lowStockAlertNotifier, never()).notifyLowStock(any(), any(), anyInt());
     }
 }

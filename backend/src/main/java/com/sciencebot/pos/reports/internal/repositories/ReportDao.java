@@ -3,6 +3,7 @@ package com.sciencebot.pos.reports.internal.repositories;
 import com.sciencebot.pos.reports.ProfitabilityReportDto;
 import com.sciencebot.pos.reports.StockReportDto;
 import com.sciencebot.pos.reports.TopProductDto;
+import com.sciencebot.pos.reports.internal.repositories.ReportProjections.PaymentMethodTotalProjection;
 import com.sciencebot.pos.reports.internal.repositories.ReportProjections.SalesTotalsProjection;
 import com.sciencebot.pos.reports.internal.repositories.ReportProjections.SellerSaleProjection;
 import com.sciencebot.pos.reports.internal.repositories.ReportProjections.SupplierPurchaseProjection;
@@ -19,4 +20,6 @@ public interface ReportDao {
     List<ProfitabilityReportDto> findProfitabilityReport(Long storeId, LocalDateTime from, LocalDateTime to);
     BigDecimal findPurchasesTotal(Long storeId, LocalDateTime from, LocalDateTime to);
     List<SupplierPurchaseProjection> findPurchasesBySupplier(Long storeId, LocalDateTime from, LocalDateTime to);
+    List<PaymentMethodTotalProjection> findSalesTotalsByPaymentMethod(Long storeId, LocalDateTime from, LocalDateTime to);
+    List<SellerSaleProjection> findCashSalesBySeller(Long storeId, LocalDateTime from, LocalDateTime to);
 }

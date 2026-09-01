@@ -1,6 +1,7 @@
 package com.sciencebot.pos.users.internal.services;
 
 import com.sciencebot.pos.config.PosUserDetails;
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.users.*;
 import com.sciencebot.pos.users.internal.entities.User;
 import com.sciencebot.pos.users.internal.repositories.UserRepository;
@@ -65,10 +66,26 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
         validateRole(command.role());
         validatePasswordStrength(command.password());
 
-        if ("SUPER_ADMIN".equalsIgnoreCase(command.role()) && command.storeId() != null) {
+        // Si quien crea es un ADMINISTRATOR autenticado de un local (hay un local en el
+        // contexto de la solicitud), el nuevo usuario SIEMPRE pertenece a ESE local, sin
+        // importar que storeId venga en el comando (evita que cree personal en otro local), y
+        // jamas puede asignarse a si mismo el rol SUPER_ADMIN a traves de este endpoint. Cuando
+        // no hay local en contexto (SUPER_ADMIN vía backoffice, o el seeder en el arranque) se
+        // respeta el storeId/rol tal como venían, igual que antes.
+        Long callerStoreId = TenantContext.getStoreId();
+        Long effectiveStoreId = command.storeId();
+        String effectiveRole = command.role().toUpperCase();
+        if (callerStoreId != null) {
+            if ("SUPER_ADMIN".equals(effectiveRole)) {
+                throw new IllegalArgumentException("No tiene permisos para crear un usuario SUPER_ADMIN.");
+            }
+            effectiveStoreId = callerStoreId;
+        }
+
+        if ("SUPER_ADMIN".equals(effectiveRole) && effectiveStoreId != null) {
             throw new IllegalArgumentException("El rol SUPER_ADMIN no puede estar asociado a un local.");
         }
-        if (!"SUPER_ADMIN".equalsIgnoreCase(command.role()) && command.storeId() == null) {
+        if (!"SUPER_ADMIN".equals(effectiveRole) && effectiveStoreId == null) {
             throw new IllegalArgumentException("El campo storeId es obligatorio para roles del POS (ADMINISTRATOR, SUPERVISOR, SELLER).");
         }
 
@@ -84,9 +101,9 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
         user.setUsername(command.username());
         user.setEmail(command.email());
         user.setPassword(passwordEncoder.encode(command.password()));
-        user.setRole(command.role().toUpperCase());
+        user.setRole(effectiveRole);
         user.setActive(true);
-        user.setStoreId(command.storeId());
+        user.setStoreId(effectiveStoreId);
 
         User saved = userRepository.save(user);
         return userMapper.toDto(saved);
@@ -96,6 +113,7 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
     @Transactional
     public UserDto updateUser(Long id, UpdateUserCommand command) {
         User user = userRepository.findById(id)
+                .filter(this::belongsToCallerStoreOrGlobalCaller)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
 
         validateRole(command.role());
@@ -105,7 +123,7 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
         }
 
         if (user.getRole().equals("ADMINISTRATOR") && !command.role().equalsIgnoreCase("ADMINISTRATOR")) {
-            long adminCount = userRepository.countByRoleAndActiveTrue("ADMINISTRATOR");
+            long adminCount = countActiveAdmins(user.getStoreId());
             if (adminCount <= 1) {
                 throw new IllegalArgumentException("No se puede cambiar el rol del ultimo administrador activo");
             }
@@ -123,6 +141,7 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
     @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
+                .filter(this::belongsToCallerStoreOrGlobalCaller)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
 
         String currentUsername = getCurrentUsername();
@@ -131,7 +150,7 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
         }
 
         if (user.getRole().equals("ADMINISTRATOR")) {
-            long adminCount = userRepository.countByRoleAndActiveTrue("ADMINISTRATOR");
+            long adminCount = countActiveAdmins(user.getStoreId());
             if (adminCount <= 1) {
                 throw new IllegalArgumentException("No se puede eliminar al ultimo administrador activo");
             }
@@ -145,6 +164,7 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
     @Transactional
     public void changeStatus(Long id, boolean active) {
         User user = userRepository.findById(id)
+                .filter(this::belongsToCallerStoreOrGlobalCaller)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
 
         String currentUsername = getCurrentUsername();
@@ -153,7 +173,7 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
         }
 
         if (user.getRole().equals("ADMINISTRATOR")) {
-            long adminCount = userRepository.countByRoleAndActiveTrue("ADMINISTRATOR");
+            long adminCount = countActiveAdmins(user.getStoreId());
             if (adminCount <= 1) {
                 throw new IllegalArgumentException("No se puede desactivar al ultimo administrador activo");
             }
@@ -167,6 +187,7 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
     @Transactional
     public void changePassword(Long id, ChangePasswordCommand command) {
         User user = userRepository.findById(id)
+                .filter(this::belongsToCallerStoreOrGlobalCaller)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
 
         String currentUsername = getCurrentUsername();
@@ -198,18 +219,27 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
     @Override
     public UserDto getById(Long id) {
         return userRepository.findById(id)
+                .filter(this::belongsToCallerStoreOrGlobalCaller)
                 .map(userMapper::toDto)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
     }
 
     @Override
     public Page<UserDto> listUsers(Pageable pageable) {
+        Long callerStoreId = TenantContext.getStoreId();
+        if (callerStoreId != null) {
+            return userRepository.findAllByStoreIdAndActiveTrue(callerStoreId, pageable).map(userMapper::toDto);
+        }
         return userRepository.findAllByActiveTrue(pageable)
                 .map(userMapper::toDto);
     }
 
     @Override
     public Page<UserDto> listUsersByRole(String role, Pageable pageable) {
+        Long callerStoreId = TenantContext.getStoreId();
+        if (callerStoreId != null) {
+            return userRepository.findAllByStoreIdAndRole(callerStoreId, role.toUpperCase(), pageable).map(userMapper::toDto);
+        }
         return userRepository.findAllByRole(role.toUpperCase(), pageable)
                 .map(userMapper::toDto);
     }
@@ -265,6 +295,32 @@ public class UserServiceImpl implements UserFacade, UserDetailsService {
     public Page<UserDto> listPendingVerificationUsers(Pageable pageable) {
         return userRepository.findAllByRoleAndEmailVerifiedFalse("ADMINISTRATOR", pageable)
                 .map(userMapper::toDto);
+    }
+
+    @Override
+    public List<UserDto> listActiveByStoreAndRoles(Long storeId, List<String> roles) {
+        return userRepository.findAllByStoreIdAndRoleInAndActiveTrue(storeId, roles).stream()
+                .map(userMapper::toDto)
+                .toList();
+    }
+
+    /**
+     * Cuando quien llama es un ADMINISTRATOR autenticado (hay un local en el contexto de la
+     * solicitud), el usuario objetivo debe pertenecer a ESE local; de lo contrario se trata
+     * como inexistente en vez de exponer su existencia en otro local. Cuando no hay local en
+     * contexto (SUPER_ADMIN vía backoffice, o una llamada interna del arranque/otros módulos
+     * sin request HTTP) se preserva el comportamiento sin restricción anterior.
+     */
+    private boolean belongsToCallerStoreOrGlobalCaller(User user) {
+        Long callerStoreId = TenantContext.getStoreId();
+        return callerStoreId == null || callerStoreId.equals(user.getStoreId());
+    }
+
+    /** "Ultimo administrador activo" se cuenta por local cuando el usuario pertenece a uno. */
+    private long countActiveAdmins(Long storeId) {
+        return storeId != null
+                ? userRepository.countByStoreIdAndRoleAndActiveTrue(storeId, "ADMINISTRATOR")
+                : userRepository.countByRoleAndActiveTrue("ADMINISTRATOR");
     }
 
     private void validateRole(String role) {

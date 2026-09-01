@@ -1,10 +1,13 @@
 package com.sciencebot.pos.sales.internal.controllers;
 
 import com.sciencebot.pos.sales.CreateSaleCommand;
+import com.sciencebot.pos.sales.CreateSaleReturnCommand;
 import com.sciencebot.pos.sales.SaleDto;
 import com.sciencebot.pos.sales.SaleFacade;
+import com.sciencebot.pos.sales.SaleReturnDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/sales")
@@ -130,5 +134,59 @@ public class SaleController {
         return saleFacade.getById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/returns")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'SUPERVISOR', 'SELLER')")
+    @Operation(
+            summary = "Registrar devolución de una venta",
+            description = """
+                    Devuelve uno o varios ítems de una venta ya registrada. La venta original
+                    **nunca se modifica** (sigue siendo el comprobante fiscal íntegro); esto crea un
+                    registro de devolución aparte que:
+                    1. Valida que cada ítem pertenezca a esta venta y que la cantidad no exceda lo
+                       vendido menos lo ya devuelto en devoluciones previas de esa misma línea.
+                    2. Repone el stock automáticamente (movimiento `DEVOLUCION_VENTA`).
+                    3. Calcula el monto a reembolsar al precio al que se vendió cada ítem.
+
+                    Cada ítem se referencia por el `id` de su línea en la venta original
+                    (`SaleItemDto.id`), no por `productId` — así se distingue correctamente si el
+                    mismo producto aparece en más de una línea.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Devolución registrada exitosamente",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = SaleReturnDto.class))),
+            @ApiResponse(responseCode = "400", description = "Cantidad a devolver inválida o ítem ajeno a la venta", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Venta o ítem no encontrado", content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Sin permisos suficientes", content = @Content)
+    })
+    public ResponseEntity<SaleReturnDto> registerReturn(
+            @Parameter(description = "ID de la venta original", example = "1", required = true)
+            @PathVariable Long id,
+            @RequestBody CreateSaleReturnCommand command) {
+        SaleReturnDto created = saleFacade.registerReturn(id, command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/{id}/returns")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'SUPERVISOR', 'SELLER')")
+    @Operation(
+            summary = "Listar devoluciones de una venta",
+            description = "Retorna todas las devoluciones registradas sobre esta venta, más recientes primero."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devoluciones de la venta",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = SaleReturnDto.class)))),
+            @ApiResponse(responseCode = "404", description = "Venta no encontrada", content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content)
+    })
+    public ResponseEntity<List<SaleReturnDto>> getReturnsBySale(
+            @Parameter(description = "ID de la venta original", example = "1", required = true)
+            @PathVariable Long id) {
+        return ResponseEntity.ok(saleFacade.getReturnsBySale(id));
     }
 }

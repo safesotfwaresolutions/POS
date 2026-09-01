@@ -3,6 +3,7 @@ package com.sciencebot.pos.reports.internal.repositories;
 import com.sciencebot.pos.reports.ProfitabilityReportDto;
 import com.sciencebot.pos.reports.StockReportDto;
 import com.sciencebot.pos.reports.TopProductDto;
+import com.sciencebot.pos.reports.internal.repositories.ReportProjections.PaymentMethodTotalProjection;
 import com.sciencebot.pos.reports.internal.repositories.ReportProjections.SalesTotalsProjection;
 import com.sciencebot.pos.reports.internal.repositories.ReportProjections.SellerSaleProjection;
 import com.sciencebot.pos.reports.internal.repositories.ReportProjections.SupplierPurchaseProjection;
@@ -171,6 +172,48 @@ public class ReportDaoJdbc implements ReportDao {
                 .param("from", from)
                 .param("to", to)
                 .query(SupplierPurchaseProjection.class)
+                .list();
+    }
+
+    @Override
+    public List<PaymentMethodTotalProjection> findSalesTotalsByPaymentMethod(Long storeId, LocalDateTime from, LocalDateTime to) {
+        String sql = """
+            SELECT
+                s.payment_method AS paymentMethod,
+                COALESCE(SUM(s.total_amount), 0) AS totalAmount
+            FROM sales s
+            WHERE s.store_id = :storeId AND s.created_at >= :from AND s.created_at <= :to
+            GROUP BY s.payment_method
+            ORDER BY totalAmount DESC
+            """;
+
+        return jdbcClient.sql(sql)
+                .param("storeId", storeId)
+                .param("from", from)
+                .param("to", to)
+                .query(PaymentMethodTotalProjection.class)
+                .list();
+    }
+
+    @Override
+    public List<SellerSaleProjection> findCashSalesBySeller(Long storeId, LocalDateTime from, LocalDateTime to) {
+        String sql = """
+            SELECT
+                COALESCE(u.username, 'Desconocido') AS sellerName,
+                COALESCE(SUM(s.total_amount), 0) AS totalAmount
+            FROM sales s
+            LEFT JOIN users u ON u.id = s.user_id
+            WHERE s.store_id = :storeId AND s.payment_method = 'CASH'
+                AND s.created_at >= :from AND s.created_at <= :to
+            GROUP BY u.username
+            ORDER BY totalAmount DESC
+            """;
+
+        return jdbcClient.sql(sql)
+                .param("storeId", storeId)
+                .param("from", from)
+                .param("to", to)
+                .query(SellerSaleProjection.class)
                 .list();
     }
 }

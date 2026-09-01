@@ -3,6 +3,7 @@ package com.sciencebot.pos.sales;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface SaleFacade {
@@ -25,4 +26,14 @@ public interface SaleFacade {
             LocalDateTime dateTo,
             Pageable pageable
     );
+
+    /**
+     * Registra la devolución de uno o varios ítems de una venta ya registrada. La venta
+     * original nunca se modifica; repone stock por cada ítem devuelto y calcula el monto a
+     * reembolsar a partir del precio al que se vendió cada línea.
+     */
+    SaleReturnDto registerReturn(Long saleId, CreateSaleReturnCommand command);
+
+    /** Devoluciones registradas sobre una venta, más recientes primero. */
+    List<SaleReturnDto> getReturnsBySale(Long saleId);
 }

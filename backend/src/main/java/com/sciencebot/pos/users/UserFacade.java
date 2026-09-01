@@ -2,6 +2,7 @@ package com.sciencebot.pos.users;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserFacade {
@@ -23,4 +24,6 @@ public interface UserFacade {
     UserDto assignStore(Long userId, Long storeId);
     /** Usuarios ADMINISTRATOR que aun no verifican su correo (para el panel de pendientes del backoffice). */
     Page<UserDto> listPendingVerificationUsers(Pageable pageable);
+    /** Usuarios activos de un local con alguno de los roles dados (ej. destinatarios de alertas). */
+    List<UserDto> listActiveByStoreAndRoles(Long storeId, List<String> roles);
 }

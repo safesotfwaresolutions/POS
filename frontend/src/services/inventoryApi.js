@@ -1,9 +1,5 @@
 import { fetchApi, newIdempotencyKey } from './http';
 
-export async function getStockReportApi(belowMinStock = false) {
-  return await fetchApi(`/reports/stock?belowMinStock=${belowMinStock}`);
-}
-
 export async function createInventoryMovementApi(productId, movementType, quantity, reason = '') {
   return await fetchApi('/inventory/movements', {
     method: 'POST',

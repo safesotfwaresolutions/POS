@@ -84,6 +84,27 @@ public class ReportServiceImpl implements ReportService {
         return new PurchasesReportDto(from, to, totalInverted, purchasesBySupplier);
     }
 
+    @Override
+    public CashClosingReportDto getCashClosingReport(LocalDateTime dateFrom, LocalDateTime dateTo) {
+        LocalDateTime from = (dateFrom != null) ? dateFrom : LocalDateTime.now().minusDays(DEFAULT_REPORT_DAYS);
+        LocalDateTime to = (dateTo != null) ? dateTo : LocalDateTime.now();
+        Long storeId = requireCurrentStoreId();
+
+        Map<String, BigDecimal> totalByPaymentMethod = new LinkedHashMap<>();
+        for (var row : reportDao.findSalesTotalsByPaymentMethod(storeId, from, to)) {
+            totalByPaymentMethod.put(row.paymentMethod(), row.totalAmount());
+        }
+
+        Map<String, BigDecimal> cashBySeller = new LinkedHashMap<>();
+        for (SellerSaleProjection row : reportDao.findCashSalesBySeller(storeId, from, to)) {
+            cashBySeller.put(row.sellerName(), row.totalAmount());
+        }
+
+        BigDecimal expectedCash = totalByPaymentMethod.getOrDefault("CASH", BigDecimal.ZERO);
+
+        return new CashClosingReportDto(from, to, totalByPaymentMethod, expectedCash, cashBySeller);
+    }
+
     private static Long requireCurrentStoreId() {
         Long storeId = TenantContext.getStoreId();
         if (storeId == null) {

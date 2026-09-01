@@ -8,6 +8,8 @@ import {
   Truck,
   Users,
   FileText,
+  BarChart3,
+  RotateCcw,
   Settings,
   HelpCircle,
   LogOut,
@@ -18,17 +20,20 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/pos', label: 'Punto de Venta', icon: ShoppingCart },
+    { path: '/returns', label: 'Devoluciones', icon: RotateCcw },
     { path: '/products', label: 'Productos', icon: Tag },
     { path: '/inventory', label: 'Inventario', icon: Package },
     { path: '/suppliers', label: 'Proveedores', icon: Truck },
     { path: '/customers', label: 'Clientes', icon: Users },
     { path: '/invoicing', label: 'Facturación DIAN', icon: FileText },
+    // El backend no expone ningún reporte a SELLER (solo Admin y Supervisor).
+    ...(user?.role !== 'SELLER' ? [{ path: '/reports', label: 'Reportes', icon: BarChart3 }] : []),
     { path: '/settings', label: 'Configuración', icon: Settings },
   ];
 

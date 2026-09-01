@@ -1,9 +1,12 @@
 package com.sciencebot.pos.users;
 
+import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.users.internal.entities.User;
 import com.sciencebot.pos.users.internal.repositories.UserRepository;
 import com.sciencebot.pos.users.internal.services.UserServiceImpl;
 import com.sciencebot.pos.users.internal.mappers.UserMapper;
+import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -18,6 +21,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class UserServiceImplTest {
@@ -30,6 +34,11 @@ class UserServiceImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test
@@ -295,5 +304,94 @@ class UserServiceImplTest {
 
         assertTrue(result.emailVerified());
         assertTrue(user.isEmailVerified());
+    }
+
+    @Test
+    void listActiveByStoreAndRoles_DelegatesToStoreScopedRepositoryQuery() {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setStoreId(5L);
+        admin.setRole("ADMINISTRATOR");
+        when(userRepository.findAllByStoreIdAndRoleInAndActiveTrue(5L, java.util.List.of("ADMINISTRATOR", "SUPERVISOR")))
+                .thenReturn(java.util.List.of(admin));
+        when(userMapper.toDto(admin)).thenReturn(new UserDto(1L, null, null, "ana@tienda.com", "ADMINISTRATOR", true, 5L, true));
+
+        var result = userService.listActiveByStoreAndRoles(5L, java.util.List.of("ADMINISTRATOR", "SUPERVISOR"));
+
+        assertEquals(1, result.size());
+        assertEquals("ana@tienda.com", result.get(0).email());
+    }
+
+    // --- Aislamiento multi-tenant ---
+
+    @Test
+    void createUser_CallerFromStoreContext_IgnoresStoreIdFromCommandAndUsesOwnStore() {
+        TenantContext.setStoreId(1L);
+        // El comando intenta crear el usuario en el local 99 (otro local): debe ignorarse.
+        CreateUserCommand command = new CreateUserCommand(
+                "Juan Perez", "juanp", "juan@tienda.com", "Password123", "SELLER", 99L
+        );
+        when(userRepository.existsByUsername("juanp")).thenReturn(false);
+        when(userRepository.existsByEmail("juan@tienda.com")).thenReturn(false);
+        when(passwordEncoder.encode("Password123")).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userMapper.toDto(any(User.class))).thenAnswer(inv -> {
+            User u = inv.getArgument(0);
+            return new UserDto(1L, u.getFullName(), u.getUsername(), u.getEmail(), u.getRole(), true, u.getStoreId(), true);
+        });
+
+        UserDto result = userService.createUser(command);
+
+        assertEquals(1L, result.storeId());
+        verify(userRepository).save(argThat(u -> u.getStoreId().equals(1L)));
+    }
+
+    @Test
+    void createUser_CallerFromStoreContext_CannotCreateSuperAdmin() {
+        TenantContext.setStoreId(1L);
+        CreateUserCommand command = new CreateUserCommand(
+                "Rogue Admin", "rogue", "rogue@tienda.com", "Password123", "SUPER_ADMIN", null
+        );
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.createUser(command));
+        assertTrue(ex.getMessage().contains("SUPER_ADMIN"));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void getById_UserFromAnotherStore_ThrowsNotFound() {
+        TenantContext.setStoreId(1L);
+        User otherStoreUser = new User();
+        otherStoreUser.setId(7L);
+        otherStoreUser.setStoreId(2L);
+        when(userRepository.findById(7L)).thenReturn(Optional.of(otherStoreUser));
+
+        assertThrows(EntityNotFoundException.class, () -> userService.getById(7L));
+    }
+
+    @Test
+    void getById_UserFromOwnStore_Succeeds() {
+        TenantContext.setStoreId(1L);
+        User ownStoreUser = new User();
+        ownStoreUser.setId(7L);
+        ownStoreUser.setStoreId(1L);
+        when(userRepository.findById(7L)).thenReturn(Optional.of(ownStoreUser));
+        when(userMapper.toDto(ownStoreUser)).thenReturn(new UserDto(7L, "Ana", "ana", "ana@a.com", "SELLER", true, 1L, true));
+
+        UserDto result = userService.getById(7L);
+
+        assertEquals(7L, result.id());
+    }
+
+    @Test
+    void listUsers_CallerFromStoreContext_UsesStoreScopedQuery() {
+        TenantContext.setStoreId(1L);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        when(userRepository.findAllByStoreIdAndActiveTrue(eq(1L), any())).thenReturn(org.springframework.data.domain.Page.empty());
+
+        userService.listUsers(pageable);
+
+        verify(userRepository, times(1)).findAllByStoreIdAndActiveTrue(eq(1L), any());
+        verify(userRepository, never()).findAllByActiveTrue(any());
     }
 }
