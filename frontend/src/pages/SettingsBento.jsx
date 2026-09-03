@@ -110,7 +110,7 @@ export default function SettingsBento() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('folder', 'stores');
+      formData.append('folder', 'imagenes-logos');
       const result = await uploadFileApi('/storage/upload', formData);
       setConfig(prev => ({ ...prev, logoUrl: result.url }));
     } catch (err) {

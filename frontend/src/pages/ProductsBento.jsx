@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Tag,
   Plus,
@@ -8,12 +8,14 @@ import {
   Barcode,
   Package,
   Check,
-  AlertCircle
+  AlertCircle,
+  ImagePlus
 } from 'lucide-react';
 import { getProductsApi, createProductApi, deleteProductApi } from '../services/productsApi';
 import { getCategoriesApi } from '../services/categoriesApi';
 import { createInventoryMovementApi } from '../services/inventoryApi';
 import { useModal } from '../context/ModalContext';
+import { uploadFileApi } from '../services/http';
 import BarcodeModal from '../components/BarcodeModal';
 
 const EMPTY_PRODUCT = {
@@ -23,7 +25,8 @@ const EMPTY_PRODUCT = {
   categoryId: '',
   price: '',
   stock: '',
-  minStock: 5
+  minStock: 5,
+  imageUrl: ''
 };
 
 export default function ProductsBento() {
@@ -36,6 +39,8 @@ export default function ProductsBento() {
   const [barcodeProduct, setBarcodeProduct] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [newProduct, setNewProduct] = useState(EMPTY_PRODUCT);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef(null);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -76,7 +81,8 @@ export default function ProductsBento() {
         internalCode: newProduct.internalCode || `PROD-00${products.length + 1}`,
         categoryId: Number(newProduct.categoryId),
         price: parseFloat(newProduct.price),
-        minStock: parseInt(newProduct.minStock) || 5
+        minStock: parseInt(newProduct.minStock) || 5,
+        imageUrl: newProduct.imageUrl || null
       });
 
       // El producto siempre nace con stock 0; el stock inicial se registra
@@ -92,6 +98,25 @@ export default function ProductsBento() {
       await loadProducts();
     } catch (err) {
       setErrorMsg(err.message || 'Error al guardar el producto. Intenta nuevamente.');
+    }
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setErrorMsg('');
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'imagenes-productos');
+      const result = await uploadFileApi('/storage/upload', formData);
+      setNewProduct(prev => ({ ...prev, imageUrl: result.url }));
+    } catch (err) {
+      setErrorMsg(err.message || 'Error al subir la imagen. Intenta nuevamente.');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -166,16 +191,27 @@ export default function ProductsBento() {
             {filtered.map(p => (
               <div key={p.id} className="p-5 bg-gray-50/60 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-3 flex flex-col justify-between hover:bg-white dark:hover:bg-[#14231e] hover:border-[#12b76a] transition-all shadow-xs">
                 <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a] font-extrabold">
-                      {p.categoryName || 'General'}
-                    </span>
-                    <span className="text-[10px] font-mono text-gray-400 dark:text-gray-500 font-bold">{p.internalCode}</span>
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-white dark:bg-[#0b1411] border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden shrink-0">
+                      {p.imageUrl ? (
+                        <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Package className="w-5 h-5 text-gray-300 dark:text-gray-600" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a] font-extrabold">
+                          {p.categoryName || 'General'}
+                        </span>
+                        <span className="text-[10px] font-mono text-gray-400 dark:text-gray-500 font-bold shrink-0">{p.internalCode}</span>
+                      </div>
+                      <h3 className="font-extrabold text-sm text-[#191c1e] dark:text-white mt-2 truncate">{p.name}</h3>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 font-mono mt-0.5 flex items-center gap-1">
+                        <Barcode className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0" /> {p.barcode || 'Sin código'}
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="font-extrabold text-sm text-[#191c1e] dark:text-white mt-2">{p.name}</h3>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 font-mono mt-0.5 flex items-center gap-1">
-                    <Barcode className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> {p.barcode || 'Sin código'}
-                  </p>
                 </div>
 
                 <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
@@ -230,6 +266,27 @@ export default function ProductsBento() {
             )}
 
             <div className="space-y-3 text-xs">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden shrink-0">
+                  {newProduct.imageUrl ? (
+                    <img src={newProduct.imageUrl} alt="Imagen del producto" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImagePlus className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <button
+                    type="button"
+                    disabled={uploadingImage}
+                    onClick={() => imageInputRef.current?.click()}
+                    className="px-3.5 py-2 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 disabled:opacity-50 text-gray-700 dark:text-gray-200 rounded-2xl text-xs font-bold cursor-pointer"
+                  >
+                    {uploadingImage ? 'Subiendo...' : newProduct.imageUrl ? 'Cambiar imagen' : 'Subir imagen'}
+                  </button>
+                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                </div>
+              </div>
+
               <div>
                 <label className="font-bold text-gray-700 dark:text-gray-300 block mb-1">Categoría:</label>
                 <select

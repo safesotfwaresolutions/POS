@@ -207,7 +207,8 @@ public class StoreServiceImpl implements StoreFacade {
             throw new IllegalArgumentException("Debes adjuntar un archivo.");
         }
 
-        StorageUploadResult uploaded = storageFacade.uploadFile(file, "stores/" + storeId + "/documents");
+        // "documentos" es el nombre exacto de la carpeta creada en el bucket de Cloudflare R2.
+        StorageUploadResult uploaded = storageFacade.uploadFile(file, "documentos");
 
         StoreDocumentEntity doc = new StoreDocumentEntity();
         doc.setStoreId(storeId);

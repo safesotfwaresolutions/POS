@@ -122,6 +122,16 @@
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
 		</dependency>
+		<!-- Carga backend/.env como si fueran variables de entorno reales (ej. R2_*, FACTUS_*)
+		     cuando se corre localmente con "mvnw spring-boot:run". Sin esto, .env es solo un
+		     archivo de texto que Spring Boot nunca lee: hay que exportar cada variable a mano
+		     o depender de Docker Compose. Las variables de entorno reales del sistema/proceso
+		     siempre tienen prioridad sobre .env. -->
+		<dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>4.0.0</version>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>

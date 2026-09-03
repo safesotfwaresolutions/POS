@@ -270,8 +270,8 @@ class StoreServiceImplTest {
         UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 1L, true);
         when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
         MockMultipartFile file = new MockMultipartFile("file", "rut.pdf", "application/pdf", "contenido".getBytes());
-        when(storageFacade.uploadFile(eq(file), eq("stores/1/documents")))
-                .thenReturn(new StorageUploadResult("stores/1/documents/uuid.pdf", "https://cdn.test/rut.pdf", "rut.pdf", 9L, "application/pdf"));
+        when(storageFacade.uploadFile(eq(file), eq("documentos")))
+                .thenReturn(new StorageUploadResult("documentos/uuid.pdf", "https://cdn.test/rut.pdf", "rut.pdf", 9L, "application/pdf"));
         when(documentRepository.save(any(StoreDocumentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
         when(storeMapper.toDocumentDto(any())).thenAnswer(inv -> {
             StoreDocumentEntity e = inv.getArgument(0);

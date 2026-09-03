@@ -22,6 +22,7 @@ export async function createProductApi(productData) {
       purchasePrice: parseFloat(productData.purchasePrice || productData.price * 0.7),
       salePrice: parseFloat(productData.price || productData.salePrice),
       minStock: parseInt(productData.minStock || 5),
+      imageUrl: productData.imageUrl || null,
     }),
   });
 }

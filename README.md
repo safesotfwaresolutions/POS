@@ -273,6 +273,13 @@ Puedes personalizar la configuración del backend mediante variables de entorno 
 | `FACTUS_URL` | `https://api-sandbox.factus.com.co` | Endpoint de la API de Factus. |
 | `FACTUS_CLIENT_ID` | *Sandbox Client ID* | Identificador de cliente en Factus. |
 | `FACTUS_CLIENT_SECRET` | *Sandbox Client Secret* | Secreto de cliente en Factus. |
+| `R2_ACCOUNT_ID` | *(vacío)* | ID de cuenta de Cloudflare (define el endpoint `https://<id>.r2.cloudflarestorage.com`). |
+| `R2_ACCESS_KEY_ID` | *(vacío)* | Access Key ID del token API de Cloudflare R2. |
+| `R2_SECRET_ACCESS_KEY` | *(vacío)* | Secret Access Key del token API de Cloudflare R2. |
+| `R2_BUCKET_NAME` | `pos-storage` | Nombre del bucket de R2. Dentro conviven las carpetas `documentos`, `imagenes-productos` e `imagenes-logos`. |
+| `R2_PUBLIC_URL` | `https://pub-example.r2.dev` | URL pública del bucket (Public Development URL o dominio propio conectado en R2) usada para armar la URL de cada archivo subido. |
+
+> Sin estas 5 variables, `POST /api/v1/storage/upload` sigue respondiendo pero falla al intentar conectarse a R2 (no hay fallback silencioso). Corriendo con `mvnw spring-boot:run`, `backend/.env` se carga automáticamente (vía `spring-dotenv`); con Docker Compose, `docker-compose.yml`/`docker-compose.prod.yml` ya las reenvían al contenedor.
 
 El frontend no requiere variables de entorno propias: las llamadas a `/api` se redirigen al backend mediante el proxy de Vite (`frontend/vite.config.js`).
 
