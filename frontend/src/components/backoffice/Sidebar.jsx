@@ -67,32 +67,31 @@ export default function BackofficeSidebar({ isOpen, onClose, isCollapsed, onTogg
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-screen bg-white dark:bg-[#1e293b] text-[#191c1e] dark:text-white z-50 flex flex-col justify-between py-6 border-r border-[#e0e3e6] dark:border-[#334155] shadow-xs select-none transition-all duration-300 ${
+        className={`fixed top-0 left-0 h-screen bg-white dark:bg-[#1e293b] text-[#191c1e] dark:text-white z-50 flex flex-col py-6 border-r border-[#e0e3e6] dark:border-[#334155] shadow-xs select-none transition-all duration-300 ${
           isCollapsed ? 'lg:w-20' : 'lg:w-64'
         } ${
           isOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex flex-col items-center w-full px-3">
-          <div className={`flex items-center gap-3 w-full pb-4 border-b border-[#e0e3e6] dark:border-[#334155] ${
-            isCollapsed ? 'justify-center' : 'px-2 justify-between'
-          }`}>
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-2xl bg-[#006d3c] text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              {(!isCollapsed || isOpen) && (
-                <div className="truncate">
-                  <h1 className="font-extrabold text-base leading-tight text-[#191c1e] dark:text-white truncate">
-                    ProPOS <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]">Backoffice</span>
-                  </h1>
-                  <p className="text-[10px] text-gray-400 font-medium">Administración SaaS</p>
-                </div>
-              )}
+        <div className={`shrink-0 flex items-center gap-3 w-full pb-4 border-b border-[#e0e3e6] dark:border-[#334155] ${
+          isCollapsed ? 'px-3 justify-center' : 'px-5 justify-between'
+        }`}>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-[#006d3c] text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
+              <ShieldCheck className="w-5 h-5" />
             </div>
+            {(!isCollapsed || isOpen) && (
+              <div className="truncate">
+                <h1 className="font-extrabold text-base leading-tight text-[#191c1e] dark:text-white truncate">
+                  ProPOS <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]">Backoffice</span>
+                </h1>
+                <p className="text-[10px] text-gray-400 font-medium">Administración SaaS</p>
+              </div>
+            )}
           </div>
+        </div>
 
-          <nav className="flex flex-col gap-4 w-full mt-4">
+        <nav className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 w-full px-3 mt-4">
             {navGroups.map((group, groupIdx) => (
               <div key={group.title} className="flex flex-col gap-2 w-full">
                 {(!isCollapsed || isOpen) ? (
@@ -130,10 +129,9 @@ export default function BackofficeSidebar({ isOpen, onClose, isCollapsed, onTogg
                 })}
               </div>
             ))}
-          </nav>
-        </div>
+        </nav>
 
-        <div className="flex flex-col gap-2 w-full px-3 pt-3 border-t border-[#e0e3e6] dark:border-[#334155]">
+        <div className="shrink-0 flex flex-col gap-2 w-full px-3 pt-3 border-t border-[#e0e3e6] dark:border-[#334155]">
           <button
             onClick={onToggleCollapse}
             className={`hidden lg:flex items-center gap-3 p-2.5 rounded-2xl text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#334155] transition-colors cursor-pointer ${

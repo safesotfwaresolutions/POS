@@ -32,6 +32,25 @@ export async function verifyEmailApi(token) {
   return data;
 }
 
+// Renueva la sesion contra /auth/refresh y devuelve el LoginResponse completo (incluye
+// storeId/role al dia). Se usa, ademas del reintento automatico transparente de fetchApi en
+// un 401, justo despues de completar el onboarding del local: el JWT emitido en el login
+// original tiene storeId=null (el usuario aun no tenia local), y sin este refresh explicito
+// el frontend seguiria creyendo que no hay local y rebotaria de vuelta al onboarding.
+export async function refreshSessionApi() {
+  const data = await fetchApi('/auth/refresh', {
+    method: 'POST',
+    body: JSON.stringify(getRefreshToken() ? { refreshToken: getRefreshToken() } : {}),
+  });
+  if (data && data.token) {
+    setAuthToken(data.token);
+  }
+  if (data && data.refreshToken) {
+    setRefreshToken(data.refreshToken);
+  }
+  return data;
+}
+
 export async function logoutApi() {
   try {
     await fetchApi('/auth/logout', {
