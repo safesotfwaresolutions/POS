@@ -18,6 +18,8 @@ public interface StoreFacade {
     StoreDto registerOwnStore(String ownerUsername, CreateStoreCommand command);
     /** Local del ADMINISTRATOR autenticado. */
     StoreDto getOwnStore(String ownerUsername);
+    /** Actualiza los datos "seguros" del local del ADMINISTRATOR autenticado (no email/status). */
+    StoreDto updateOwnStore(String ownerUsername, UpdateOwnStoreCommand command);
     /** Documentos KYC subidos por el local del ADMINISTRATOR autenticado. */
     List<StoreDocumentDto> getOwnDocuments(String ownerUsername);
     /** Sube un nuevo documento KYC (queda en PENDING) para el local del ADMINISTRATOR autenticado. */

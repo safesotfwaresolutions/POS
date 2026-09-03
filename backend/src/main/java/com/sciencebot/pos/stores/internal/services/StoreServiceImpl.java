@@ -8,6 +8,8 @@ import com.sciencebot.pos.stores.internal.mappers.StoreMapper;
 import com.sciencebot.pos.stores.internal.repositories.StoreCategoryRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreDocumentRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreRepository;
+import com.sciencebot.pos.notifications.CreateNotificationCommand;
+import com.sciencebot.pos.notifications.NotificationFacade;
 import com.sciencebot.pos.storage.StorageFacade;
 import com.sciencebot.pos.storage.StorageUploadResult;
 import com.sciencebot.pos.users.UserDto;
@@ -37,19 +39,22 @@ public class StoreServiceImpl implements StoreFacade {
     private final StoreMapper storeMapper;
     private final UserFacade userFacade;
     private final StorageFacade storageFacade;
+    private final NotificationFacade notificationFacade;
 
     public StoreServiceImpl(StoreRepository storeRepository,
                             StoreCategoryRepository categoryRepository,
                             StoreDocumentRepository documentRepository,
                             StoreMapper storeMapper,
                             UserFacade userFacade,
-                            StorageFacade storageFacade) {
+                            StorageFacade storageFacade,
+                            NotificationFacade notificationFacade) {
         this.storeRepository = storeRepository;
         this.categoryRepository = categoryRepository;
         this.documentRepository = documentRepository;
         this.storeMapper = storeMapper;
         this.userFacade = userFacade;
         this.storageFacade = storageFacade;
+        this.notificationFacade = notificationFacade;
     }
 
     @Override
@@ -165,6 +170,26 @@ public class StoreServiceImpl implements StoreFacade {
     }
 
     @Override
+    @Transactional
+    public StoreDto updateOwnStore(String ownerUsername, UpdateOwnStoreCommand command) {
+        Long storeId = requireOwnStoreId(ownerUsername);
+        StoreEntity entity = storeRepository.findById(storeId)
+                .orElseThrow(() -> new EntityNotFoundException("Local no encontrado con ID: " + storeId));
+
+        if (command.name() == null || command.name().isBlank()) {
+            throw new IllegalArgumentException("El nombre del local es obligatorio");
+        }
+        entity.setName(command.name().trim());
+        entity.setPhone(command.phone());
+        entity.setWebsite(command.website());
+        entity.setAddress(command.address());
+        entity.setTaxId(command.taxId());
+        // Deliberadamente no se tocan email/status/emailVerified/storeCategoryId aqui: siguen
+        // bajo control del backoffice (ver UpdateOwnStoreCommand).
+        return storeMapper.toDto(storeRepository.save(entity), resolveCategoryName(entity.getStoreCategoryId()));
+    }
+
+    @Override
     public List<StoreDocumentDto> getOwnDocuments(String ownerUsername) {
         return getDocuments(requireOwnStoreId(ownerUsername));
     }
@@ -242,7 +267,34 @@ public class StoreServiceImpl implements StoreFacade {
         doc.setStatus(newStatus);
         doc.setRejectionReason(command.rejectionReason());
         doc.setVerifiedAt(LocalDateTime.now());
-        return storeMapper.toDocumentDto(documentRepository.save(doc));
+        StoreDocumentDto reviewed = storeMapper.toDocumentDto(documentRepository.save(doc));
+
+        boolean approved = "APPROVED".equals(newStatus);
+        notificationFacade.createNotification(new CreateNotificationCommand(
+                storeId,
+                approved ? "DOCUMENT_APPROVED" : "DOCUMENT_REJECTED",
+                approved ? "Documento aprobado" : "Documento rechazado",
+                approved
+                        ? "Tu " + documentTypeLabel(doc.getDocumentType()) + " fue aprobado."
+                        : "Tu " + documentTypeLabel(doc.getDocumentType()) + " fue rechazado"
+                                + (command.rejectionReason() != null ? ": " + command.rejectionReason() : "."),
+                "/documents"
+        ));
+
+        return reviewed;
+    }
+
+    private static String documentTypeLabel(String documentType) {
+        if (documentType == null) {
+            return "documento";
+        }
+        return switch (documentType) {
+            case "RUT" -> "RUT";
+            case "COMMERCE_CHAMBER" -> "Cámara de Comercio";
+            case "ID_CARD" -> "Cédula";
+            case "BANK_CERTIFICATE" -> "Certificación Bancaria";
+            default -> "documento";
+        };
     }
 
     @Override

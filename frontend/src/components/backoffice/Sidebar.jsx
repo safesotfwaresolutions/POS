@@ -20,15 +20,31 @@ export default function BackofficeSidebar({ isOpen, onClose, isCollapsed, onTogg
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const navItems = [
-    { path: '/backoffice', label: 'Locales', icon: Store, end: true },
-    { path: '/backoffice/onboarding', label: 'Pendientes', icon: Clock },
-    { path: '/backoffice/categories', label: 'Categorías de Locales', icon: Tags },
-    { path: '/backoffice/product-categories', label: 'Categorías de Producto', icon: Package },
-    { path: '/backoffice/parameters', label: 'Parámetros y Catálogos', icon: Puzzle },
-    { path: '/backoffice/legal-documents', label: 'Textos Legales', icon: ScrollText },
-    { path: '/backoffice/support', label: 'Soporte y PQRs', icon: LifeBuoy },
-    { path: '/backoffice/staff', label: 'Operadores', icon: UserCog },
+  // Agrupado por área de trabajo, igual que el sidebar de tienda (components/layout/Sidebar.jsx).
+  const navGroups = [
+    {
+      title: 'Locales',
+      items: [
+        { path: '/backoffice', label: 'Locales', icon: Store, end: true },
+        { path: '/backoffice/onboarding', label: 'Pendientes', icon: Clock },
+      ],
+    },
+    {
+      title: 'Catálogos',
+      items: [
+        { path: '/backoffice/categories', label: 'Categorías de Locales', icon: Tags },
+        { path: '/backoffice/product-categories', label: 'Categorías de Producto', icon: Package },
+        { path: '/backoffice/parameters', label: 'Parámetros y Catálogos', icon: Puzzle },
+        { path: '/backoffice/legal-documents', label: 'Textos Legales', icon: ScrollText },
+      ],
+    },
+    {
+      title: 'Soporte y Equipo',
+      items: [
+        { path: '/backoffice/support', label: 'Soporte y PQRs', icon: LifeBuoy },
+        { path: '/backoffice/staff', label: 'Operadores', icon: UserCog },
+      ],
+    },
   ];
 
   const handleLogout = async () => {
@@ -76,33 +92,44 @@ export default function BackofficeSidebar({ isOpen, onClose, isCollapsed, onTogg
             </div>
           </div>
 
-          <nav className="flex flex-col gap-2 w-full mt-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.end}
-                  onClick={handleNavClick}
-                  title={isCollapsed ? item.label : undefined}
-                  className={({ isActive }) =>
-                    `rounded-2xl flex items-center transition-all duration-200 cursor-pointer ${
-                      isActive
-                        ? 'bg-[#006d3c] text-white shadow-md shadow-[#006d3c]/20 font-bold'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-[#f2f4f7] dark:hover:bg-[#334155] hover:text-[#006d3c] dark:hover:text-white'
-                    } ${
-                      isCollapsed && !isOpen
-                        ? 'w-11 h-11 justify-center mx-auto'
-                        : 'w-full px-3.5 py-3 gap-3 text-xs font-semibold'
-                    }`
-                  }
-                >
-                  <Icon className="w-5 h-5 shrink-0" />
-                  {(!isCollapsed || isOpen) && <span className="truncate">{item.label}</span>}
-                </NavLink>
-              );
-            })}
+          <nav className="flex flex-col gap-4 w-full mt-4">
+            {navGroups.map((group, groupIdx) => (
+              <div key={group.title} className="flex flex-col gap-2 w-full">
+                {(!isCollapsed || isOpen) ? (
+                  <p className="px-3.5 text-[10px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                    {group.title}
+                  </p>
+                ) : (
+                  groupIdx > 0 && <div className="h-px w-8 bg-[#e0e3e6] dark:bg-[#334155] mx-auto" />
+                )}
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      end={item.end}
+                      onClick={handleNavClick}
+                      title={isCollapsed ? item.label : undefined}
+                      className={({ isActive }) =>
+                        `rounded-2xl flex items-center transition-all duration-200 cursor-pointer ${
+                          isActive
+                            ? 'bg-[#006d3c] text-white shadow-md shadow-[#006d3c]/20 font-bold'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-[#f2f4f7] dark:hover:bg-[#334155] hover:text-[#006d3c] dark:hover:text-white'
+                        } ${
+                          isCollapsed && !isOpen
+                            ? 'w-11 h-11 justify-center mx-auto'
+                            : 'w-full px-3.5 py-3 gap-3 text-xs font-semibold'
+                        }`
+                      }
+                    >
+                      <Icon className="w-5 h-5 shrink-0" />
+                      {(!isCollapsed || isOpen) && <span className="truncate">{item.label}</span>}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
         </div>
 

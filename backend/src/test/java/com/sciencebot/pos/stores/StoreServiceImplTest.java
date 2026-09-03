@@ -8,6 +8,7 @@ import com.sciencebot.pos.stores.internal.repositories.StoreCategoryRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreDocumentRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreRepository;
 import com.sciencebot.pos.stores.internal.services.StoreServiceImpl;
+import com.sciencebot.pos.notifications.NotificationFacade;
 import com.sciencebot.pos.storage.StorageFacade;
 import com.sciencebot.pos.storage.StorageUploadResult;
 import com.sciencebot.pos.users.UserDto;
@@ -38,6 +39,7 @@ class StoreServiceImplTest {
     @Mock private StoreMapper storeMapper;
     @Mock private UserFacade userFacade;
     @Mock private StorageFacade storageFacade;
+    @Mock private NotificationFacade notificationFacade;
     @InjectMocks private StoreServiceImpl storeService;
 
     @BeforeEach
@@ -185,6 +187,64 @@ class StoreServiceImplTest {
         StoreDocumentDto result = storeService.reviewDocument(1L, 10L, new ReviewDocumentCommand("APPROVED", null));
         assertNotNull(result);
         assertEquals("APPROVED", result.status());
+        verify(notificationFacade, times(1)).createNotification(argThat(cmd ->
+                cmd.storeId().equals(1L) && "DOCUMENT_APPROVED".equals(cmd.type())));
+    }
+
+    @Test
+    void reviewDocument_Rejected_NotifiesStore() {
+        StoreDocumentEntity doc = new StoreDocumentEntity();
+        doc.setId(11L);
+        doc.setStoreId(1L);
+        doc.setDocumentType("RUT");
+        doc.setStatus("PENDING");
+
+        when(documentRepository.findById(11L)).thenReturn(Optional.of(doc));
+        when(documentRepository.save(any())).thenReturn(doc);
+        when(storeMapper.toDocumentDto(any())).thenReturn(new StoreDocumentDto(11L, 1L, "RUT", "http://doc.pdf", "REJECTED", "Ilegible", null, null));
+
+        storeService.reviewDocument(1L, 11L, new ReviewDocumentCommand("REJECTED", "Ilegible"));
+
+        verify(notificationFacade, times(1)).createNotification(argThat(cmd ->
+                cmd.storeId().equals(1L) && "DOCUMENT_REJECTED".equals(cmd.type()) && cmd.message().contains("Ilegible")));
+    }
+
+    @Test
+    void updateOwnStore_Success_UpdatesSafeFields() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 1L, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+
+        StoreEntity entity = new StoreEntity();
+        entity.setId(1L);
+        entity.setName("Tienda Vieja");
+        entity.setEmail("tienda1@test.com");
+        entity.setStatus("ACTIVE");
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(storeRepository.save(any(StoreEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(storeMapper.toDto(any(), any())).thenAnswer(inv -> {
+            StoreEntity e = inv.getArgument(0);
+            return new StoreDto(e.getId(), e.getName(), null, null, e.getPhone(), e.getEmail(), e.getWebsite(), e.getAddress(), e.getTaxId(), e.getStatus(), e.isEmailVerified(), null, null);
+        });
+
+        UpdateOwnStoreCommand command = new UpdateOwnStoreCommand("Tienda Nueva", "3009999999", "https://nueva.com", "Calle Nueva 1", "900999999-1");
+        StoreDto result = storeService.updateOwnStore("carlos", command);
+
+        assertEquals("Tienda Nueva", result.name());
+        assertEquals("3009999999", result.phone());
+        assertEquals("900999999-1", result.taxId());
+        // email y status no deben cambiar via esta ruta
+        assertEquals("tienda1@test.com", result.email());
+        assertEquals("ACTIVE", result.status());
+    }
+
+    @Test
+    void updateOwnStore_OwnerHasNoStore_ThrowsException() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, null, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+
+        UpdateOwnStoreCommand command = new UpdateOwnStoreCommand("Tienda", null, null, null, null);
+        assertThrows(jakarta.persistence.EntityNotFoundException.class, () -> storeService.updateOwnStore("carlos", command));
+        verify(storeRepository, never()).save(any());
     }
 
     @Test

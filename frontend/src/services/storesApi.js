@@ -13,6 +13,13 @@ export async function getOwnStoreApi() {
   return fetchApi('/stores/me');
 }
 
+export async function updateOwnStoreApi(payload) {
+  return fetchApi('/stores/me', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function getOwnStoreDocumentsApi() {
   return fetchApi('/stores/me/documents');
 }

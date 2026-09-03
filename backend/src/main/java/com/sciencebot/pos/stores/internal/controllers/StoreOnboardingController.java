@@ -4,6 +4,7 @@ import com.sciencebot.pos.stores.CreateStoreCommand;
 import com.sciencebot.pos.stores.StoreDocumentDto;
 import com.sciencebot.pos.stores.StoreDto;
 import com.sciencebot.pos.stores.StoreFacade;
+import com.sciencebot.pos.stores.UpdateOwnStoreCommand;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,13 @@ public class StoreOnboardingController {
     @Operation(summary = "Obtener mi local", description = "Retorna el local del ADMINISTRATOR autenticado.")
     public ResponseEntity<StoreDto> getOwnStore(Authentication authentication) {
         return ResponseEntity.ok(storeFacade.getOwnStore(authentication.getName()));
+    }
+
+    @PutMapping("/me")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @Operation(summary = "Actualizar mi local", description = "Actualiza nombre, teléfono, sitio web, dirección y NIT del local del ADMINISTRATOR autenticado. El correo y el estado de verificación no se pueden cambiar por esta vía.")
+    public ResponseEntity<StoreDto> updateOwnStore(@RequestBody UpdateOwnStoreCommand command, Authentication authentication) {
+        return ResponseEntity.ok(storeFacade.updateOwnStore(authentication.getName(), command));
     }
 
     @GetMapping("/me/documents")
