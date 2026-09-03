@@ -2,6 +2,7 @@ package com.sciencebot.pos.stores;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,6 +18,10 @@ public interface StoreFacade {
     StoreDto registerOwnStore(String ownerUsername, CreateStoreCommand command);
     /** Local del ADMINISTRATOR autenticado. */
     StoreDto getOwnStore(String ownerUsername);
+    /** Documentos KYC subidos por el local del ADMINISTRATOR autenticado. */
+    List<StoreDocumentDto> getOwnDocuments(String ownerUsername);
+    /** Sube un nuevo documento KYC (queda en PENDING) para el local del ADMINISTRATOR autenticado. */
+    StoreDocumentDto uploadOwnDocument(String ownerUsername, String documentType, MultipartFile file);
     /** Rechaza un local pendiente con un motivo obligatorio. */
     StoreDto rejectStore(Long id, String reason);
     List<StoreDocumentDto> getDocuments(Long storeId);

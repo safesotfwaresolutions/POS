@@ -8,6 +8,8 @@ import com.sciencebot.pos.stores.internal.mappers.StoreMapper;
 import com.sciencebot.pos.stores.internal.repositories.StoreCategoryRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreDocumentRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreRepository;
+import com.sciencebot.pos.storage.StorageFacade;
+import com.sciencebot.pos.storage.StorageUploadResult;
 import com.sciencebot.pos.users.UserDto;
 import com.sciencebot.pos.users.UserFacade;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,23 +29,27 @@ import java.util.Set;
 public class StoreServiceImpl implements StoreFacade {
 
     private static final Set<String> VALID_STATUSES = Set.of("ACTIVE", "INACTIVE", "PENDING_VERIFICATION", "SUSPENDED", "REJECTED");
+    private static final Set<String> VALID_DOCUMENT_TYPES = Set.of("RUT", "COMMERCE_CHAMBER", "ID_CARD", "BANK_CERTIFICATE", "OTHER");
 
     private final StoreRepository storeRepository;
     private final StoreCategoryRepository categoryRepository;
     private final StoreDocumentRepository documentRepository;
     private final StoreMapper storeMapper;
     private final UserFacade userFacade;
+    private final StorageFacade storageFacade;
 
     public StoreServiceImpl(StoreRepository storeRepository,
                             StoreCategoryRepository categoryRepository,
                             StoreDocumentRepository documentRepository,
                             StoreMapper storeMapper,
-                            UserFacade userFacade) {
+                            UserFacade userFacade,
+                            StorageFacade storageFacade) {
         this.storeRepository = storeRepository;
         this.categoryRepository = categoryRepository;
         this.documentRepository = documentRepository;
         this.storeMapper = storeMapper;
         this.userFacade = userFacade;
+        this.storageFacade = storageFacade;
     }
 
     @Override
@@ -155,6 +162,44 @@ public class StoreServiceImpl implements StoreFacade {
             throw new EntityNotFoundException("Aun no has registrado un local.");
         }
         return getById(owner.storeId());
+    }
+
+    @Override
+    public List<StoreDocumentDto> getOwnDocuments(String ownerUsername) {
+        return getDocuments(requireOwnStoreId(ownerUsername));
+    }
+
+    @Override
+    @Transactional
+    public StoreDocumentDto uploadOwnDocument(String ownerUsername, String documentType, MultipartFile file) {
+        Long storeId = requireOwnStoreId(ownerUsername);
+
+        String type = documentType == null ? "" : documentType.trim().toUpperCase();
+        if (!VALID_DOCUMENT_TYPES.contains(type)) {
+            throw new IllegalArgumentException("Tipo de documento inválido. Use uno de: " + VALID_DOCUMENT_TYPES);
+        }
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Debes adjuntar un archivo.");
+        }
+
+        StorageUploadResult uploaded = storageFacade.uploadFile(file, "stores/" + storeId + "/documents");
+
+        StoreDocumentEntity doc = new StoreDocumentEntity();
+        doc.setStoreId(storeId);
+        doc.setDocumentType(type);
+        doc.setDocumentUrl(uploaded.url());
+        doc.setStatus("PENDING");
+        return storeMapper.toDocumentDto(documentRepository.save(doc));
+    }
+
+    /** Resuelve el storeId del ADMINISTRATOR autenticado, exigiendo que ya tenga un local registrado. */
+    private Long requireOwnStoreId(String ownerUsername) {
+        UserDto owner = userFacade.findByUsername(ownerUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + ownerUsername));
+        if (owner.storeId() == null) {
+            throw new EntityNotFoundException("Aun no has registrado un local.");
+        }
+        return owner.storeId();
     }
 
     @Override

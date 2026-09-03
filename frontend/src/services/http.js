@@ -108,3 +108,41 @@ export async function fetchApi(endpoint, options = {}, _retried = false) {
   if (response.status === 204) return true;
   return await response.json();
 }
+
+// Variante de fetchApi para subir archivos (multipart/form-data). No fija 'Content-Type':
+// el navegador debe generar el boundary del multipart por su cuenta. Comparte el mismo
+// manejo de token/refresh/errores que fetchApi.
+export async function uploadFileApi(endpoint, formData, options = {}, _retried = false) {
+  const headers = {
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    ...options.headers,
+  };
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    method: options.method || 'POST',
+    headers,
+    body: formData,
+    credentials: 'include',
+  });
+
+  if (response.status === 401) {
+    if (!_retried) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        return uploadFileApi(endpoint, formData, options, true);
+      }
+    }
+    setAuthToken('');
+    setRefreshToken('');
+    throw new Error('Sesión expirada o credenciales no válidas.');
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Error HTTP ${response.status}`);
+  }
+
+  if (response.status === 204) return true;
+  return await response.json();
+}

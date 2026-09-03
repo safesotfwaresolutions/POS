@@ -8,6 +8,8 @@ import com.sciencebot.pos.stores.internal.repositories.StoreCategoryRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreDocumentRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreRepository;
 import com.sciencebot.pos.stores.internal.services.StoreServiceImpl;
+import com.sciencebot.pos.storage.StorageFacade;
+import com.sciencebot.pos.storage.StorageUploadResult;
 import com.sciencebot.pos.users.UserDto;
 import com.sciencebot.pos.users.UserFacade;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +20,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
@@ -34,6 +37,7 @@ class StoreServiceImplTest {
     @Mock private StoreDocumentRepository documentRepository;
     @Mock private StoreMapper storeMapper;
     @Mock private UserFacade userFacade;
+    @Mock private StorageFacade storageFacade;
     @InjectMocks private StoreServiceImpl storeService;
 
     @BeforeEach
@@ -181,5 +185,63 @@ class StoreServiceImplTest {
         StoreDocumentDto result = storeService.reviewDocument(1L, 10L, new ReviewDocumentCommand("APPROVED", null));
         assertNotNull(result);
         assertEquals("APPROVED", result.status());
+    }
+
+    @Test
+    void getOwnDocuments_Success_ReturnsDocumentsOfOwnStore() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 1L, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+        when(storeRepository.existsById(1L)).thenReturn(true);
+
+        StoreDocumentEntity doc = new StoreDocumentEntity();
+        doc.setId(10L);
+        doc.setStoreId(1L);
+        when(documentRepository.findByStoreId(1L)).thenReturn(List.of(doc));
+        when(storeMapper.toDocumentDto(doc)).thenReturn(new StoreDocumentDto(10L, 1L, "RUT", "http://doc.pdf", "PENDING", null, null, null));
+
+        List<StoreDocumentDto> result = storeService.getOwnDocuments("carlos");
+
+        assertEquals(1, result.size());
+        assertEquals("RUT", result.get(0).documentType());
+    }
+
+    @Test
+    void uploadOwnDocument_Success_CreatesPendingDocument() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 1L, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+        MockMultipartFile file = new MockMultipartFile("file", "rut.pdf", "application/pdf", "contenido".getBytes());
+        when(storageFacade.uploadFile(eq(file), eq("stores/1/documents")))
+                .thenReturn(new StorageUploadResult("stores/1/documents/uuid.pdf", "https://cdn.test/rut.pdf", "rut.pdf", 9L, "application/pdf"));
+        when(documentRepository.save(any(StoreDocumentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(storeMapper.toDocumentDto(any())).thenAnswer(inv -> {
+            StoreDocumentEntity e = inv.getArgument(0);
+            return new StoreDocumentDto(1L, e.getStoreId(), e.getDocumentType(), e.getDocumentUrl(), e.getStatus(), null, null, null);
+        });
+
+        StoreDocumentDto result = storeService.uploadOwnDocument("carlos", "rut", file);
+
+        assertNotNull(result);
+        assertEquals("RUT", result.documentType());
+        assertEquals("PENDING", result.status());
+        assertEquals("https://cdn.test/rut.pdf", result.documentUrl());
+    }
+
+    @Test
+    void uploadOwnDocument_InvalidType_ThrowsException() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 1L, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", "x".getBytes());
+
+        assertThrows(IllegalArgumentException.class, () -> storeService.uploadOwnDocument("carlos", "NOT_A_TYPE", file));
+        verify(storageFacade, never()).uploadFile(any(), any());
+    }
+
+    @Test
+    void uploadOwnDocument_OwnerHasNoStore_ThrowsException() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, null, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", "x".getBytes());
+
+        assertThrows(jakarta.persistence.EntityNotFoundException.class, () -> storeService.uploadOwnDocument("carlos", "RUT", file));
     }
 }

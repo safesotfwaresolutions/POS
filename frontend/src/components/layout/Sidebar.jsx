@@ -8,6 +8,7 @@ import {
   Truck,
   Users,
   FileText,
+  FileCheck2,
   BarChart3,
   RotateCcw,
   Settings,
@@ -23,18 +24,43 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
-  const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/pos', label: 'Punto de Venta', icon: ShoppingCart },
-    { path: '/returns', label: 'Devoluciones', icon: RotateCcw },
-    { path: '/products', label: 'Productos', icon: Tag },
-    { path: '/inventory', label: 'Inventario', icon: Package },
-    { path: '/suppliers', label: 'Proveedores', icon: Truck },
-    { path: '/customers', label: 'Clientes', icon: Users },
-    { path: '/invoicing', label: 'Facturación DIAN', icon: FileText },
-    // El backend no expone ningún reporte a SELLER (solo Admin y Supervisor).
-    ...(user?.role !== 'SELLER' ? [{ path: '/reports', label: 'Reportes', icon: BarChart3 }] : []),
-    { path: '/settings', label: 'Configuración', icon: Settings },
+  // Agrupado por área de trabajo para que el menú sea más fácil de escanear.
+  // El backend no expone ningún reporte a SELLER (solo Admin y Supervisor).
+  const navGroups = [
+    {
+      title: 'Principal',
+      items: [
+        { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+      ],
+    },
+    {
+      title: 'Operación',
+      items: [
+        { path: '/pos', label: 'Punto de Venta', icon: ShoppingCart },
+        { path: '/returns', label: 'Devoluciones', icon: RotateCcw },
+        { path: '/products', label: 'Productos', icon: Tag },
+        { path: '/inventory', label: 'Inventario', icon: Package },
+        { path: '/suppliers', label: 'Proveedores', icon: Truck },
+      ],
+    },
+    {
+      title: 'Clientes y Facturación',
+      items: [
+        { path: '/customers', label: 'Clientes', icon: Users },
+        { path: '/invoicing', label: 'Facturación DIAN', icon: FileText },
+        { path: '/documents', label: 'Documentos', icon: FileCheck2 },
+      ],
+    },
+    ...(user?.role !== 'SELLER' ? [{
+      title: 'Análisis',
+      items: [{ path: '/reports', label: 'Reportes', icon: BarChart3 }],
+    }] : []),
+    {
+      title: 'Sistema',
+      items: [
+        { path: '/settings', label: 'Configuración', icon: Settings },
+      ],
+    },
   ];
 
   const handleLogout = async () => {
@@ -85,33 +111,44 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
             </div>
           </div>
 
-          {/* Navigation Menu */}
-          <nav className="flex flex-col gap-2 w-full mt-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={handleNavClick}
-                  title={isCollapsed ? item.label : undefined}
-                  className={({ isActive }) =>
-                    `rounded-2xl flex items-center transition-all duration-200 cursor-pointer ${
-                      isActive
-                        ? 'bg-[#006d3c] text-white shadow-md shadow-[#006d3c]/20 font-bold'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-[#f2f4f7] dark:hover:bg-[#334155] hover:text-[#006d3c] dark:hover:text-white'
-                    } ${
-                      isCollapsed && !isOpen
-                        ? 'w-11 h-11 justify-center mx-auto'
-                        : 'w-full px-3.5 py-3 gap-3 text-xs font-semibold'
-                    }`
-                  }
-                >
-                  <Icon className="w-5 h-5 shrink-0" />
-                  {(!isCollapsed || isOpen) && <span className="truncate">{item.label}</span>}
-                </NavLink>
-              );
-            })}
+          {/* Navigation Menu, agrupado por área de trabajo */}
+          <nav className="flex flex-col gap-4 w-full mt-4">
+            {navGroups.map((group, groupIdx) => (
+              <div key={group.title} className="flex flex-col gap-2 w-full">
+                {(!isCollapsed || isOpen) ? (
+                  <p className="px-3.5 text-[10px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                    {group.title}
+                  </p>
+                ) : (
+                  groupIdx > 0 && <div className="h-px w-8 bg-[#e0e3e6] dark:bg-[#334155] mx-auto" />
+                )}
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      onClick={handleNavClick}
+                      title={isCollapsed ? item.label : undefined}
+                      className={({ isActive }) =>
+                        `rounded-2xl flex items-center transition-all duration-200 cursor-pointer ${
+                          isActive
+                            ? 'bg-[#006d3c] text-white shadow-md shadow-[#006d3c]/20 font-bold'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-[#f2f4f7] dark:hover:bg-[#334155] hover:text-[#006d3c] dark:hover:text-white'
+                        } ${
+                          isCollapsed && !isOpen
+                            ? 'w-11 h-11 justify-center mx-auto'
+                            : 'w-full px-3.5 py-3 gap-3 text-xs font-semibold'
+                        }`
+                      }
+                    >
+                      <Icon className="w-5 h-5 shrink-0" />
+                      {(!isCollapsed || isOpen) && <span className="truncate">{item.label}</span>}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
         </div>
 
