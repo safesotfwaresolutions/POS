@@ -121,16 +121,20 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
+			<exclusions>
+				<!-- El cliente HTTP sincrono por defecto (Apache) falla el handshake TLS contra
+				     Cloudflare R2 en algunos entornos Windows/JDK ("handshake_failure" durante la
+				     renegociacion TLS que hace el edge de Cloudflare). Se reemplaza por
+				     url-connection-client (usa HttpsURLConnection del JDK), que si la completa. -->
+				<exclusion>
+					<groupId>software.amazon.awssdk</groupId>
+					<artifactId>apache-client</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-		<!-- Carga backend/.env como si fueran variables de entorno reales (ej. R2_*, FACTUS_*)
-		     cuando se corre localmente con "mvnw spring-boot:run". Sin esto, .env es solo un
-		     archivo de texto que Spring Boot nunca lee: hay que exportar cada variable a mano
-		     o depender de Docker Compose. Las variables de entorno reales del sistema/proceso
-		     siempre tienen prioridad sobre .env. -->
 		<dependency>
-			<groupId>me.paulschwarz</groupId>
-			<artifactId>spring-dotenv</artifactId>
-			<version>4.0.0</version>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>url-connection-client</artifactId>
 		</dependency>
 	</dependencies>
 
