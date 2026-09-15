@@ -9,9 +9,15 @@ import com.sciencebot.pos.customers.CreateCustomerCommand;
 import com.sciencebot.pos.settings.SettingsFacade;
 import com.sciencebot.pos.settings.SettingsDto;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+/**
+ * Corre primero (Order 1): siembra el store/admin base del que dependen los demás seeders
+ * (CategorySeeder Order 2, ProductDemoSeeder Order 3 en el perfil dev).
+ */
 @Component
+@Order(1)
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;

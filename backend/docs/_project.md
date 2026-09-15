@@ -1,8 +1,8 @@
-<!-- doc-version: 1.1 | last-updated: 2026-08-20 -->
+<!-- doc-version: 1.2 | last-updated: 2026-09-15 -->
 # Proyecto POS — Contexto General
 
 ## Resumen
-Aplicación web backend (API REST) para gestión de ventas en efectivo e inventario de un pequeño negocio con una sola sucursal y una sola caja física.
+Plataforma multi-tenant de API REST para gestión de ventas, inventario y facturación electrónica DIAN. Cada tienda (`store`) opera aislada de las demás (ver `_security.md` / `TenantContext`); dentro de una tienda, el modelo de negocio sigue siendo el de un local con una sola caja física.
 
 ## Stack Tecnológico
 - **Backend**: Java 21, Spring Boot, Spring Security, Spring Data JPA
@@ -27,12 +27,12 @@ Aplicación web backend (API REST) para gestión de ventas en efectivo e inventa
 | Excluido | Razón |
 |---|---|
 | Notas crédito/débito | Requiere contabilidad avanzada |
-| Devoluciones | Ventas son finales e irreversibles |
-| Múltiples métodos de pago | Solo efectivo |
-| Múltiples sucursales/cajas | Una sola tienda |
 | Mesas y reservas | No es software de restaurante |
 | Despachos/domicilios | Entrega inmediata en mostrador |
 | Múltiples monedas | Moneda local única |
+| Múltiples cajas físicas por tienda | Una sola caja por local |
+
+**Ya NO están excluidos** (implementados desde entonces, ver `V8`–`V10` en `db/migration/` y `_roadmap.md`): devoluciones de venta (`sales` — notas de devolución, no notas crédito contables), múltiples métodos de pago (`sales`, catálogo dinámico vía `settings`) y múltiples sucursales (multi-tenancy por `store_id`, ver `stores` y `_security.md`).
 
 ## Objetivos
 - Procesamiento de ventas ágil con lector de código de barras

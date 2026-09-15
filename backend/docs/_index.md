@@ -1,4 +1,4 @@
-<!-- doc-version: 1.2 | last-updated: 2026-08-19 -->
+<!-- doc-version: 1.3 | last-updated: 2026-09-15 -->
 # Índice del Proyecto POS
 
 ## Resolución Rápida por Módulo
@@ -32,3 +32,4 @@
 | _database-schema.md | Crear tablas nuevas o relaciones |
 | _deployment.md | Configurar entorno o desplegar |
 | _glossary.md | Término desconocido del dominio |
+| _roadmap.md | Estado por módulo, deuda técnica, ideas de valor agregado y plan de trabajo vigente |
