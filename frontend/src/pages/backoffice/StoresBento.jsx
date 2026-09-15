@@ -26,6 +26,7 @@ import {
   getBackofficeStoreCategoriesApi
 } from '../../services/backoffice/storesApi';
 import { useModal } from '../../context/ModalContext';
+import { DOC_TYPE_LABELS, DOC_STATUS_STYLES } from '../../constants/storeDocuments';
 
 const STATUSES = ['ACTIVE', 'INACTIVE', 'PENDING_VERIFICATION', 'SUSPENDED'];
 
@@ -41,20 +42,6 @@ const STATUS_STYLES = {
   INACTIVE: 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300',
   PENDING_VERIFICATION: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
   SUSPENDED: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
-};
-
-const DOC_TYPE_LABELS = {
-  RUT: 'RUT',
-  COMMERCE_CHAMBER: 'Cámara de Comercio',
-  ID_CARD: 'Cédula',
-  BANK_CERTIFICATE: 'Certificación Bancaria',
-  OTHER: 'Otro'
-};
-
-const DOC_STATUS_STYLES = {
-  PENDING: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
-  APPROVED: 'bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]',
-  REJECTED: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
 };
 
 const EMPTY_STORE_FORM = {

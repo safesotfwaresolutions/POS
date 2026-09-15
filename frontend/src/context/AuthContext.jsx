@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { loginApi, logoutApi } from '../services/authApi';
+import { loginApi, logoutApi, refreshSessionApi } from '../services/authApi';
 import { getAuthToken, setAuthToken } from '../services/http';
 
 const AuthContext = createContext();
@@ -50,6 +50,14 @@ export function AuthProvider({ children }) {
   // Usado tras verificar el correo (POST /auth/verify-email ya autologuea al usuario).
   const setSessionFromResponse = (data) => applySession(data);
 
+  // Vuelve a emitir el access token y trae storeId/role al dia desde el backend. Necesario tras
+  // completar el onboarding del local: el JWT/usuario en memoria quedaron con storeId=null desde
+  // el login original, y sin esto el guard de rutas seguiria mandando al usuario a /onboarding/store.
+  const refreshSession = async () => {
+    const data = await refreshSessionApi();
+    return applySession(data, user?.username);
+  };
+
   const logout = async () => {
     setLoading(true);
     await logoutApi();
@@ -59,7 +67,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, isAuthenticated: !!user, setSessionFromResponse }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, isAuthenticated: !!user, setSessionFromResponse, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );

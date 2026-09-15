@@ -121,6 +121,20 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
+			<exclusions>
+				<!-- El cliente HTTP sincrono por defecto (Apache) falla el handshake TLS contra
+				     Cloudflare R2 en algunos entornos Windows/JDK ("handshake_failure" durante la
+				     renegociacion TLS que hace el edge de Cloudflare). Se reemplaza por
+				     url-connection-client (usa HttpsURLConnection del JDK), que si la completa. -->
+				<exclusion>
+					<groupId>software.amazon.awssdk</groupId>
+					<artifactId>apache-client</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>url-connection-client</artifactId>
 		</dependency>
 	</dependencies>
 

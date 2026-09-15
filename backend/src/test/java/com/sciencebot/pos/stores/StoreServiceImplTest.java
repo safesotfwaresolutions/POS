@@ -8,6 +8,9 @@ import com.sciencebot.pos.stores.internal.repositories.StoreCategoryRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreDocumentRepository;
 import com.sciencebot.pos.stores.internal.repositories.StoreRepository;
 import com.sciencebot.pos.stores.internal.services.StoreServiceImpl;
+import com.sciencebot.pos.notifications.NotificationFacade;
+import com.sciencebot.pos.storage.StorageFacade;
+import com.sciencebot.pos.storage.StorageUploadResult;
 import com.sciencebot.pos.users.UserDto;
 import com.sciencebot.pos.users.UserFacade;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +21,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
@@ -34,6 +38,8 @@ class StoreServiceImplTest {
     @Mock private StoreDocumentRepository documentRepository;
     @Mock private StoreMapper storeMapper;
     @Mock private UserFacade userFacade;
+    @Mock private StorageFacade storageFacade;
+    @Mock private NotificationFacade notificationFacade;
     @InjectMocks private StoreServiceImpl storeService;
 
     @BeforeEach
@@ -181,5 +187,121 @@ class StoreServiceImplTest {
         StoreDocumentDto result = storeService.reviewDocument(1L, 10L, new ReviewDocumentCommand("APPROVED", null));
         assertNotNull(result);
         assertEquals("APPROVED", result.status());
+        verify(notificationFacade, times(1)).createNotification(argThat(cmd ->
+                cmd.storeId().equals(1L) && "DOCUMENT_APPROVED".equals(cmd.type())));
+    }
+
+    @Test
+    void reviewDocument_Rejected_NotifiesStore() {
+        StoreDocumentEntity doc = new StoreDocumentEntity();
+        doc.setId(11L);
+        doc.setStoreId(1L);
+        doc.setDocumentType("RUT");
+        doc.setStatus("PENDING");
+
+        when(documentRepository.findById(11L)).thenReturn(Optional.of(doc));
+        when(documentRepository.save(any())).thenReturn(doc);
+        when(storeMapper.toDocumentDto(any())).thenReturn(new StoreDocumentDto(11L, 1L, "RUT", "http://doc.pdf", "REJECTED", "Ilegible", null, null));
+
+        storeService.reviewDocument(1L, 11L, new ReviewDocumentCommand("REJECTED", "Ilegible"));
+
+        verify(notificationFacade, times(1)).createNotification(argThat(cmd ->
+                cmd.storeId().equals(1L) && "DOCUMENT_REJECTED".equals(cmd.type()) && cmd.message().contains("Ilegible")));
+    }
+
+    @Test
+    void updateOwnStore_Success_UpdatesSafeFields() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 1L, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+
+        StoreEntity entity = new StoreEntity();
+        entity.setId(1L);
+        entity.setName("Tienda Vieja");
+        entity.setEmail("tienda1@test.com");
+        entity.setStatus("ACTIVE");
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(storeRepository.save(any(StoreEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(storeMapper.toDto(any(), any())).thenAnswer(inv -> {
+            StoreEntity e = inv.getArgument(0);
+            return new StoreDto(e.getId(), e.getName(), null, null, e.getPhone(), e.getEmail(), e.getWebsite(), e.getAddress(), e.getTaxId(), e.getStatus(), e.isEmailVerified(), null, null);
+        });
+
+        UpdateOwnStoreCommand command = new UpdateOwnStoreCommand("Tienda Nueva", "3009999999", "https://nueva.com", "Calle Nueva 1", "900999999-1");
+        StoreDto result = storeService.updateOwnStore("carlos", command);
+
+        assertEquals("Tienda Nueva", result.name());
+        assertEquals("3009999999", result.phone());
+        assertEquals("900999999-1", result.taxId());
+        // email y status no deben cambiar via esta ruta
+        assertEquals("tienda1@test.com", result.email());
+        assertEquals("ACTIVE", result.status());
+    }
+
+    @Test
+    void updateOwnStore_OwnerHasNoStore_ThrowsException() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, null, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+
+        UpdateOwnStoreCommand command = new UpdateOwnStoreCommand("Tienda", null, null, null, null);
+        assertThrows(jakarta.persistence.EntityNotFoundException.class, () -> storeService.updateOwnStore("carlos", command));
+        verify(storeRepository, never()).save(any());
+    }
+
+    @Test
+    void getOwnDocuments_Success_ReturnsDocumentsOfOwnStore() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 1L, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+        when(storeRepository.existsById(1L)).thenReturn(true);
+
+        StoreDocumentEntity doc = new StoreDocumentEntity();
+        doc.setId(10L);
+        doc.setStoreId(1L);
+        when(documentRepository.findByStoreId(1L)).thenReturn(List.of(doc));
+        when(storeMapper.toDocumentDto(doc)).thenReturn(new StoreDocumentDto(10L, 1L, "RUT", "http://doc.pdf", "PENDING", null, null, null));
+
+        List<StoreDocumentDto> result = storeService.getOwnDocuments("carlos");
+
+        assertEquals(1, result.size());
+        assertEquals("RUT", result.get(0).documentType());
+    }
+
+    @Test
+    void uploadOwnDocument_Success_CreatesPendingDocument() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 1L, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+        MockMultipartFile file = new MockMultipartFile("file", "rut.pdf", "application/pdf", "contenido".getBytes());
+        when(storageFacade.uploadFile(eq(file), eq("documentos")))
+                .thenReturn(new StorageUploadResult("documentos/uuid.pdf", "https://cdn.test/rut.pdf", "rut.pdf", 9L, "application/pdf"));
+        when(documentRepository.save(any(StoreDocumentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(storeMapper.toDocumentDto(any())).thenAnswer(inv -> {
+            StoreDocumentEntity e = inv.getArgument(0);
+            return new StoreDocumentDto(1L, e.getStoreId(), e.getDocumentType(), e.getDocumentUrl(), e.getStatus(), null, null, null);
+        });
+
+        StoreDocumentDto result = storeService.uploadOwnDocument("carlos", "rut", file);
+
+        assertNotNull(result);
+        assertEquals("RUT", result.documentType());
+        assertEquals("PENDING", result.status());
+        assertEquals("https://cdn.test/rut.pdf", result.documentUrl());
+    }
+
+    @Test
+    void uploadOwnDocument_InvalidType_ThrowsException() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, 1L, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", "x".getBytes());
+
+        assertThrows(IllegalArgumentException.class, () -> storeService.uploadOwnDocument("carlos", "NOT_A_TYPE", file));
+        verify(storageFacade, never()).uploadFile(any(), any());
+    }
+
+    @Test
+    void uploadOwnDocument_OwnerHasNoStore_ThrowsException() {
+        UserDto owner = new UserDto(5L, "Carlos", "carlos", "carlos@test.com", "ADMINISTRATOR", true, null, true);
+        when(userFacade.findByUsername("carlos")).thenReturn(Optional.of(owner));
+        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", "x".getBytes());
+
+        assertThrows(jakarta.persistence.EntityNotFoundException.class, () -> storeService.uploadOwnDocument("carlos", "RUT", file));
     }
 }

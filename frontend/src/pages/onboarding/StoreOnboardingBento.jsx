@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Store, Phone, Mail, MapPin, Globe, FileText, ArrowRight, AlertCircle } from 'lucide-react';
 import { registerOwnStoreApi } from '../../services/storesApi';
+import { useAuth } from '../../context/AuthContext';
 
 const EMPTY_FORM = { name: '', phone: '', email: '', website: '', address: '', taxId: '' };
 
 export default function StoreOnboardingBento() {
   const navigate = useNavigate();
+  const { refreshSession } = useAuth();
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,10 @@ export default function StoreOnboardingBento() {
     setLoading(true);
     try {
       await registerOwnStoreApi({ ...form, storeCategoryId: null });
+      // El JWT/usuario en memoria siguen con storeId=null (así estaban al hacer login, antes de
+      // registrar el local). Sin renovar la sesión aquí, el guard de rutas te devolvería a este
+      // mismo formulario en vez de dejarte entrar.
+      await refreshSession();
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.message || 'No se pudo registrar el local.');

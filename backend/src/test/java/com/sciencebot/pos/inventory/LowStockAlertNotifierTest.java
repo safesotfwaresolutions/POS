@@ -1,6 +1,7 @@
 package com.sciencebot.pos.inventory;
 
 import com.sciencebot.pos.inventory.internal.services.LowStockAlertNotifier;
+import com.sciencebot.pos.notifications.NotificationFacade;
 import com.sciencebot.pos.products.ProductDto;
 import com.sciencebot.pos.shared.email.EmailSender;
 import com.sciencebot.pos.users.UserDto;
@@ -26,6 +27,9 @@ class LowStockAlertNotifierTest {
     @Mock
     private EmailSender emailSender;
 
+    @Mock
+    private NotificationFacade notificationFacade;
+
     @InjectMocks
     private LowStockAlertNotifier notifier;
 
@@ -49,6 +53,18 @@ class LowStockAlertNotifierTest {
 
         verify(emailSender, times(1)).send(eq("ana@tienda.com"), contains("Arroz Diana 500g"), anyString());
         verify(emailSender, times(1)).send(eq("beto@tienda.com"), contains("Arroz Diana 500g"), anyString());
+        verify(notificationFacade, times(1)).createNotification(argThat(cmd ->
+                cmd.storeId().equals(1L) && "LOW_STOCK".equals(cmd.type()) && cmd.message().contains("Arroz Diana 500g")));
+    }
+
+    @Test
+    void notifyLowStock_NotificationFacadeThrows_DoesNotPropagate() {
+        doThrow(new IllegalStateException("fallo publicando notificación")).when(notificationFacade).createNotification(any());
+
+        // Es "best-effort": un fallo publicando la notificacion en-app no debe propagarse
+        // (rompería la tarea async), igual que un fallo de EmailSender.
+        assertDoesNotThrow(() -> notifier.notifyLowStock(1L, product, 4));
+        verify(emailSender, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test
