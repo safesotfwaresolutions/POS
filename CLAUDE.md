@@ -9,7 +9,9 @@ Monorepo for a retail POS system (sales, real-time inventory, and Colombian DIAN
 - `backend/` — Java 21 + Spring Boot REST API, structured as a **modular monolith** (vertical slicing).
 - `frontend/` — React 19 + Vite + Tailwind CSS 4 SPA. Pure API consumer; contains **no business logic**.
 
-Documentation (Spanish) lives in `backend/docs/` — `_architecture.md`, `_conventions.md`, `_database-schema.md`, `_security.md`, and per-module docs under `backend/docs/modules/`. Consult these before non-trivial backend changes; they are the source of truth for conventions.
+Documentation (Spanish) lives in `backend/docs/` — `_architecture.md`, `_conventions.md`, `_database-schema.md`, `_security.md`, `_roadmap.md` (per-module status/gaps/backlog), and per-module docs under `backend/docs/modules/`. Consult these before non-trivial backend changes; they are the source of truth for conventions.
+
+This repo also has a parallel `.ai/` harness (`.ai/agents.md`) describing a Leader/Implementer/Reviewer/Committer protocol with its own validation script (`.ai/init.ps1` / `init.sh`) and progress log (`.ai/progress/history.md`), authored independently of Claude Code. Its substantive rules (SSOT adherence to `backend/docs/`, no direct schema edits outside Flyway, explicit approval before any commit, never push/amend/rebase without being asked) already match how you should operate here regardless; treat `.ai/progress/history.md` as another source of project history worth checking, and flag (don't silently "fix") any drift you find between `.ai/features.json`/`init.ps1`'s module list and the actual modules under `backend/src/main/java/com/sciencebot/pos/`.
 
 ## Commands
 
@@ -39,7 +41,7 @@ Default login: `admin` / `Password123`. Swagger UI at `http://localhost:8080/swa
 ## Backend Architecture
 
 ### Modular monolith with strict encapsulation
-Each business module (`auth`, `users`, `categories`, `products`, `inventory`, `customers`, `suppliers`, `purchases`, `sales`, `billing`, `reports`, `settings`, `stores`, `legal`, `support`) is a vertical slice under `com.sciencebot.pos`:
+Each business module (`auth`, `users`, `categories`, `products`, `inventory`, `customers`, `suppliers`, `purchases`, `sales`, `billing`, `reports`, `settings`, `stores`, `legal`, `support`, `notifications`, `storage`) is a vertical slice under `com.sciencebot.pos`. The last two (`notifications`, `storage`) don't have a `backend/docs/modules/*/spec.md` yet nor an entry in `.ai/init.ps1`/`init.sh`'s module list — known documentation gap, see `backend/docs/_roadmap.md`.
 
 - **Module root** — the public API: `[Module]Facade` interface, output DTOs (`[Module]Dto`), input commands (`Create[Module]Command`), and domain events. These are the *only* types other modules may reference.
 - **`internal/`** — private implementation, split into `controllers/`, `services/`, `repositories/`, `entities/`, `mappers/`. Classes here should be package-private wherever possible and are invisible to other modules.
@@ -58,7 +60,7 @@ The `reports` module bypasses JPA and uses `JdbcClient` with native SQL aggregat
 Inventory stock deduction uses **pessimistic locking** to prevent race conditions on concurrent sales. Preserve this when touching inventory/sales flows.
 
 ### Multi-tenancy (store scoping)
-Requests are scoped to a store. `JwtAuthenticationFilter` extracts `storeId` from the JWT and stores it in `TenantContext` (a `ThreadLocal`) for the request, clearing it afterward. When adding tenant-scoped queries, read the current store via `TenantContext.getStoreId()`. The `stores` module handles store onboarding/documents; `legal` and `support` are platform back-office modules.
+Requests are scoped to a store. `JwtAuthenticationFilter` extracts `storeId` from the JWT and stores it in `TenantContext` (a `ThreadLocal`) for the request, clearing it afterward. When adding tenant-scoped queries, read the current store via `TenantContext.getStoreId()`. The `stores` module handles store onboarding/documents; `legal` and `support` are platform back-office modules. `categories` is the one business catalog that is deliberately **global** (no `store_id`) — shared across every store, writable only by `SUPER_ADMIN`.
 
 ### Billing adapter strategy
 Electronic invoicing is decoupled behind `ElectronicInvoicingProvider` in `billing/internal/adapters/`. Implementation is selected by the `billing.provider` property (`factus` → real DIAN sandbox via `FactusBillingAdapter`, `mock` → `MockBillingAdapter`). Add new providers as adapters selected by this property; don't hardcode a provider in services.
@@ -78,4 +80,4 @@ Electronic invoicing is decoupled behind `ElectronicInvoicingProvider` in `billi
 
 Backend config is env-var driven (see README "Variables de Entorno"): `SPRING_PROFILES_ACTIVE`, `SPRING_DATASOURCE_*`, `JWT_SECRET`, `JWT_EXPIRATION_MS`, `BILLING_PROVIDER`, `FACTUS_*`. The frontend needs no env vars.
 
-Roles: `ADMIN` (full control), `SUPERVISOR` (purchases, inventory, customers, invoice retries), `SELLER` (cash sales, catalog).
+Roles: `SUPER_ADMIN` (platform/back-office level, no `store_id` — SaaS metrics, store lifecycle/KYC, legal docs, support, and the only role allowed to write the global `categories` catalog), `ADMINISTRATOR` (full control of one store), `SUPERVISOR` (purchases, inventory, customers, invoice retries), `SELLER` (cash sales, catalog). All but `SUPER_ADMIN` carry a `store_id` and are scoped to their own tenant.

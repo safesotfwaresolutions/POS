@@ -283,3 +283,20 @@
   - chore(harness): track .ai assistant harness and configuration
 - **Resultado:** Éxito
 - **Notas:** Se removió .ai/ de .gitignore para permitir el control de versiones y trazabilidad de agentes, roles y especificaciones del sistema.
+
+## [2026-09-16 14:34] [REVIEWER] — Auditoría SSOT tras el merge del 2026-09-16 (agente externo: Claude Code)
+
+- **Tarea:** Revisión solicitada por el usuario de los últimos cambios y del arnés `.ai/` (no vinculada a un FEAT-XXX puntual)
+- **Acción:**
+  1. Ejecutado `init.ps1` sobre el HEAD actual (post-merge `acbff36`) → `ENTORNO SANO` (0 errores, 0 advertencias, 95+ tests en verde).
+  2. Detectada discrepancia SSOT: `backend/docs/modules/categories/spec.md` documentaba permisos de escritura "Admin, Supervisor" pero `CategoryController` exige `SUPER_ADMIN` exclusivamente desde FEAT-006 (2026-08-19) — spec corregido (RN-CAT-002 agregada, tabla de Permisos y endpoints actualizados).
+  3. Detectado que `CLAUDE.md` (raíz, guía específica de Claude Code) no mencionaba el rol `SUPER_ADMIN` ni los módulos `notifications`/`storage` — actualizado.
+  4. Detectado que los módulos `notifications` y `storage` (llegados en el merge de la rama paralela, commits del 2026-09-03) no tienen `spec.md` en `backend/docs/modules/` ni entrada en el array `$modules` de `init.ps1`/`init.sh` — **no corregido, queda pendiente** (requiere leer el código de ambos módulos para redactar el spec correctamente; candidato para delegar a un Implementer/Reviewer dedicado).
+  5. Detectado que `.ai/features.json` (v1.2.0, última entrada 2026-08-19) y este mismo historial no registran el trabajo fusionado el 2026-09-03 (notifications, storage inicial, auth/onboarding, store documents) ni la config de Spring Security del 2026-09-16 — esa rama no pasó por el protocolo Leader→Implementer→Reviewer de este arnés. **No corregido** (decisión de backlog, corresponde al Leader/al equipo, no se inventan entradas retroactivas de un trabajo que no se presenció).
+  6. Documentados los hallazgos 4 y 5 en `backend/docs/_roadmap.md` (nuevo, creado en sesión previa del 2026-09-15) para que no se pierdan.
+- **Resultado:** Parcial — hallazgos 2 y 3 corregidos; hallazgos 4 y 5 documentados pero pendientes de decisión/ejecución.
+- **Archivos tocados:**
+  - `backend/docs/modules/categories/spec.md` — corregido (permisos SUPER_ADMIN).
+  - `CLAUDE.md` — actualizado (rol SUPER_ADMIN, módulos notifications/storage, mención del arnés `.ai/`).
+  - `backend/docs/_roadmap.md` — agregadas filas de notifications/storage y hallazgos de esta auditoría.
+- **Notas:** Esta sesión de Claude Code no venía siguiendo el protocolo Leader/Implementer/Reviewer/Committer de este arnés (el `.ai/` no estaba trackeado en git en la sesión anterior, 2026-09-15). A partir de ahora se respetan sus reglas sustantivas (SSOT, validación antes de dar por terminado, aprobación explícita antes de commitear) aunque sin roleplay literal de los 4 roles por turno, dado que opera como agente único interactivo con el usuario en vivo.

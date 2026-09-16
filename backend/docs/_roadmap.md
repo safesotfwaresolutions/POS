@@ -1,4 +1,4 @@
-<!-- doc-version: 1.0 | last-updated: 2026-09-15 -->
+<!-- doc-version: 1.1 | last-updated: 2026-09-16 -->
 # Roadmap y Estado por Módulo
 
 Este documento complementa los `spec.md` de cada módulo (que describen el comportamiento *actual*). Aquí se registra lo que **falta**, la **deuda técnica** conocida y las **próximas ideas**, para que quede como referencia entre sesiones de trabajo. Ver también la skill `pos-doc-sync` para el procedimiento de mantenerlo al día.
@@ -22,11 +22,19 @@ Este documento complementa los `spec.md` de cada módulo (que describen el compo
 | stores | Backoffice SaaS: métricas, ciclo de vida, KYC. Sin `doc-version` header en su spec | Spec no documenta el flujo de self-registration (V7) ni referencia `doc-version`/`last-updated` | — |
 | legal | Documentos legales de plataforma | — | — |
 | support | Tickets de soporte | — | — |
+| notifications | Módulo nuevo (fusionado 2026-09-16): persistencia + alertas en tiempo real para el dashboard | **Sin `spec.md`**, sin entrada en `.ai/init.ps1`/`init.sh` | — |
+| storage | Cloudflare R2 (S3-compatible), subida/eliminación de archivos vía `StorageFacade` | **Sin `spec.md`**, sin entrada en `.ai/init.ps1`/`init.sh` | — |
+
+> `notifications` y `storage` llegaron en el merge del 2026-09-16 (rama paralela) junto con el módulo de documentos de tienda, el service de auth/onboarding y la config de Spring Security. Ninguno de los dos tiene spec modular todavía — siguiente candidato para `pos-doc-sync` / `pos-new-module` (parte del checklist es justamente crear ese spec).
 
 ## Hallazgos detectados en esta revisión (no corregidos, quedan para decidir)
 
 - **IVA fijo en frontend**: `POSBento.jsx` calcula `tax = subtotal * 0.19` hardcodeado cuando se marca "Transmitir a DIAN", en vez de usar un parámetro configurable de `settings`. Si el negocio no es responsable de IVA (régimen simplificado) esto sobrefactura.
 - **`stores/spec.md`** no sigue el formato estándar (`spec-version`/`last-updated`, secciones RN-/RF-) de los demás specs — pendiente de normalizar cuando se vuelva a tocar el módulo.
+- **`notifications` y `storage` sin documentación modular** (ver fila en la tabla de arriba) — el harness `.ai/init.ps1`/`init.sh` tampoco los valida, así que "ENTORNO SANO" no detecta el hueco.
+- **`.ai/features.json` desactualizado**: sigue en la versión 1.2.0 con FEAT-001 a FEAT-006 (última completada 2026-08-19). No registra como features el trabajo fusionado el 2026-09-03 (notifications, storage/R2 inicial duplicado, auth/onboarding, store documents) ni la config de Spring Security del 2026-09-16 — ese trabajo tampoco tiene entradas correspondientes en `.ai/progress/history.md` (el log salta de 2026-08-27 a 2026-09-16 directo al commit del propio harness). Es una rama paralela que no pasó por el protocolo Leader→Implementer→Reviewer→Committer del arnés.
+- **~~`categories/spec.md` permisos~~ — corregido en esta revisión**: el spec decía "Crear/Editar: Admin, Supervisor" pero `CategoryController` ya exige `SUPER_ADMIN` exclusivamente desde FEAT-006 (2026-08-19). Se corrigió el spec para reflejar el código real.
+- **`CLAUDE.md` (raíz) desactualizado — corregido en esta revisión**: no mencionaba el rol `SUPER_ADMIN` ni los módulos `notifications`/`storage`. Ya se actualizó.
 
 ## Valores agregados propuestos (para retail colombiano)
 
