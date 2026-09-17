@@ -90,6 +90,7 @@ public class ProductDemoSeeder implements CommandLineRunner {
                         demo.barcode(),
                         demo.name(),
                         categoryId,
+                        null,
                         demo.purchasePrice(),
                         demo.salePrice(),
                         demo.minStock(),

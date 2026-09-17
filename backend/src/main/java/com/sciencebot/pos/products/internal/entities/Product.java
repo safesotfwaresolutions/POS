@@ -39,6 +39,10 @@ public class Product {
     @Column(name = "category_id", nullable = false)
     private Long categoryId;
 
+    /** Subcategoría propia de la tienda (opcional), debe pertenecer a la misma categoryId. */
+    @Column(name = "subcategory_id")
+    private Long subcategoryId;
+
     @Column(name = "purchase_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal purchasePrice = BigDecimal.ZERO;
 

@@ -13,6 +13,8 @@ public record CreateProductCommand(
     String name,
     @Schema(description = "ID de la categoría a la que pertenece", example = "2", requiredMode = Schema.RequiredMode.REQUIRED)
     Long categoryId,
+    @Schema(description = "ID de la subcategoría propia de la tienda (opcional, debe pertenecer a categoryId)", example = "5")
+    Long subcategoryId,
     @Schema(description = "Precio de compra (costo unitario)", example = "2500.00", requiredMode = Schema.RequiredMode.REQUIRED)
     BigDecimal purchasePrice,
     @Schema(description = "Precio de venta al público", example = "3200.00", requiredMode = Schema.RequiredMode.REQUIRED)

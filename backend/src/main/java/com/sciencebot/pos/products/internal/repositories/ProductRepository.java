@@ -20,5 +20,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     boolean existsByCategoryIdAndActiveTrue(Long categoryId);
     int countByCategoryIdAndActiveTrue(Long categoryId);
 
+    // Subcategorias: a diferencia de categories (global), aqui SI corresponde acotar por
+    // tienda -- pero SubcategoryDeleteValidator/-ProductCountProvider ya reciben el id de
+    // una subcategoria puntual (ya es unica por tienda), asi que no hace falta filtrar por
+    // store_id de nuevo aqui.
+    boolean existsBySubcategoryIdAndActiveTrue(Long subcategoryId);
+    int countBySubcategoryIdAndActiveTrue(Long subcategoryId);
+
 }
 

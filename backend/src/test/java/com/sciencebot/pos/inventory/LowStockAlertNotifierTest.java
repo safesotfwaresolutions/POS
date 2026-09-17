@@ -34,7 +34,7 @@ class LowStockAlertNotifierTest {
     private LowStockAlertNotifier notifier;
 
     private final ProductDto product = new ProductDto(
-            1L, "P1", "123", "Arroz Diana 500g", "Alimentos",
+            1L, "P1", "123", "Arroz Diana 500g", "Alimentos", null, null,
             BigDecimal.ONE, BigDecimal.TEN, 4, 5, true, null);
 
     @BeforeEach

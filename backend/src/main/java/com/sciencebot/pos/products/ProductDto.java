@@ -15,6 +15,10 @@ public record ProductDto(
     String name,
     @Schema(description = "Nombre de la categoría a la que pertenece", example = "Alimentos")
     String categoryName,
+    @Schema(description = "ID de la subcategoría propia de la tienda (opcional)", example = "5")
+    Long subcategoryId,
+    @Schema(description = "Nombre de la subcategoría propia de la tienda (opcional)", example = "Gaseosas")
+    String subcategoryName,
     @Schema(description = "Precio de compra (costo)", example = "2500.00")
     BigDecimal purchasePrice,
     @Schema(description = "Precio de venta al público", example = "3200.00")

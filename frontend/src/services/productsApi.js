@@ -19,6 +19,7 @@ export async function createProductApi(productData) {
       internalCode: productData.internalCode,
       barcode: productData.barcode,
       categoryId: productData.categoryId,
+      subcategoryId: productData.subcategoryId || null,
       purchasePrice: parseFloat(productData.purchasePrice || productData.price * 0.7),
       salePrice: parseFloat(productData.price || productData.salePrice),
       minStock: parseInt(productData.minStock || 5),

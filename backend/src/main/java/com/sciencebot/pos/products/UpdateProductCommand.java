@@ -11,6 +11,8 @@ public record UpdateProductCommand(
     String description,
     @Schema(description = "Nuevo ID de categoría", example = "2")
     Long categoryId,
+    @Schema(description = "Nuevo ID de subcategoría propia de la tienda (opcional, debe pertenecer a categoryId)", example = "5")
+    Long subcategoryId,
     @Schema(description = "Nuevo precio de compra", example = "2800.00")
     BigDecimal purchasePrice,
     @Schema(description = "Nuevo precio de venta", example = "3500.00")

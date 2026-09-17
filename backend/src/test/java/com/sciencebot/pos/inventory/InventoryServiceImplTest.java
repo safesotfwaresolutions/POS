@@ -55,7 +55,7 @@ class InventoryServiceImplTest {
 
     @Test
     void registerMovement_Entry_Success() {
-        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", BigDecimal.ONE, BigDecimal.TEN, 10, 5, true, null);
+        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", null, null, BigDecimal.ONE, BigDecimal.TEN, 10, 5, true, null);
         when(productFacade.getById(1L)).thenReturn(Optional.of(product));
 
         InventoryMovement saved = new InventoryMovement();
@@ -80,7 +80,7 @@ class InventoryServiceImplTest {
 
     @Test
     void registerMovement_InsufficientStock_ThrowsException() {
-        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", BigDecimal.ONE, BigDecimal.TEN, 2, 5, true, null);
+        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", null, null, BigDecimal.ONE, BigDecimal.TEN, 2, 5, true, null);
         when(productFacade.getById(1L)).thenReturn(Optional.of(product));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
@@ -92,7 +92,7 @@ class InventoryServiceImplTest {
     void registerMovement_StockCrossesBelowMinimum_TriggersLowStockAlert() {
         // 8 unidades disponibles, min 5: una salida de 4 deja el stock en 4 (<= 5), cruzando
         // el minimo desde arriba (8 > 5) hacia abajo.
-        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", BigDecimal.ONE, BigDecimal.TEN, 8, 5, true, null);
+        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", null, null, BigDecimal.ONE, BigDecimal.TEN, 8, 5, true, null);
         when(productFacade.getById(1L)).thenReturn(Optional.of(product));
         when(movementRepository.save(any(InventoryMovement.class))).thenReturn(new InventoryMovement());
         when(inventoryMapper.toDto(any(InventoryMovement.class)))
@@ -107,7 +107,7 @@ class InventoryServiceImplTest {
     void registerMovement_StockAlreadyBelowMinimum_DoesNotRepeatAlert() {
         // Ya estaba en 4 (<= min 5): otra salida que lo deja en 3 NO debe re-disparar la alerta,
         // solo el cruce inicial.
-        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", BigDecimal.ONE, BigDecimal.TEN, 4, 5, true, null);
+        ProductDto product = new ProductDto(1L, "P1", "123", "Product 1", "Cat", null, null, BigDecimal.ONE, BigDecimal.TEN, 4, 5, true, null);
         when(productFacade.getById(1L)).thenReturn(Optional.of(product));
         when(movementRepository.save(any(InventoryMovement.class))).thenReturn(new InventoryMovement());
         when(inventoryMapper.toDto(any(InventoryMovement.class)))

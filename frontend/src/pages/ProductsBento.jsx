@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getProductsApi, createProductApi, deleteProductApi } from '../services/productsApi';
 import { getCategoriesApi } from '../services/categoriesApi';
+import { getSubcategoriesApi, createSubcategoryApi } from '../services/subcategoriesApi';
 import { createInventoryMovementApi } from '../services/inventoryApi';
 import { useModal } from '../context/ModalContext';
 import { uploadFileApi } from '../services/http';
@@ -23,6 +24,7 @@ const EMPTY_PRODUCT = {
   barcode: '',
   internalCode: '',
   categoryId: '',
+  subcategoryId: '',
   price: '',
   stock: '',
   minStock: 5,
@@ -33,6 +35,7 @@ export default function ProductsBento() {
   const { confirm, notify } = useModal();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -40,6 +43,8 @@ export default function ProductsBento() {
   const [errorMsg, setErrorMsg] = useState('');
   const [newProduct, setNewProduct] = useState(EMPTY_PRODUCT);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showNewSubcategory, setShowNewSubcategory] = useState(false);
+  const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const imageInputRef = useRef(null);
 
   const loadProducts = async () => {
@@ -64,10 +69,40 @@ export default function ProductsBento() {
     }
   };
 
+  // Subcategorías propias de esta tienda: se cargan todas de una vez (no por categoría)
+  // y se filtran en el cliente al elegir categoría en el formulario, para poder ofrecer
+  // "+ Nueva subcategoría" sin ida y vuelta al servidor por cada cambio de categoría.
+  const loadSubcategories = async () => {
+    try {
+      setSubcategories(await getSubcategoriesApi());
+    } catch (e) {
+      console.warn('Error cargando subcategorías:', e);
+      setSubcategories([]);
+    }
+  };
+
   useEffect(() => {
     loadProducts();
     loadCategories();
+    loadSubcategories();
   }, []);
+
+  const subcategoriesForSelectedCategory = subcategories.filter(
+    sub => String(sub.categoryId) === String(newProduct.categoryId)
+  );
+
+  const handleCreateSubcategory = async () => {
+    if (!newSubcategoryName.trim() || !newProduct.categoryId) return;
+    try {
+      const created = await createSubcategoryApi(Number(newProduct.categoryId), newSubcategoryName.trim());
+      await loadSubcategories();
+      setNewProduct(prev => ({ ...prev, subcategoryId: String(created.id) }));
+      setNewSubcategoryName('');
+      setShowNewSubcategory(false);
+    } catch (err) {
+      notify('Error creando subcategoría: ' + err.message);
+    }
+  };
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
@@ -80,6 +115,7 @@ export default function ProductsBento() {
         barcode: newProduct.barcode || `${Math.floor(1000000000000 + Math.random() * 9000000000000)}`,
         internalCode: newProduct.internalCode || `PROD-00${products.length + 1}`,
         categoryId: Number(newProduct.categoryId),
+        subcategoryId: newProduct.subcategoryId ? Number(newProduct.subcategoryId) : null,
         price: parseFloat(newProduct.price),
         minStock: parseInt(newProduct.minStock) || 5,
         imageUrl: newProduct.imageUrl || null
@@ -201,9 +237,16 @@ export default function ProductsBento() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a] font-extrabold">
-                          {p.categoryName || 'General'}
-                        </span>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a] font-extrabold">
+                            {p.categoryName || 'General'}
+                          </span>
+                          {p.subcategoryName && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 font-extrabold">
+                              {p.subcategoryName}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[10px] font-mono text-gray-400 dark:text-gray-500 font-bold shrink-0">{p.internalCode}</span>
                       </div>
                       <h3 className="font-extrabold text-sm text-[#191c1e] dark:text-white mt-2 truncate">{p.name}</h3>
@@ -291,7 +334,10 @@ export default function ProductsBento() {
                 <label className="font-bold text-gray-700 dark:text-gray-300 block mb-1">Categoría:</label>
                 <select
                   value={newProduct.categoryId}
-                  onChange={e => setNewProduct({ ...newProduct, categoryId: e.target.value })}
+                  onChange={e => {
+                    setNewProduct({ ...newProduct, categoryId: e.target.value, subcategoryId: '' });
+                    setShowNewSubcategory(false);
+                  }}
                   className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
                   required
                   disabled={categories.length === 0}
@@ -302,6 +348,62 @@ export default function ProductsBento() {
                   ))}
                 </select>
               </div>
+
+              {newProduct.categoryId && (
+                <div>
+                  <label className="font-bold text-gray-700 dark:text-gray-300 block mb-1">Subcategoría (opcional):</label>
+                  {!showNewSubcategory ? (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={newProduct.subcategoryId}
+                        onChange={e => setNewProduct({ ...newProduct, subcategoryId: e.target.value })}
+                        className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                      >
+                        <option value="">Sin subcategoría</option>
+                        {subcategoriesForSelectedCategory.map(sub => (
+                          <option key={sub.id} value={sub.id}>{sub.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowNewSubcategory(true)}
+                        title="Crear nueva subcategoría"
+                        className="shrink-0 w-9 h-9 rounded-2xl bg-emerald-50 dark:bg-[#12b76a]/10 text-[#006d3c] dark:text-[#12b76a] hover:bg-[#006d3c] hover:text-white flex items-center justify-center cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        autoFocus
+                        value={newSubcategoryName}
+                        onChange={e => setNewSubcategoryName(e.target.value)}
+                        placeholder="Ej. Gaseosas"
+                        className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleCreateSubcategory}
+                        className="shrink-0 px-3 py-2 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-bold cursor-pointer"
+                      >
+                        Crear
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowNewSubcategory(false); setNewSubcategoryName(''); }}
+                        className="shrink-0 px-3 py-2 bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
+                    Las subcategorías son propias de tu tienda — créalas aquí mismo, sin pedirlas a la plataforma.
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="font-bold text-gray-700 dark:text-gray-300 block mb-1">Nombre Comercial del Producto:</label>

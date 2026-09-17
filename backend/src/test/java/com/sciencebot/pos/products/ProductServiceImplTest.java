@@ -53,7 +53,7 @@ class ProductServiceImplTest {
     @Test
     void createProduct_Success() {
         CreateProductCommand command = new CreateProductCommand(
-                "PROD-001", "7701234567890", "Coca Cola 350ml", 1L,
+                "PROD-001", "7701234567890", "Coca Cola 350ml", 1L, null,
                 BigDecimal.valueOf(1.20), BigDecimal.valueOf(1.80), 10, "Coca Cola", null
         );
 
@@ -75,7 +75,7 @@ class ProductServiceImplTest {
         when(productRepository.save(any(Product.class))).thenReturn(saved);
 
         ProductDto expectedDto = new ProductDto(
-                10L, "PROD-001", "7701234567890", "Coca Cola 350ml", "Bebidas",
+                10L, "PROD-001", "7701234567890", "Coca Cola 350ml", "Bebidas", null, null,
                 BigDecimal.valueOf(1.20), BigDecimal.valueOf(1.80), 0, 10, true, null
         );
         when(productMapper.toDto(any(Product.class))).thenReturn(expectedDto);
@@ -93,7 +93,7 @@ class ProductServiceImplTest {
     @Test
     void createProduct_InvalidMargin_ThrowsException() {
         CreateProductCommand command = new CreateProductCommand(
-                "PROD-001", "7701234567890", "Coca Cola 350ml", 1L,
+                "PROD-001", "7701234567890", "Coca Cola 350ml", 1L, null,
                 BigDecimal.valueOf(1.80), BigDecimal.valueOf(1.20), 10, "Coca Cola", null
         );
 

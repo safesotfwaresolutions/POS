@@ -1,4 +1,4 @@
-<!-- doc-version: 1.1 | last-updated: 2026-09-16 -->
+<!-- doc-version: 1.2 | last-updated: 2026-09-16 -->
 # Roadmap y Estado por Módulo
 
 Este documento complementa los `spec.md` de cada módulo (que describen el comportamiento *actual*). Aquí se registra lo que **falta**, la **deuda técnica** conocida y las **próximas ideas**, para que quede como referencia entre sesiones de trabajo. Ver también la skill `pos-doc-sync` para el procedimiento de mantenerlo al día.
@@ -9,8 +9,8 @@ Este documento complementa los `spec.md` de cada módulo (que describen el compo
 |---|---|---|---|
 | auth | JWT access+refresh, roles ADMIN/SUPERVISOR/SELLER, self-registration de tiendas (V7) | — | 2FA opcional para ADMIN |
 | users | CRUD + seed de superadmin/admin por defecto (`DatabaseSeeder`) | — | Invitación de usuarios por email en vez de creación directa |
-| categories | Catálogo global (no por tienda), seed base de 11 categorías genéricas (`CategorySeeder`, ver abajo) | — | Íconos/colores por categoría para la grilla del POS |
-| products | CRUD por tienda (`store_id`), barcode + código interno únicos por tienda, seed demo solo en `dev` (`ProductDemoSeeder`) | Sin variantes de producto (talla/color) — fuera de alcance actual | Carga masiva por CSV/Excel |
+| categories | Catálogo global (no por tienda), seed base de 11 categorías genéricas (`CategorySeeder`). Subcategorías por tienda (`product_subcategories`), creadas libremente por Administrator/Supervisor bajo una categoría global, sin pedírselo a la plataforma (2026-09-16) | — | Íconos/colores por categoría para la grilla del POS |
+| products | CRUD por tienda (`store_id`), barcode + código interno únicos por tienda, subcategoría opcional por producto, seed demo solo en `dev` (`ProductDemoSeeder`) | Sin variantes de producto (talla/color) — fuera de alcance actual | Carga masiva por CSV/Excel |
 | inventory | Movimientos con pessimistic locking en descuento de stock | — | Conteo físico / ajuste de inventario con motivo |
 | purchases | Compras a proveedor, sube stock automáticamente | — | Órdenes de compra sugeridas por stock bajo (ver "Valores agregados") |
 | sales | Multi-método de pago (`payment_method`, catálogo `PAYMENT_METHODS`), devoluciones (`sale_returns`), multi-tenant | Spec de `sales` corregido en esta sesión (ver `modules/sales/spec.md`) | Venta a crédito/fiado (ver "Valores agregados") |
@@ -40,7 +40,8 @@ Este documento complementa los `spec.md` de cada módulo (que describen el compo
 
 Priorizados por impacto/esfuerzo estimado, no implementados aún salvo que se indique lo contrario:
 
-1. **Escaneo dinámico en POS** — al escanear un código de barras se agrega directo al carrito sin clicks. *Implementado en esta sesión* (`POSBento.jsx`).
+1. **Escaneo dinámico en POS** — al escanear un código de barras se agrega directo al carrito sin clicks. *Implementado 2026-09-15* (`POSBento.jsx`).
+1b. **Subcategorías de tienda** — cada tienda crea sus propias subcategorías bajo las categorías globales sembradas, sin depender del equipo de plataforma. *Implementado 2026-09-16* (`categories` — `SubcategoryFacade`, migración `V12`, UI en `ProductsBento.jsx`).
 2. **Venta a crédito / fiado a clientes** — muy común en tiendas de barrio colombianas: registrar saldo pendiente por cliente y abonos parciales. Requiere nuevo campo en `sales` o módulo de cuentas por cobrar.
 3. **Alertas de stock bajo accionables** — hoy el POS muestra el badge de stock bajo, pero no hay notificación proactiva ni sugerencia de orden de compra hacia `purchases`.
 4. **Cierre de caja / arqueo diario** — resumen de ventas por método de pago, efectivo esperado vs. contado, al cierre de turno.

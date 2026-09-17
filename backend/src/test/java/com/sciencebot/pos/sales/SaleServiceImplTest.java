@@ -87,7 +87,7 @@ class SaleServiceImplTest {
         CustomerDto customer = new CustomerDto(1L, "Maria Lopez", "123", "a@a.com", "123", "Calle", true);
         when(customerFacade.getById(1L)).thenReturn(Optional.of(customer));
 
-        ProductDto product = new ProductDto(1L, "P1", "123", "Prod 1", "Cat", BigDecimal.ONE, BigDecimal.valueOf(8.00), 10, 2, true, null);
+        ProductDto product = new ProductDto(1L, "P1", "123", "Prod 1", "Cat", null, null, BigDecimal.ONE, BigDecimal.valueOf(8.00), 10, 2, true, null);
         when(productFacade.getById(1L)).thenReturn(Optional.of(product));
         when(saleRepository.getNextInvoiceSeq()).thenReturn(1L);
 
@@ -144,7 +144,7 @@ class SaleServiceImplTest {
         CustomerDto customer = new CustomerDto(1L, "Maria Lopez", "123", "a@a.com", "123", "Calle", true);
         when(customerFacade.getById(1L)).thenReturn(Optional.of(customer));
 
-        ProductDto product = new ProductDto(1L, "P1", "123", "Prod 1", "Cat", BigDecimal.ONE, BigDecimal.valueOf(8.00), 10, 2, true, null);
+        ProductDto product = new ProductDto(1L, "P1", "123", "Prod 1", "Cat", null, null, BigDecimal.ONE, BigDecimal.valueOf(8.00), 10, 2, true, null);
         when(productFacade.getById(1L)).thenReturn(Optional.of(product));
         when(saleRepository.getNextInvoiceSeq()).thenReturn(1L);
 

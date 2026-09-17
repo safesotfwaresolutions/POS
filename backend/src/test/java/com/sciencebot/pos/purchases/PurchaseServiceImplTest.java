@@ -68,7 +68,7 @@ class PurchaseServiceImplTest {
         SupplierDto supplier = new SupplierDto(1L, "Supp ABC", "123", "Pedro", "a@a.com", "123", "Calle", true);
         when(supplierFacade.getById(1L)).thenReturn(Optional.of(supplier));
 
-        ProductDto product = new ProductDto(1L, "P1", "123", "Prod 1", "Cat", BigDecimal.ONE, BigDecimal.TEN, 5, 2, true, null);
+        ProductDto product = new ProductDto(1L, "P1", "123", "Prod 1", "Cat", null, null, BigDecimal.ONE, BigDecimal.TEN, 5, 2, true, null);
         when(productFacade.getById(1L)).thenReturn(Optional.of(product));
 
         Purchase saved = new Purchase();

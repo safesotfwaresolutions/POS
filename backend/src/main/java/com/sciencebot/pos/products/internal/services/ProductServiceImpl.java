@@ -3,6 +3,9 @@ package com.sciencebot.pos.products.internal.services;
 import com.sciencebot.pos.categories.CategoryDeleteValidator;
 import com.sciencebot.pos.categories.CategoryFacade;
 import com.sciencebot.pos.categories.CategoryProductCountProvider;
+import com.sciencebot.pos.categories.SubcategoryDeleteValidator;
+import com.sciencebot.pos.categories.SubcategoryFacade;
+import com.sciencebot.pos.categories.SubcategoryProductCountProvider;
 import com.sciencebot.pos.config.TenantContext;
 import com.sciencebot.pos.products.*;
 import com.sciencebot.pos.products.internal.entities.Product;
@@ -22,18 +25,22 @@ import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
-public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidator, CategoryProductCountProvider {
+public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidator, CategoryProductCountProvider,
+        SubcategoryDeleteValidator, SubcategoryProductCountProvider {
 
     private final ProductRepository productRepository;
     private final CategoryFacade categoryFacade;
+    private final SubcategoryFacade subcategoryFacade;
     private final ProductMapper productMapper;
 
     public ProductServiceImpl(
             ProductRepository productRepository,
             @org.springframework.context.annotation.Lazy CategoryFacade categoryFacade,
+            @org.springframework.context.annotation.Lazy SubcategoryFacade subcategoryFacade,
             ProductMapper productMapper) {
         this.productRepository = productRepository;
         this.categoryFacade = categoryFacade;
+        this.subcategoryFacade = subcategoryFacade;
         this.productMapper = productMapper;
     }
 
@@ -66,15 +73,14 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
         categoryFacade.getById(command.categoryId())
                 .orElseThrow(() -> new IllegalArgumentException("La categoría especificada no existe"));
 
-
-
-
+        validateSubcategory(command.subcategoryId(), command.categoryId());
         Product product = new Product();
         product.setStoreId(storeId);
         product.setInternalCode(command.internalCode().trim());
         product.setBarcode(command.barcode() != null ? command.barcode().trim() : null);
         product.setName(command.name().trim());
         product.setCategoryId(command.categoryId());
+        product.setSubcategoryId(command.subcategoryId());
         product.setPurchasePrice(command.purchasePrice());
         product.setSalePrice(command.salePrice());
         product.setMinStock(command.minStock());
@@ -99,6 +105,8 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
         categoryFacade.getById(command.categoryId())
                 .orElseThrow(() -> new IllegalArgumentException("La categoría especificada no existe"));
 
+        validateSubcategory(command.subcategoryId(), command.categoryId());
+
         if (command.barcode() != null && !command.barcode().isBlank()) {
             String cleanBarcode = command.barcode().trim();
             if (!cleanBarcode.equals(product.getBarcode())
@@ -109,6 +117,7 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
 
         product.setName(command.name().trim());
         product.setCategoryId(command.categoryId());
+        product.setSubcategoryId(command.subcategoryId());
         product.setPurchasePrice(command.purchasePrice());
         product.setSalePrice(command.salePrice());
         product.setMinStock(command.minStock());
@@ -187,6 +196,29 @@ public class ProductServiceImpl implements ProductFacade, CategoryDeleteValidato
     @Override
     public int getProductCount(Long categoryId) {
         return productRepository.countByCategoryIdAndActiveTrue(categoryId);
+    }
+
+    @Override
+    public void validateSubcategoryBeforeDelete(Long subcategoryId) {
+        if (productRepository.existsBySubcategoryIdAndActiveTrue(subcategoryId)) {
+            throw new IllegalStateException("No se puede eliminar la subcategoría porque tiene productos asociados activos");
+        }
+    }
+
+    @Override
+    public int getSubcategoryProductCount(Long subcategoryId) {
+        return productRepository.countBySubcategoryIdAndActiveTrue(subcategoryId);
+    }
+
+    private void validateSubcategory(Long subcategoryId, Long categoryId) {
+        if (subcategoryId == null) {
+            return;
+        }
+        var subcategory = subcategoryFacade.getById(subcategoryId)
+                .orElseThrow(() -> new IllegalArgumentException("La subcategoría especificada no existe"));
+        if (!subcategory.categoryId().equals(categoryId)) {
+            throw new IllegalArgumentException("La subcategoría seleccionada no pertenece a la categoría elegida");
+        }
     }
 
 
