@@ -38,42 +38,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(abstractHttpConfigurer -> abstractHttpConfigurer.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/login").permitAll()
-                .requestMatchers("/api/v1/auth/refresh").permitAll()
-                .requestMatchers("/api/v1/auth/register").permitAll()
-                .requestMatchers("/api/v1/auth/verify-email").permitAll()
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/v1/legal/**").permitAll()
-                .requestMatchers("/api/v1/support/tickets").permitAll()
-                .requestMatchers("/api/v1/support/tickets/track/**").permitAll()
-                .requestMatchers("/api/v1/backoffice/**").hasRole("SUPER_ADMIN")
-                .requestMatchers("/api/v1/**").authenticated()
-                .anyRequest().permitAll()
-            )
-            .exceptionHandling(ex -> ex
-                // Sin este handler, Spring Security responde 403 tanto a peticiones
-                // no autenticadas (token ausente/expirado/invalido) como a las que
-                // si estan autenticadas pero sin el rol requerido. Eso rompe el refresh
-                // automatico del frontend, que solo reintenta en 401. Aqui se separan:
-                // 401 = no autenticado, 403 = autenticado sin permisos suficientes.
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                .accessDeniedHandler(new AccessDeniedHandlerImpl())
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .exceptionHandling(handling -> handling.authenticationEntryPoint(authenticationEntryPoint()))
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(abstractHttpConfigurer -> abstractHttpConfigurer.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/refresh").permitAll()
+                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers("/api/v1/auth/verify-email").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/v1/legal/**").permitAll()
+                        .requestMatchers("/api/v1/support/tickets").permitAll()
+                        .requestMatchers("/api/v1/support/tickets/track/**").permitAll()
+                        .requestMatchers("/api/v1/backoffice/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/api/v1/**").authenticated()
+                        .anyRequest().permitAll())
+                .exceptionHandling(ex -> ex
+                        // Sin este handler, Spring Security responde 403 tanto a peticiones
+                        // no autenticadas (token ausente/expirado/invalido) como a las que
+                        // si estan autenticadas pero sin el rol requerido. Eso rompe el refresh
+                        // automatico del frontend, que solo reintenta en 401. Aqui se separan:
+                        // 401 = no autenticado, 403 = autenticado sin permisos suficientes.
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler(new AccessDeniedHandlerImpl()))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(handling -> handling.authenticationEntryPoint(authenticationEntryPoint()))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
-     * Sin este entry point, Spring Security usa Http403ForbiddenEntryPoint por defecto
-     * (no hay httpBasic/formLogin configurado), asi que un token ausente/expirado devuelve
+     * Sin este entry point, Spring Security usa Http403ForbiddenEntryPoint por
+     * defecto
+     * (no hay httpBasic/formLogin configurado), asi que un token ausente/expirado
+     * devuelve
      * 403 en vez de 401. El frontend solo dispara el refresh automatico en 401
      * (ver fetchApi en frontend/src/services/api.js), asi que sin esto la sesion
      * nunca se renueva y el usuario queda bloqueado cuando el access token expira.
@@ -83,7 +82,8 @@ public class SecurityConfig {
         return (request, response, authException) -> {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Token invalido, ausente o expirado\"}");
+            response.getWriter()
+                    .write("{\"error\":\"Unauthorized\",\"message\":\"Token invalido, ausente o expirado\"}");
         };
     }
 
@@ -102,7 +102,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Idempotency-Key"));
+        configuration.setAllowedHeaders(
+                List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Idempotency-Key"));
         configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
