@@ -1,9 +1,18 @@
-<!-- spec-version: 1.0 | last-updated: 2026-08-13 -->
+<!-- spec-version: 1.1 | last-updated: 2026-09-03 -->
 # Módulo: Facturación Electrónica (Billing)
 
 ## Dependencias
 - **Requiere**: sales, customers, products, settings
 - **Requerido por**: sales (consumo desacoplado vía Facade)
+
+## Estructura Interna Desacoplada
+
+El módulo está internamente segregado por responsabilidades (Feature Slicing & Interface Segregation):
+1. **Facturas Electrónicas de Venta**: `InvoiceService` / `BillingInvoiceController` / `InvoiceProvider` / `FactusInvoiceClient`.
+2. **Rangos de Numeración DIAN**: `NumberingRangeService` / `BillingNumberingRangeController` / `NumberingRangeProvider` / `FactusNumberingRangeClient`.
+3. **Fachada Unificada**: `BillingFacade` / `BillingServiceImpl` (punto de integración único para otros módulos).
+
+---
 
 ## Reglas de Negocio
 
@@ -26,60 +35,22 @@
 
 ---
 
-## Requerimientos Funcionales
-
-### RF-BILL-001 — Emitir Factura Electrónica
-- **Prioridad**: Alta
-- **Criterios de Aceptación**:
-  - Se invoca al confirmar una venta con la bandera `sendToFactus: true` o mediante reintento.
-  - Mapea cliente (persona natural/jurídica, consumidor final DIAN `222222222222`), ítems, subtotales, método de pago en efectivo (`10`) y rango de numeración.
-  - Almacena el número de factura oficial de Factus, CUFE, código QR y URL pública del PDF.
-
-### RF-BILL-002 — Consultar Factura Electrónica por Venta
-- **Prioridad**: Alta
-- **Criterios de Aceptación**:
-  - Permite consultar el estado actual de la factura electrónica asociada a un `saleId`.
-  - Retorna `status`, `cufe`, `qrCode`, `pdfUrl`, `factusNumber` y `errorMessage` si existió fallo.
-
-### RF-BILL-003 — Reintentar Facturación Electrónica
-- **Prioridad**: Alta
-- **Criterios de Aceptación**:
-  - Permite a Supervisores y Administradores reenviar a Factus una factura en estado `ERROR` o `PENDING`.
-  - Si la factura ya está `VALIDATED`, la operación es rechazada con HTTP 400.
-
----
-
-## Requerimientos No Funcionales
-
-### RNF-BILL-001 — Aislamiento Transaccional de I/O
-- Las llamadas remotas HTTP hacia la API de Factus deben ejecutarse fuera de la transacción de base de datos principal para evitar retención prolongada de conexiones de base de datos.
-
----
-
 ## API Endpoints
 
-### GET /api/v1/billing/sales/{saleId}
-- **Permisos**: Admin, Supervisor, Vendedor
-- **Response 200**:
-  ```json
-  {
-    "id": 1,
-    "saleId": 105,
-    "factusNumber": "SETP-990000123",
-    "cufe": "c7a8b9c0d1e2f3...",
-    "qrCode": "https://catalogo-vpfe.dian.gov.co/document/searchqr?documentkey=...",
-    "status": "VALIDATED",
-    "errorMessage": null,
-    "pdfUrl": "https://api-sandbox.factus.com.co/v1/bills/SETP-990000123/pdf",
-    "validatedAt": "2026-08-13T16:30:00"
-  }
-  ```
-- **Errores**: 404 (venta sin factura electrónica)
+### 1. Facturas Electrónicas de Ventas (`BillingInvoiceController`)
 
-### POST /api/v1/billing/sales/{saleId}/retry
-- **Permisos**: Admin, Supervisor
-- **Response 200**: Objeto `ElectronicInvoiceDto` con el nuevo estado tras el reintento.
-- **Errores**: 400 (la factura ya está validada), 404 (venta no encontrada).
+- `GET /api/v1/billing/sales/{saleId}`: Consultar estado y datos de la factura electrónica generada para una venta.
+- `POST /api/v1/billing/sales/{saleId}/retry`: Reintentar facturación electrónica de ventas fallidas (`status = ERROR` o `PENDING`).
+- `POST /api/v1/billing/sales/{saleId}/send-email`: Enviar ZIP con PDF y XML legal de la factura al email indicado.
+
+### 2. Rangos de Numeración DIAN (`BillingNumberingRangeController`)
+
+- `GET /api/v1/billing/numbering-ranges/dian`: Consultar en tiempo real ante la DIAN las resoluciones y rangos autorizados.
+- `GET /api/v1/billing/numbering-ranges`: Listar rangos de numeración registrados y activos en Factus.
+- `GET /api/v1/billing/numbering-ranges/{id}`: Consultar detalle de un rango de numeración.
+- `POST /api/v1/billing/numbering-ranges`: Registrar y vincular una resolución DIAN en Factus.
+- `DELETE /api/v1/billing/numbering-ranges/{id}`: Eliminar un rango en Factus.
+- `PATCH /api/v1/billing/numbering-ranges/{id}/toggle-status`: Alternar estado activo/inactivo del rango.
 
 ---
 
@@ -100,13 +71,13 @@
 | created_at | TIMESTAMP | NOT NULL |
 | updated_at | TIMESTAMP | NOT NULL |
 
-**Constraints**:
-- FK_einvoice_sale → sales(id)
-
 ---
 
 ## Permisos
 | Operación | Admin | Supervisor | Vendedor |
 |---|---|---|---|
-| Consultar estado | ✓ | ✓ | ✓ |
-| Reintentar emisión | ✓ | ✓ | - |
+| Consultar factura venta | ✓ | ✓ | ✓ |
+| Reintentar emisión factura | ✓ | ✓ | - |
+| Enviar factura por email | ✓ | ✓ | ✓ |
+| Consultar rangos DIAN / Factus | ✓ | ✓ | - |
+| Crear / Eliminar / Alternar rangos | ✓ | - | - |

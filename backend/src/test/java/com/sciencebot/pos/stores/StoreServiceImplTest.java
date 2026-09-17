@@ -1,6 +1,5 @@
 package com.sciencebot.pos.stores;
 
-import com.sciencebot.pos.stores.internal.entities.StoreCategoryEntity;
 import com.sciencebot.pos.stores.internal.entities.StoreDocumentEntity;
 import com.sciencebot.pos.stores.internal.entities.StoreEntity;
 import com.sciencebot.pos.stores.internal.mappers.StoreMapper;
@@ -18,9 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 
