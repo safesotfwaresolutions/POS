@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Scan,
   Search,
@@ -12,7 +12,9 @@ import {
   X,
   ShieldAlert,
   Package,
-  ChevronDown
+  ChevronDown,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { getProductsApi } from '../services/productsApi';
 import { getCustomersApi } from '../services/customersApi';
@@ -47,6 +49,45 @@ export default function POSBento() {
   // reintentos para que un doble clic o un reintento de red no genere ventas duplicadas.
   const saleIdempotencyKeyRef = useRef(null);
 
+  // Feedback no bloqueante de escaneo (a diferencia de useModal().notify, que exige click
+  // en "Entendido" y frenaría escaneos sucesivos rápidos del lector físico).
+  const [scanToasts, setScanToasts] = useState([]);
+  const scanToastIdRef = useRef(0);
+
+  const pushScanToast = useCallback((type, message) => {
+    const id = ++scanToastIdRef.current;
+    setScanToasts(prev => [...prev, { id, type, message }]);
+    setTimeout(() => {
+      setScanToasts(prev => prev.filter(t => t.id !== id));
+    }, 1500);
+  }, []);
+
+  // Beep de éxito/error generado con Web Audio API (sin assets/dependencias nuevas).
+  const playScanTone = useCallback((success) => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.value = success ? 1046.5 : 220;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (success ? 0.12 : 0.25));
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + (success ? 0.12 : 0.25));
+      oscillator.onended = () => ctx.close();
+    } catch {
+      // Entorno sin soporte de Web Audio (o autoplay bloqueado): el feedback visual basta.
+    }
+  }, []);
+
+  const focusBarcodeInput = useCallback(() => {
+    barcodeInputRef.current?.focus();
+  }, []);
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -79,6 +120,12 @@ export default function POSBento() {
     loadData();
   }, []);
 
+  // El lector de código de barras funciona como teclado: mantiene el foco en este campo
+  // para que escanear (sin hacer click en nada) funcione en cualquier momento del flujo.
+  useEffect(() => {
+    focusBarcodeInput();
+  }, [focusBarcodeInput]);
+
   const filteredProducts = productsList.filter(p => {
     const matchesCategory = selectedCategory === 'Todos' || p.categoryName === selectedCategory;
     const matchesSearch = (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -100,6 +147,44 @@ export default function POSBento() {
       const priceVal = product.salePrice || product.price || 0;
       return [...prev, { ...product, price: priceVal, stock: stockVal, quantity: 1 }];
     });
+  };
+
+  // Escaneo dinámico: el lector envía el código y un Enter muy rápido. Si hace match exacto
+  // contra un producto cargado, se agrega directo al carrito sin que el usuario tenga que
+  // hacer click en nada.
+  const handleBarcodeScan = useCallback((rawCode) => {
+    const code = rawCode.trim();
+    if (!code) return;
+
+    const product = productsList.find(p => p.barcode === code) ||
+      productsList.find(p => p.internalCode && p.internalCode.toLowerCase() === code.toLowerCase());
+
+    if (!product) {
+      playScanTone(false);
+      pushScanToast('error', `Código no encontrado: ${code}`);
+      setSearchQuery('');
+      return;
+    }
+
+    const stockVal = product.quantityAvailable ?? product.stock ?? 0;
+    if (stockVal <= 0) {
+      playScanTone(false);
+      pushScanToast('error', `${product.name}: sin stock disponible`);
+      setSearchQuery('');
+      return;
+    }
+
+    addToCart(product);
+    playScanTone(true);
+    pushScanToast('success', `${product.name} agregado al carrito`);
+    setSearchQuery('');
+  }, [productsList, playScanTone, pushScanToast]);
+
+  const handleBarcodeInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleBarcodeScan(searchQuery);
+    }
   };
 
   const updateQuantity = (id, delta) => {
@@ -176,10 +261,26 @@ export default function POSBento() {
     setCashTendered('');
     setSelectedPaymentMethod('CASH');
     await loadData();
+    focusBarcodeInput();
   };
 
   return (
     <div className="space-y-6 relative pb-20 lg:pb-0">
+      {/* Toasts de escaneo: no bloqueantes, se autodescartan, se apilan si llegan varios escaneos seguidos */}
+      <div className="fixed top-4 right-4 z-[60] flex flex-col gap-2 items-end pointer-events-none">
+        {scanToasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold text-white animate-in fade-in slide-in-from-top-2 duration-150 ${
+              toast.type === 'success' ? 'bg-[#006d3c]' : 'bg-red-600'
+            }`}
+          >
+            {toast.type === 'success' ? <CheckCircle className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
+            <span>{toast.message}</span>
+          </div>
+        ))}
+      </div>
+
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
         <div>
@@ -222,7 +323,8 @@ export default function POSBento() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por nombre, código de barras [770...] o código interno..."
+              onKeyDown={handleBarcodeInputKeyDown}
+              placeholder="Escanea, o busca por nombre, código de barras [770...] o código interno..."
               className="w-full bg-transparent text-xs font-semibold focus:outline-none text-[#191c1e] dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
             {searchQuery && (
@@ -635,7 +737,7 @@ export default function POSBento() {
                 <Printer className="w-4 h-4" /> Imprimir Tiquete
               </button>
               <button
-                onClick={() => setSaleCompleted(null)}
+                onClick={() => { setSaleCompleted(null); focusBarcodeInput(); }}
                 className="w-1/2 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl font-bold text-xs"
               >
                 Siguiente Venta

@@ -25,6 +25,7 @@ import InvoicingBento from './pages/InvoicingBento';
 import ReportsBento from './pages/ReportsBento';
 import ReturnsBento from './pages/ReturnsBento';
 import SettingsBento from './pages/SettingsBento';
+import DocumentsBento from './pages/DocumentsBento';
 import StoresBento from './pages/backoffice/StoresBento';
 import CategoriesBento from './pages/backoffice/CategoriesBento';
 import ProductCategoriesBento from './pages/backoffice/ProductCategoriesBento';
@@ -135,6 +136,7 @@ function ProtectedLayoutContent({ mobileSidebarOpen, setMobileSidebarOpen, sideb
             <Route path="/invoicing" element={<InvoicingBento />} />
             <Route path="/reports" element={<ReportsBento />} />
             <Route path="/returns" element={<ReturnsBento />} />
+            <Route path="/documents" element={<DocumentsBento />} />
             <Route path="/settings" element={<SettingsBento />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

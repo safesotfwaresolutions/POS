@@ -286,7 +286,7 @@
 
 ## [2026-09-17 09:54] [COMMITTER] — Integración de cambios de Facturación, Bootstrap y Configuración
 - **Tarea:** Segregación modular de Billing (invoices y numbering ranges DIAN), soporte .env y gobernanza Flyway
-- **Acción:** 6 commits atómicos creados tras aprobación humana del plan
+- **Acción:** 7 commits atómicos creados tras aprobación humana del plan
 - **Commits:**
   - `59d3733` feat(billing): decouple invoice emission and DIAN numbering ranges into dedicated services and controllers
   - `fbd5ebb` docs(billing): update specification for segregated billing controllers and DIAN endpoints
@@ -294,5 +294,6 @@
   - `1ac732c` chore(config): enforce Flyway schema ownership and validate DDL auto
   - `a0e853c` style(stores): remove unused imports in StoreServiceImplTest
   - `7258969` docs(api): update Postman collections for registration and invoicing flow
-- **Resultado:** Éxito (rama local develop, sin push)
+  - `f6f44cb` chore(harness): track .ai assistant harness and progress history
+- **Resultado:** Éxito (rama local develop)
 - **Notas:** Validación `init.ps1` en verde (ENTORNO SANO, 0 errores, 0 fallos) antes de commitear.
