@@ -5,6 +5,7 @@ import com.sciencebot.pos.billing.internal.adapters.dto.InvoiceItemData;
 import com.sciencebot.pos.billing.internal.adapters.dto.InvoiceRequest;
 import com.sciencebot.pos.billing.internal.adapters.dto.InvoiceResult;
 import com.sciencebot.pos.billing.internal.adapters.factus.FactusBillingAdapter;
+import com.sciencebot.pos.billing.internal.adapters.factus.FactusNumberingRangeMapper;
 import com.sciencebot.pos.billing.internal.adapters.factus.FactusSaleMapper;
 import com.sciencebot.pos.billing.internal.adapters.factus.FactusTokenManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,13 +25,15 @@ class FactusBillingAdapterTest {
     private FactusTokenManager tokenManager;
 
     private FactusSaleMapper saleMapper;
+    private FactusNumberingRangeMapper rangeMapper;
     private FactusBillingAdapter adapter;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         saleMapper = new FactusSaleMapper();
-        adapter = new FactusBillingAdapter(tokenManager, saleMapper);
+        rangeMapper = new FactusNumberingRangeMapper();
+        adapter = new FactusBillingAdapter(tokenManager, saleMapper, rangeMapper);
     }
 
     @Test
@@ -47,6 +50,28 @@ class FactusBillingAdapterTest {
         assertFalse(result.isSuccess());
         assertEquals("ERROR", result.status());
         assertTrue(result.errorMessage().contains("ID de la venta es obligatorio"));
+    }
+
+    @Test
+    void queryInvoice_ReturnsPending() {
+        InvoiceResult result = adapter.queryInvoice("FACT-001");
+        assertNotNull(result);
+        assertEquals("PENDING", result.status());
+        assertTrue(result.errorMessage().contains("FACT-001"));
+    }
+
+    @Test
+    void sendInvoiceEmail_NullArguments_ThrowsException() {
+        assertThrows(NullPointerException.class, () -> adapter.sendInvoiceEmail(null, "correo@tienda.com"));
+        assertThrows(NullPointerException.class, () -> adapter.sendInvoiceEmail("FACT-001", null));
+    }
+
+    @Test
+    void numberingRanges_NullArguments_ThrowsException() {
+        assertThrows(NullPointerException.class, () -> adapter.getNumberingRange(null));
+        assertThrows(NullPointerException.class, () -> adapter.createNumberingRange(null));
+        assertThrows(NullPointerException.class, () -> adapter.deleteNumberingRange(null));
+        assertThrows(NullPointerException.class, () -> adapter.toggleNumberingRangeStatus(null));
     }
 
     @Test
