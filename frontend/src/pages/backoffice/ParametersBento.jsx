@@ -137,7 +137,7 @@ export default function ParametersBento() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#191c1e] dark:text-white">Parámetros y Catálogos</h1>
+          <h1 className="text-2xl font-black text-[#161b22] dark:text-[#f0f6fc]">Parámetros y Catálogos</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
             Catálogos globales (métodos de pago, motivos de devolución, zonas de entrega...) que consumen todos los locales
           </p>
@@ -145,7 +145,7 @@ export default function ParametersBento() {
 
         <button
           onClick={() => { setTopicForm(EMPTY_TOPIC_FORM); setTopicError(''); setShowTopicForm(true); }}
-          className="px-4 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#006d3c]/20 cursor-pointer"
+          className="px-4 py-2.5 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#c83824]/20 cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Nuevo Tema
         </button>
@@ -167,12 +167,12 @@ export default function ParametersBento() {
                   onClick={() => selectTopic(t)}
                   className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
                     selectedTopic?.code === t.code
-                      ? 'bg-[#006d3c] border-[#006d3c] text-white'
-                      : 'bg-gray-50/60 dark:bg-white/5 border-gray-200 dark:border-gray-700 hover:border-[#12b76a]'
+                      ? 'bg-[#c83824] border-[#c83824] text-white'
+                      : 'bg-gray-50/60 dark:bg-white/5 border-[#e2e8f0] dark:border-[#262f38] hover:border-[#c83824]'
                   }`}
                 >
                   <div className="min-w-0">
-                    <p className={`text-xs font-extrabold truncate ${selectedTopic?.code === t.code ? 'text-white' : 'text-[#191c1e] dark:text-white'}`}>{t.name}</p>
+                    <p className={`text-xs font-extrabold truncate ${selectedTopic?.code === t.code ? 'text-white' : 'text-[#161b22] dark:text-[#f0f6fc]'}`}>{t.name}</p>
                     <p className={`text-[10px] font-mono truncate ${selectedTopic?.code === t.code ? 'text-white/70' : 'text-gray-400 dark:text-gray-500'}`}>{t.code}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -196,7 +196,7 @@ export default function ParametersBento() {
             <>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-sm font-extrabold text-[#191c1e] dark:text-white flex items-center gap-2">
+                  <h2 className="text-sm font-extrabold text-[#161b22] dark:text-[#f0f6fc] flex items-center gap-2">
                     {selectedTopic.name}
                     {selectedTopic.isSystem && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 font-bold flex items-center gap-1">
@@ -210,7 +210,7 @@ export default function ParametersBento() {
                 </div>
                 <button
                   onClick={openAddValue}
-                  className="px-3 py-1.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                  className="px-3 py-1.5 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 cursor-pointer shadow-sm shadow-[#c83824]/20"
                 >
                   <Plus className="w-3.5 h-3.5" /> Nuevo Valor
                 </button>
@@ -234,14 +234,14 @@ export default function ParametersBento() {
                     </thead>
                     <tbody>
                       {values.map(v => (
-                        <tr key={v.id} className="border-t border-gray-100 dark:border-gray-800">
+                        <tr key={v.id} className="border-t border-[#e2e8f0] dark:border-[#262f38]">
                           <td className="px-2 py-3 font-mono font-bold text-gray-500 dark:text-gray-400">{v.code}</td>
-                          <td className="px-2 py-3 font-extrabold text-[#191c1e] dark:text-white">{v.label}</td>
+                          <td className="px-2 py-3 font-extrabold text-[#161b22] dark:text-[#f0f6fc]">{v.label}</td>
                           <td className="px-2 py-3 text-gray-500 dark:text-gray-400">{v.extraValue || '—'}</td>
                           <td className="px-2 py-3 text-center">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                               v.active
-                                ? 'bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                 : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'
                             }`}>
                               {v.active ? 'Activo' : 'Inactivo'}
@@ -251,7 +251,7 @@ export default function ParametersBento() {
                             <button
                               onClick={() => openEditValue(v)}
                               title="Editar valor"
-                              className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer inline-flex"
+                              className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#c83824] dark:hover:text-[#ea6a58] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer inline-flex"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
@@ -277,9 +277,9 @@ export default function ParametersBento() {
       {/* Modal: nuevo tema */}
       {showTopicForm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleCreateTopic} className="bento-card max-w-md w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
+          <form onSubmit={handleCreateTopic} className="bento-card max-w-md w-full bg-white dark:bg-[#161b22] p-6 rounded-3xl shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Nuevo Tema</h3>
+              <h3 className="font-extrabold text-base text-[#161b22] dark:text-[#f0f6fc]">Nuevo Tema</h3>
               <button type="button" onClick={() => setShowTopicForm(false)} className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
@@ -300,7 +300,7 @@ export default function ParametersBento() {
                   value={topicForm.code}
                   onChange={e => setTopicForm({ ...topicForm, code: e.target.value })}
                   placeholder="LOYALTY_TIERS"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-mono text-xs text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-mono text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -311,7 +311,7 @@ export default function ParametersBento() {
                   value={topicForm.name}
                   onChange={e => setTopicForm({ ...topicForm, name: e.target.value })}
                   placeholder="Niveles de Fidelización"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -321,16 +321,16 @@ export default function ParametersBento() {
                   type="text"
                   value={topicForm.description}
                   onChange={e => setTopicForm({ ...topicForm, description: e.target.value })}
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                 />
               </div>
             </div>
 
             <div className="flex gap-2 pt-2">
-              <button type="button" onClick={() => setShowTopicForm(false)} className="w-1/2 py-3 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold">
+              <button type="button" onClick={() => setShowTopicForm(false)} className="w-1/2 py-3 bg-gray-100 dark:bg-[#262f38] hover:bg-gray-200 dark:hover:bg-[#303b47] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer">
                 Cancelar
               </button>
-              <button type="submit" className="w-1/2 py-3 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold">
+              <button type="submit" className="w-1/2 py-3 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-2xl text-xs font-extrabold cursor-pointer shadow-md shadow-[#c83824]/20">
                 Crear Tema
               </button>
             </div>
@@ -341,9 +341,9 @@ export default function ParametersBento() {
       {/* Modal: nuevo/editar valor */}
       {showValueForm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleSubmitValue} className="bento-card max-w-md w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
+          <form onSubmit={handleSubmitValue} className="bento-card max-w-md w-full bg-white dark:bg-[#161b22] p-6 rounded-3xl shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">
+              <h3 className="font-extrabold text-base text-[#161b22] dark:text-[#f0f6fc]">
                 {valueForm.id ? 'Editar Valor' : 'Nuevo Valor'}
               </h3>
               <button type="button" onClick={() => setShowValueForm(false)} className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer">
@@ -367,7 +367,7 @@ export default function ParametersBento() {
                   onChange={e => setValueForm({ ...valueForm, code: e.target.value })}
                   placeholder="GOLD"
                   disabled={!!valueForm.id}
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-mono text-xs text-[#191c1e] dark:text-white disabled:opacity-60"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-mono text-xs text-[#161b22] dark:text-[#f0f6fc] disabled:opacity-60 focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -378,7 +378,7 @@ export default function ParametersBento() {
                   value={valueForm.label}
                   onChange={e => setValueForm({ ...valueForm, label: e.target.value })}
                   placeholder="Nivel Oro"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -389,7 +389,7 @@ export default function ParametersBento() {
                     type="text"
                     value={valueForm.extraValue}
                     onChange={e => setValueForm({ ...valueForm, extraValue: e.target.value })}
-                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                    className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   />
                 </div>
                 <div>
@@ -398,17 +398,17 @@ export default function ParametersBento() {
                     type="number"
                     value={valueForm.sortOrder}
                     onChange={e => setValueForm({ ...valueForm, sortOrder: e.target.value })}
-                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                    className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   />
                 </div>
               </div>
             </div>
 
             <div className="flex gap-2 pt-2">
-              <button type="button" onClick={() => setShowValueForm(false)} className="w-1/2 py-3 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold">
+              <button type="button" onClick={() => setShowValueForm(false)} className="w-1/2 py-3 bg-gray-100 dark:bg-[#262f38] hover:bg-gray-200 dark:hover:bg-[#303b47] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer">
                 Cancelar
               </button>
-              <button type="submit" className="w-1/2 py-3 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold">
+              <button type="submit" className="w-1/2 py-3 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-2xl text-xs font-extrabold cursor-pointer shadow-md shadow-[#c83824]/20">
                 {valueForm.id ? 'Guardar Cambios' : 'Agregar Valor'}
               </button>
             </div>

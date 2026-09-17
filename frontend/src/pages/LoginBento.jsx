@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Zap, User, KeyRound, ArrowRight, AlertCircle } from 'lucide-react';
+import { User, KeyRound, ArrowRight, AlertCircle } from 'lucide-react';
+import logoFull from '../assets/logo-full.png';
 
 export default function LoginBento() {
   const { login, loading } = useAuth();
@@ -22,28 +23,27 @@ export default function LoginBento() {
   };
 
   return (
-    <div className="min-h-screen bg-[#101e19] text-white flex items-center justify-center p-4 relative overflow-hidden select-none">
-      {/* Ambient Glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#006d3c]/30 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#12b76a]/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-[#0d1117] text-white flex items-center justify-center p-4 relative overflow-hidden select-none">
+      {/* Ambient Vermilion Glows */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#c83824]/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#e25845]/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="max-w-md w-full bento-card bg-[#14231e] border-[#1d332c] p-8 rounded-3xl shadow-2xl space-y-6 relative z-10">
+      <div className="max-w-md w-full bento-card bg-[#161b22] border-[#262f38] p-8 rounded-3xl shadow-2xl space-y-6 relative z-10">
         
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#006d3c] to-[#12b76a] flex items-center justify-center mx-auto shadow-lg shadow-[#006d3c]/40">
-            <Zap className="w-8 h-8 fill-white text-white" />
-          </div>
-          <h1 className="text-2xl font-black tracking-tight text-white mt-3">
-            ProPOS <span className="text-[#12b76a] font-bold">Bento</span>
-          </h1>
-          <p className="text-xs text-gray-300 font-semibold">
+        {/* Brand Header */}
+        <div className="text-center space-y-3">
+          <img 
+            src={logoFull} 
+            alt="BentoPOS" 
+            className="h-28 mx-auto object-contain drop-shadow-md hover:scale-102 transition-transform duration-300"
+          />
+          <p className="text-xs text-gray-400 font-semibold tracking-wide">
             Sistema de Punto de Venta • Iniciar Sesión
           </p>
         </div>
 
         {error && (
-          <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-2xl text-xs font-bold text-red-300 flex items-center gap-2">
+          <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-2xl text-xs font-bold text-red-300 flex items-center gap-2 animate-in fade-in">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -64,7 +64,7 @@ export default function LoginBento() {
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck="false"
-                className="w-full pl-10 pr-4 py-2.5 bg-[#0b1411] border border-[#1d332c] rounded-2xl text-xs font-semibold text-white placeholder-gray-500 focus:outline-none focus:border-[#12b76a] transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#0d1117] border border-[#262f38] rounded-2xl text-xs font-semibold text-white placeholder-gray-500 focus:outline-none focus:border-[#c83824] focus:ring-1 focus:ring-[#c83824] transition-all"
                 required
               />
             </div>
@@ -80,7 +80,7 @@ export default function LoginBento() {
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="off"
-                className="w-full pl-10 pr-4 py-2.5 bg-[#0b1411] border border-[#1d332c] rounded-2xl text-xs font-semibold text-white placeholder-gray-500 focus:outline-none focus:border-[#12b76a] transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#0d1117] border border-[#262f38] rounded-2xl text-xs font-semibold text-white placeholder-gray-500 focus:outline-none focus:border-[#c83824] focus:ring-1 focus:ring-[#c83824] transition-all"
                 required
               />
             </div>
@@ -89,7 +89,7 @@ export default function LoginBento() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-[#006d3c] hover:bg-[#00522c] text-white font-black text-xs rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#006d3c]/40 active:scale-98 transition-all cursor-pointer"
+            className="w-full py-3.5 bg-[#c83824] hover:bg-[#a82917] text-white font-black text-xs rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#c83824]/30 active:scale-98 transition-all cursor-pointer disabled:opacity-50"
           >
             <span>{loading ? 'Autenticando...' : 'Ingresar al Sistema'}</span>
             <ArrowRight className="w-4 h-4" />
@@ -101,7 +101,7 @@ export default function LoginBento() {
           <button
             type="button"
             onClick={() => navigate('/register')}
-            className="text-[#12b76a] font-extrabold hover:underline cursor-pointer"
+            className="text-[#c83824] hover:text-[#e25845] font-extrabold hover:underline cursor-pointer transition-colors"
           >
             Regístrate
           </button>

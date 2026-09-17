@@ -38,10 +38,10 @@ const STATUS_LABELS = {
 };
 
 const STATUS_STYLES = {
-  ACTIVE: 'bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]',
+  ACTIVE: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
   INACTIVE: 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300',
-  PENDING_VERIFICATION: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
-  SUSPENDED: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
+  PENDING_VERIFICATION: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/20',
+  SUSPENDED: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20'
 };
 
 const EMPTY_STORE_FORM = {
@@ -55,7 +55,7 @@ function MetricCard({ label, value, icon: Icon, accent }) {
         <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-lg font-black text-[#191c1e] dark:text-white leading-tight tabular-nums">{value}</p>
+        <p className="text-lg font-black text-[#161b22] dark:text-[#f0f6fc] leading-tight tabular-nums">{value}</p>
         <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 truncate">{label}</p>
       </div>
     </div>
@@ -232,7 +232,7 @@ export default function StoresBento() {
 
         <button
           onClick={openCreateStore}
-          className="px-4 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#006d3c]/20 cursor-pointer"
+          className="px-4 py-2.5 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#c83824]/20 cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Nuevo Local
         </button>
@@ -248,7 +248,7 @@ export default function StoresBento() {
       {/* Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <MetricCard label="Locales Totales" value={metrics?.totalStores ?? '—'} icon={Store} accent="bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300" />
-        <MetricCard label="Activos" value={metrics?.activeStores ?? '—'} icon={Check} accent="bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]" />
+        <MetricCard label="Activos" value={metrics?.activeStores ?? '—'} icon={Check} accent="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" />
         <MetricCard label="Inactivos" value={metrics?.inactiveStores ?? '—'} icon={Ban} accent="bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300" />
         <MetricCard label="Pend. Verificación" value={metrics?.pendingVerification ?? '—'} icon={Clock} accent="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400" />
         <MetricCard label="Suspendidos" value={metrics?.suspended ?? '—'} icon={AlertCircle} accent="bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400" />
@@ -265,14 +265,14 @@ export default function StoresBento() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nombre o correo..."
-              className="w-full pl-10 pr-3 py-1.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-[#e0e3e6] dark:border-[#1d332c] rounded-2xl text-xs font-semibold text-[#191c1e] dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
+              className="w-full pl-10 pr-3 py-1.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs font-semibold text-[#161b22] dark:text-[#f0f6fc] placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
             />
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setStatusFilter('ALL')}
-              className={`px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer ${statusFilter === 'ALL' ? 'bg-[#006d3c] text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'}`}
+              className={`px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer ${statusFilter === 'ALL' ? 'bg-[#c83824] text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'}`}
             >
               Todos
             </button>
@@ -280,7 +280,7 @@ export default function StoresBento() {
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer ${statusFilter === s ? 'bg-[#006d3c] text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'}`}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer ${statusFilter === s ? 'bg-[#c83824] text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'}`}
               >
                 {STATUS_LABELS[s]}
               </button>
@@ -314,9 +314,9 @@ export default function StoresBento() {
               </thead>
               <tbody>
                 {stores.map(s => (
-                  <tr key={s.id} className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50/60 dark:hover:bg-white/5">
+                  <tr key={s.id} className="border-t border-[#e2e8f0] dark:border-[#262f38] hover:bg-gray-50/60 dark:hover:bg-white/5">
                     <td className="px-2 py-3">
-                      <p className="font-extrabold text-[#191c1e] dark:text-white">{s.name}</p>
+                      <p className="font-extrabold text-[#161b22] dark:text-[#f0f6fc]">{s.name}</p>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 font-mono">NIT: {s.taxId || '—'}</p>
                     </td>
                     <td className="px-2 py-3 text-gray-500 dark:text-gray-400 font-semibold">{s.categoryName || 'Sin categoría'}</td>
@@ -324,7 +324,7 @@ export default function StoresBento() {
                       <p className="flex items-center gap-1.5 font-semibold text-gray-600 dark:text-gray-300">
                         <Mail className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> {s.email}
                       </p>
-                      <span className={`inline-flex items-center gap-1 mt-1 text-[10px] font-extrabold ${s.emailVerified ? 'text-[#006d3c] dark:text-[#12b76a]' : 'text-gray-400 dark:text-gray-500'}`}>
+                      <span className={`inline-flex items-center gap-1 mt-1 text-[10px] font-extrabold ${s.emailVerified ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'}`}>
                         <MailCheck className="w-3 h-3" /> {s.emailVerified ? 'Verificado' : 'Sin verificar'}
                       </span>
                     </td>
@@ -345,7 +345,7 @@ export default function StoresBento() {
                           <button
                             onClick={() => handleVerifyEmail(s)}
                             title="Marcar correo como verificado"
-                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
+                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#c83824] dark:hover:text-[#ea6a58] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
                           >
                             <MailCheck className="w-4 h-4" />
                           </button>
@@ -353,14 +353,14 @@ export default function StoresBento() {
                         <button
                           onClick={() => openDocuments(s)}
                           title="Documentos KYC"
-                          className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
+                          className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#c83824] dark:hover:text-[#ea6a58] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
                         >
                           <FileText className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => openEditStore(s)}
                           title="Editar local"
-                          className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
+                          className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#c83824] dark:hover:text-[#ea6a58] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
@@ -376,9 +376,9 @@ export default function StoresBento() {
 
       {/* Create/Edit Store Modal */}
       {showStoreModal && (
-        <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleSubmitStore} className="bento-card max-w-lg w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleSubmitStore} className="bento-card max-w-lg w-full bg-white dark:bg-[#161b22] p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="font-extrabold text-base text-[#161b22] dark:text-[#f0f6fc]">
               {editingStore ? `Editar Local: ${editingStore.name}` : 'Crear Nuevo Local'}
             </h3>
 
@@ -397,7 +397,7 @@ export default function StoresBento() {
                   value={storeForm.name}
                   onChange={e => setStoreForm({ ...storeForm, name: e.target.value })}
                   placeholder="Ej. Tienda La Esquina"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -408,7 +408,7 @@ export default function StoresBento() {
                   <select
                     value={storeForm.storeCategoryId}
                     onChange={e => setStoreForm({ ...storeForm, storeCategoryId: e.target.value })}
-                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                    className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   >
                     <option value="">Sin categoría</option>
                     {categories.map(c => (
@@ -423,7 +423,7 @@ export default function StoresBento() {
                     value={storeForm.taxId}
                     onChange={e => setStoreForm({ ...storeForm, taxId: e.target.value })}
                     placeholder="900123456-1"
-                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-mono text-xs text-[#191c1e] dark:text-white"
+                    className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-mono text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   />
                 </div>
               </div>
@@ -436,7 +436,7 @@ export default function StoresBento() {
                     value={storeForm.email}
                     onChange={e => setStoreForm({ ...storeForm, email: e.target.value })}
                     placeholder="contacto@local.com"
-                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                    className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                     required
                   />
                 </div>
@@ -447,7 +447,7 @@ export default function StoresBento() {
                     value={storeForm.phone}
                     onChange={e => setStoreForm({ ...storeForm, phone: e.target.value })}
                     placeholder="3001234567"
-                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                    className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   />
                 </div>
               </div>
@@ -459,7 +459,7 @@ export default function StoresBento() {
                   value={storeForm.website}
                   onChange={e => setStoreForm({ ...storeForm, website: e.target.value })}
                   placeholder="https://mitienda.com"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                 />
               </div>
 
@@ -470,7 +470,7 @@ export default function StoresBento() {
                   value={storeForm.address}
                   onChange={e => setStoreForm({ ...storeForm, address: e.target.value })}
                   placeholder="Calle 10 # 5-20"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                 />
               </div>
             </div>
@@ -479,13 +479,13 @@ export default function StoresBento() {
               <button
                 type="button"
                 onClick={() => setShowStoreModal(false)}
-                className="w-1/2 py-3 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold"
+                className="w-1/2 py-3 bg-gray-100 dark:bg-[#262f38] hover:bg-gray-200 dark:hover:bg-[#303b47] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="w-1/2 py-3 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold"
+                className="w-1/2 py-3 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-2xl text-xs font-extrabold cursor-pointer shadow-md shadow-[#c83824]/20"
               >
                 {editingStore ? 'Guardar Cambios' : 'Crear Local'}
               </button>
@@ -496,11 +496,11 @@ export default function StoresBento() {
 
       {/* Documents Modal */}
       {docsStore && (
-        <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bento-card max-w-lg w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bento-card max-w-lg w-full bg-white dark:bg-[#161b22] p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Documentos KYC</h3>
+                <h3 className="font-extrabold text-base text-[#161b22] dark:text-[#f0f6fc]">Documentos KYC</h3>
                 <p className="text-[11px] text-gray-400 dark:text-gray-500 font-semibold">{docsStore.name}</p>
               </div>
               <button
@@ -520,16 +520,16 @@ export default function StoresBento() {
             ) : (
               <div className="space-y-3">
                 {documents.map(doc => (
-                  <div key={doc.id} className="p-4 bg-gray-50/60 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-2">
+                  <div key={doc.id} className="p-4 bg-gray-50/60 dark:bg-white/5 rounded-2xl border border-[#e2e8f0] dark:border-[#262f38] space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-xs text-[#191c1e] dark:text-white">{DOC_TYPE_LABELS[doc.documentType] || doc.documentType}</span>
+                      <span className="font-extrabold text-xs text-[#161b22] dark:text-[#f0f6fc]">{DOC_TYPE_LABELS[doc.documentType] || doc.documentType}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${DOC_STATUS_STYLES[doc.status] || ''}`}>{doc.status}</span>
                     </div>
                     <a
                       href={doc.documentUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-[11px] text-[#006d3c] dark:text-[#12b76a] font-semibold underline break-all"
+                      className="text-[11px] text-[#c83824] dark:text-[#ea6a58] font-semibold underline break-all"
                     >
                       Ver documento
                     </a>
@@ -545,13 +545,13 @@ export default function StoresBento() {
                             value={rejectionReason}
                             onChange={e => setRejectionReason(e.target.value)}
                             placeholder="Motivo del rechazo (obligatorio)"
-                            className="w-full p-2 bg-white dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-xl text-[11px] text-[#191c1e] dark:text-white"
+                            className="w-full p-2 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-xl text-[11px] text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                           />
                           <div className="flex gap-2">
                             <button
                               type="button"
                               onClick={() => { setRejectingDoc(null); setRejectionReason(''); }}
-                              className="flex-1 py-1.5 bg-gray-100 dark:bg-[#1e293b] text-gray-600 dark:text-gray-300 rounded-xl text-[11px] font-bold cursor-pointer"
+                              className="flex-1 py-1.5 bg-gray-100 dark:bg-[#262f38] text-gray-600 dark:text-gray-300 rounded-xl text-[11px] font-bold cursor-pointer"
                             >
                               Cancelar
                             </button>
@@ -570,14 +570,14 @@ export default function StoresBento() {
                           <button
                             type="button"
                             onClick={() => handleApproveDoc(doc)}
-                            className="flex-1 py-1.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 cursor-pointer"
+                            className="flex-1 py-1.5 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 cursor-pointer shadow-sm shadow-[#c83824]/20"
                           >
                             <Check className="w-3.5 h-3.5" /> Aprobar
                           </button>
                           <button
                             type="button"
                             onClick={() => setRejectingDoc(doc.id)}
-                            className="flex-1 py-1.5 bg-white dark:bg-[#1e293b] border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 cursor-pointer"
+                            className="flex-1 py-1.5 bg-white dark:bg-[#262f38] border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 cursor-pointer"
                           >
                             <Ban className="w-3.5 h-3.5" /> Rechazar
                           </button>

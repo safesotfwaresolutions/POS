@@ -117,19 +117,19 @@ export default function ReturnsBento() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#191c1e] dark:text-white">Devoluciones</h1>
+          <h1 className="text-2xl font-black text-[#161b22] dark:text-[#f0f6fc]">Devoluciones</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
             Busca la venta original y devuelve los ítems necesarios — el stock se repone automáticamente
           </p>
         </div>
-        <button onClick={loadSales} className="text-xs font-bold text-[#006d3c] dark:text-[#12b76a] flex items-center gap-1 hover:underline cursor-pointer">
+        <button onClick={loadSales} className="text-xs font-bold text-[#c83824] dark:text-[#ea6a58] flex items-center gap-1 hover:underline cursor-pointer">
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Actualizar ventas
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* Lista de ventas */}
-        <div className="lg:col-span-2 bento-card p-5 bg-white dark:bg-[#14231e] rounded-3xl border border-[#e0e3e6] dark:border-[#1d332c] shadow-xs space-y-3">
+        <div className="lg:col-span-2 bento-card p-5 bg-white dark:bg-[#161b22] rounded-3xl border border-[#e2e8f0] dark:border-[#262f38] shadow-xs space-y-3">
           <div className="relative">
             <Search className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3.5 top-2.5" />
             <input
@@ -137,11 +137,11 @@ export default function ReturnsBento() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por factura o cliente..."
-              className="w-full pl-10 pr-3 py-1.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-[#e0e3e6] dark:border-[#1d332c] rounded-2xl text-xs font-semibold text-[#191c1e] dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
+              className="w-full pl-10 pr-3 py-1.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs font-semibold text-[#161b22] dark:text-[#f0f6fc] placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
             />
           </div>
 
-          <div className="max-h-[560px] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+          <div className="max-h-[560px] overflow-y-auto divide-y divide-[#e2e8f0] dark:divide-[#262f38]">
             {loading ? (
               <p className="text-xs text-gray-400 font-semibold py-6 text-center">Cargando ventas...</p>
             ) : filtered.length === 0 ? (
@@ -152,12 +152,12 @@ export default function ReturnsBento() {
                   key={sale.id}
                   onClick={() => openSale(sale)}
                   className={`w-full text-left py-3 px-2 rounded-xl transition-colors cursor-pointer ${
-                    selectedSale?.id === sale.id ? 'bg-emerald-50 dark:bg-[#12b76a]/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'
+                    selectedSale?.id === sale.id ? 'bg-[#c83824]/10 border-l-4 border-[#c83824]' : 'hover:bg-gray-50 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-[#191c1e] dark:text-white">{sale.invoiceNumber}</span>
-                    <span className="text-xs font-black text-[#006d3c] dark:text-[#12b76a] tabular-nums">{money(sale.totalAmount)}</span>
+                    <span className="text-xs font-extrabold text-[#161b22] dark:text-[#f0f6fc]">{sale.invoiceNumber}</span>
+                    <span className="text-xs font-black text-[#c83824] dark:text-[#ea6a58] tabular-nums">{money(sale.totalAmount)}</span>
                   </div>
                   <div className="flex items-center justify-between mt-0.5">
                     <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate">{sale.customerName}</span>
@@ -170,7 +170,7 @@ export default function ReturnsBento() {
         </div>
 
         {/* Detalle + formulario de devolución */}
-        <div className="lg:col-span-3 bento-card p-6 bg-white dark:bg-[#14231e] rounded-3xl border border-[#e0e3e6] dark:border-[#1d332c] shadow-xs">
+        <div className="lg:col-span-3 bento-card p-6 bg-white dark:bg-[#161b22] rounded-3xl border border-[#e2e8f0] dark:border-[#262f38] shadow-xs">
           {!selectedSale ? (
             <div className="py-16 text-center space-y-2">
               <RotateCcw className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto stroke-1" />
@@ -180,7 +180,7 @@ export default function ReturnsBento() {
             <div className="space-y-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-sm font-extrabold text-[#191c1e] dark:text-white">{selectedSale.invoiceNumber}</h3>
+                  <h3 className="text-sm font-extrabold text-[#161b22] dark:text-[#f0f6fc]">{selectedSale.invoiceNumber}</h3>
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
                     {selectedSale.customerName} · {dateFmt(selectedSale.createdAt)} · {selectedSale.paymentMethod}
                   </p>
@@ -196,7 +196,7 @@ export default function ReturnsBento() {
                 </div>
               )}
               {success && (
-                <div className="p-3 bg-emerald-50 dark:bg-[#12b76a]/10 border border-emerald-200 dark:border-[#12b76a]/30 rounded-2xl text-xs font-bold text-[#006d3c] dark:text-[#12b76a] flex items-center gap-2">
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0" /><span>{success}</span>
                 </div>
               )}
@@ -204,19 +204,19 @@ export default function ReturnsBento() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-500 uppercase tracking-wider font-extrabold text-[10px]">
+                    <tr className="border-b border-[#e2e8f0] dark:border-[#262f38] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-extrabold text-[10px]">
                       <th className="py-2 px-2">Producto</th>
                       <th className="py-2 px-2 text-center">Vendido</th>
                       <th className="py-2 px-2 text-center">Disponible</th>
                       <th className="py-2 px-2 text-center">A devolver</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
+                  <tbody className="divide-y divide-[#e2e8f0] dark:divide-[#262f38] font-medium">
                     {(selectedSale.items || []).map((item) => {
                       const returnable = returnableFor(item);
                       return (
                         <tr key={item.id}>
-                          <td className="py-2.5 px-2 font-bold text-[#191c1e] dark:text-white">{item.productName}</td>
+                          <td className="py-2.5 px-2 font-bold text-[#161b22] dark:text-[#f0f6fc]">{item.productName}</td>
                           <td className="py-2.5 px-2 text-center tabular-nums">{item.quantity}</td>
                           <td className="py-2.5 px-2 text-center tabular-nums text-gray-500 dark:text-gray-400">{returnable}</td>
                           <td className="py-2.5 px-2 text-center">
@@ -228,7 +228,7 @@ export default function ReturnsBento() {
                               value={returnQty[item.id] || ''}
                               onChange={(e) => setQty(item.id, e.target.value, returnable)}
                               placeholder="0"
-                              className="w-16 p-1.5 text-center bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-xl text-xs font-bold text-[#191c1e] dark:text-white disabled:opacity-40 focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
+                              className="w-16 p-1.5 text-center bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-xl text-xs font-bold text-[#161b22] dark:text-[#f0f6fc] disabled:opacity-40 focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                             />
                           </td>
                         </tr>
@@ -245,19 +245,19 @@ export default function ReturnsBento() {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Ej. Producto defectuoso, talla incorrecta..."
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs font-semibold text-[#191c1e] dark:text-white focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex items-center justify-between pt-2 border-t border-[#e2e8f0] dark:border-[#262f38]">
                 <div>
                   <span className="text-[11px] font-extrabold uppercase text-gray-400 dark:text-gray-500">Total a reembolsar</span>
-                  <div className="text-xl font-black text-[#191c1e] dark:text-white tabular-nums">{money(refundPreview)}</div>
+                  <div className="text-xl font-black text-[#161b22] dark:text-[#f0f6fc] tabular-nums">{money(refundPreview)}</div>
                 </div>
                 <button
                   onClick={submitReturn}
                   disabled={submitting || itemsToReturn.length === 0}
-                  className="px-5 py-2.5 bg-[#006d3c] hover:bg-[#00522c] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl text-xs font-extrabold flex items-center gap-2 shadow-md shadow-[#006d3c]/20 cursor-pointer"
+                  className="px-5 py-2.5 bg-[#c83824] hover:bg-[#a82d1c] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl text-xs font-extrabold flex items-center gap-2 shadow-md shadow-[#c83824]/20 cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" /> {submitting ? 'Procesando...' : 'Registrar Devolución'}
                 </button>

@@ -4,25 +4,29 @@
 
 @layer base {
   :root {
-    --bg-page: #f7f9fc;
+    --bg-page: #f8f9fa;
     --bg-card: #ffffff;
-    --border-card: #e0e3e6;
-    --text-primary: #191c1e;
-    --text-secondary: #6d7b6e;
-    --text-muted: #94a49b;
+    --border-card: #e2e8f0;
+    --text-primary: #161b22;
+    --text-secondary: #57606a;
+    --text-muted: #8c959f;
+    --color-primary: #c83824;
+    --color-primary-hover: #a82917;
   }
 
   html.dark {
-    --bg-page: #0b1411;
-    --bg-card: #14231e;
-    --border-card: #1d332c;
-    --text-primary: #f7f9fc;
-    --text-secondary: #a3b8ad;
-    --text-muted: #62796e;
+    --bg-page: #0d1117;
+    --bg-card: #161b22;
+    --border-card: #262f38;
+    --text-primary: #f0f6fc;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --color-primary: #e25845;
+    --color-primary-hover: #c83824;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     background-color: var(--bg-page);
     color: var(--text-primary);
     transition: background-color 0.25s ease, color 0.25s ease;
@@ -34,7 +38,7 @@
 }
 
 @layer components {
-  /* Custom Scrollbar */
+  /* Custom Scrollbar - Neutral Bento Style */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -43,38 +47,44 @@
     background: #f1f3f5;
   }
   html.dark ::-webkit-scrollbar-track {
-    background: #14231e;
+    background: #161b22;
   }
   ::-webkit-scrollbar-thumb {
-    background: #95d3ba;
+    background: #cbd5e1;
     border-radius: 9999px;
   }
+  html.dark ::-webkit-scrollbar-thumb {
+    background: #30363d;
+  }
   ::-webkit-scrollbar-thumb:hover {
-    background: #006d3c;
+    background: #c83824;
+  }
+  html.dark ::-webkit-scrollbar-thumb:hover {
+    background: #e25845;
   }
 
   /* Bento card styling */
   .bento-card {
-    background-color: #ffffff;
-    border: 1px solid #e0e3e6;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-card);
     border-radius: 1.5rem;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.02);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, background-color 0.25s ease, border-color 0.25s ease;
   }
 
   html.dark .bento-card {
-    background-color: #14231e;
-    border-color: #1d332c;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    background-color: #161b22;
+    border-color: #262f38;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
   }
 
   .bento-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+    box-shadow: 0 8px 30px rgba(200, 56, 36, 0.08);
   }
   html.dark .bento-card:hover {
-    border-color: #12b76a;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    border-color: #38434f;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
   }
 }
 

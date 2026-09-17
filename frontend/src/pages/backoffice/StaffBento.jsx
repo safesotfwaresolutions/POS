@@ -131,16 +131,16 @@ export default function StaffBento() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#191c1e] dark:text-white">Operadores del Backoffice</h1>
+          <h1 className="text-2xl font-black text-[#161b22] dark:text-[#f0f6fc]">Operadores del Backoffice</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Cuentas SUPER_ADMIN con acceso al panel de administración de la plataforma</p>
         </div>
 
         <button
           onClick={openCreate}
-          className="px-4 py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#006d3c]/20 cursor-pointer"
+          className="px-4 py-2.5 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#c83824]/20 cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Nuevo Operador
         </button>
@@ -182,10 +182,10 @@ export default function StaffBento() {
                 {staff.map(member => {
                   const self = isSelf(member);
                   return (
-                    <tr key={member.id} className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50/60 dark:hover:bg-white/5">
+                    <tr key={member.id} className="border-t border-[#e2e8f0] dark:border-[#262f38] hover:bg-gray-50/60 dark:hover:bg-white/5">
                       <td className="px-2 py-3">
-                        <p className="font-extrabold text-[#191c1e] dark:text-white flex items-center gap-1.5">
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#006d3c] dark:text-[#12b76a]" />
+                        <p className="font-extrabold text-[#161b22] dark:text-[#f0f6fc] flex items-center gap-1.5">
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#c83824] dark:text-[#ea6a58]" />
                           {member.fullName}
                           {self && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 font-extrabold">Tú</span>}
                         </p>
@@ -195,7 +195,7 @@ export default function StaffBento() {
                       <td className="px-2 py-3">
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
                           member.active
-                            ? 'bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                             : 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
                         }`}>
                           {member.active ? 'Activo' : 'Inactivo'}
@@ -206,14 +206,14 @@ export default function StaffBento() {
                           <button
                             onClick={() => openPasswordReset(member)}
                             title="Restablecer contraseña"
-                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
+                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#c83824] dark:hover:text-[#ea6a58] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
                           >
                             <KeyRound className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => openEdit(member)}
                             title="Editar operador"
-                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#006d3c] dark:hover:text-[#12b76a] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
+                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#c83824] dark:hover:text-[#ea6a58] rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer"
                           >
                             <Edit3 className="w-4 h-4" />
                           </button>
@@ -246,10 +246,10 @@ export default function StaffBento() {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleCreate} className="bento-card max-w-md w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleCreate} className="bento-card max-w-md w-full bg-white dark:bg-[#161b22] p-6 rounded-3xl shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Nuevo Operador</h3>
+              <h3 className="font-extrabold text-base text-[#161b22] dark:text-[#f0f6fc]">Nuevo Operador</h3>
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
@@ -274,7 +274,7 @@ export default function StaffBento() {
                   value={createForm.fullName}
                   onChange={e => setCreateForm({ ...createForm, fullName: e.target.value })}
                   placeholder="Ej. Ana Torres"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -285,7 +285,7 @@ export default function StaffBento() {
                   value={createForm.username}
                   onChange={e => setCreateForm({ ...createForm, username: e.target.value })}
                   placeholder="ana.torres"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-mono text-xs text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-mono text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -296,7 +296,7 @@ export default function StaffBento() {
                   value={createForm.email}
                   onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
                   placeholder="ana.torres@platform.internal"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -307,7 +307,7 @@ export default function StaffBento() {
                   value={createForm.password}
                   onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
                   placeholder="Mínimo 8 caracteres, letras y números"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                   minLength={8}
                 />
@@ -318,13 +318,13 @@ export default function StaffBento() {
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="w-1/2 py-3 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold"
+                className="w-1/2 py-3 bg-gray-100 dark:bg-[#262f38] hover:bg-gray-200 dark:hover:bg-[#303b47] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="w-1/2 py-3 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold"
+                className="w-1/2 py-3 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-2xl text-xs font-extrabold cursor-pointer shadow-md shadow-[#c83824]/20"
               >
                 Crear Operador
               </button>
@@ -335,10 +335,10 @@ export default function StaffBento() {
 
       {/* Edit Modal */}
       {editForm && (
-        <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleEdit} className="bento-card max-w-md w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleEdit} className="bento-card max-w-md w-full bg-white dark:bg-[#161b22] p-6 rounded-3xl shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Editar Operador</h3>
+              <h3 className="font-extrabold text-base text-[#161b22] dark:text-[#f0f6fc]">Editar Operador</h3>
               <button
                 type="button"
                 onClick={() => setEditForm(null)}
@@ -362,7 +362,7 @@ export default function StaffBento() {
                   type="text"
                   value={editForm.fullName}
                   onChange={e => setEditForm({ ...editForm, fullName: e.target.value })}
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -372,7 +372,7 @@ export default function StaffBento() {
                   type="email"
                   value={editForm.email}
                   onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                 />
               </div>
@@ -382,13 +382,13 @@ export default function StaffBento() {
               <button
                 type="button"
                 onClick={() => setEditForm(null)}
-                className="w-1/2 py-3 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold"
+                className="w-1/2 py-3 bg-gray-100 dark:bg-[#262f38] hover:bg-gray-200 dark:hover:bg-[#303b47] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="w-1/2 py-3 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold"
+                className="w-1/2 py-3 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-2xl text-xs font-extrabold cursor-pointer shadow-md shadow-[#c83824]/20"
               >
                 Guardar Cambios
               </button>
@@ -399,11 +399,11 @@ export default function StaffBento() {
 
       {/* Password Reset Modal */}
       {passwordTarget && (
-        <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handlePasswordReset} className="bento-card max-w-sm w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <form onSubmit={handlePasswordReset} className="bento-card max-w-sm w-full bg-white dark:bg-[#161b22] p-6 rounded-3xl shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white">Restablecer Contraseña</h3>
+                <h3 className="font-extrabold text-base text-[#161b22] dark:text-[#f0f6fc]">Restablecer Contraseña</h3>
                 <p className="text-[11px] text-gray-400 dark:text-gray-500 font-semibold">{passwordTarget.fullName}</p>
               </div>
               <button
@@ -431,7 +431,7 @@ export default function StaffBento() {
                     value={currentPassword}
                     onChange={e => setCurrentPassword(e.target.value)}
                     placeholder="Requerida para cambiar tu propia contraseña"
-                    className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                    className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                     required
                   />
                 </div>
@@ -443,7 +443,7 @@ export default function StaffBento() {
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   placeholder="Mínimo 8 caracteres, letras y números"
-                  className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white"
+                  className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                   required
                   minLength={8}
                 />
@@ -454,13 +454,13 @@ export default function StaffBento() {
               <button
                 type="button"
                 onClick={() => setPasswordTarget(null)}
-                className="w-1/2 py-3 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold"
+                className="w-1/2 py-3 bg-gray-100 dark:bg-[#262f38] hover:bg-gray-200 dark:hover:bg-[#303b47] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="w-1/2 py-3 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold"
+                className="w-1/2 py-3 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-2xl text-xs font-extrabold cursor-pointer shadow-md shadow-[#c83824]/20"
               >
                 Restablecer
               </button>

@@ -53,9 +53,9 @@ const PRIORITY_STYLES = {
 const STATUS_LABELS = { OPEN: 'Abierto', IN_PROGRESS: 'En Progreso', RESOLVED: 'Resuelto', CLOSED: 'Cerrado' };
 
 const STATUS_STYLES = {
-  OPEN: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
-  IN_PROGRESS: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400',
-  RESOLVED: 'bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]',
+  OPEN: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/20',
+  IN_PROGRESS: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/20',
+  RESOLVED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
   CLOSED: 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
 };
 
@@ -66,7 +66,7 @@ function MetricCard({ label, value, icon: Icon, accent }) {
         <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-lg font-black text-[#191c1e] dark:text-white leading-tight tabular-nums">{value}</p>
+        <p className="text-lg font-black text-[#161b22] dark:text-[#f0f6fc] leading-tight tabular-nums">{value}</p>
         <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 truncate">{label}</p>
       </div>
     </div>
@@ -84,47 +84,40 @@ export default function SupportTicketsBento() {
 
   const [detailTicket, setDetailTicket] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [statusDraft, setStatusDraft] = useState('');
-  const [priorityDraft, setPriorityDraft] = useState('');
-  const [notesDraft, setNotesDraft] = useState('');
-  const [savingDetail, setSavingDetail] = useState(false);
   const [detailError, setDetailError] = useState('');
+  const [savingDetail, setSavingDetail] = useState(false);
+  const [statusDraft, setStatusDraft] = useState('OPEN');
+  const [priorityDraft, setPriorityDraft] = useState('NORMAL');
+  const [notesDraft, setNotesDraft] = useState('');
 
-  const loadMetrics = useCallback(async () => {
-    try {
-      setMetrics(await getBackofficeSupportMetricsApi());
-    } catch (e) {
-      console.warn('Error cargando métricas de soporte:', e);
-    }
-  }, []);
-
-  const loadTickets = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getBackofficeSupportTicketsApi({
-        type: typeFilter, status: statusFilter, priority: priorityFilter, q: search
-      });
-      setTickets(data.content || []);
-    } catch (e) {
-      console.warn('Error cargando tickets:', e);
-      setTickets([]);
+      const [m, t] = await Promise.all([
+        getBackofficeSupportMetricsApi().catch(() => null),
+        getBackofficeSupportTicketsApi({
+          type: typeFilter === 'ALL' ? undefined : typeFilter,
+          status: statusFilter === 'ALL' ? undefined : statusFilter,
+          priority: priorityFilter === 'ALL' ? undefined : priorityFilter,
+          q: search.trim() || undefined
+        }).catch(() => [])
+      ]);
+      setMetrics(m);
+      setTickets(Array.isArray(t?.content) ? t.content : Array.isArray(t) ? t : []);
     } finally {
       setLoading(false);
     }
   }, [typeFilter, statusFilter, priorityFilter, search]);
 
-  useEffect(() => { loadMetrics(); }, [loadMetrics]);
   useEffect(() => {
-    const t = setTimeout(loadTickets, 250);
-    return () => clearTimeout(t);
-  }, [loadTickets]);
-
-  const refreshAll = async () => {
-    await Promise.all([loadMetrics(), loadTickets()]);
-  };
+    loadData();
+  }, [loadData]);
 
   const openDetail = async (ticket) => {
     setDetailTicket(ticket);
+    setStatusDraft(ticket.status);
+    setPriorityDraft(ticket.priority);
+    setNotesDraft(ticket.resolutionNotes || '');
     setDetailLoading(true);
     setDetailError('');
     try {
@@ -134,7 +127,7 @@ export default function SupportTicketsBento() {
       setPriorityDraft(full.priority);
       setNotesDraft(full.resolutionNotes || '');
     } catch (e) {
-      setDetailError(e.message || 'Error cargando el detalle del ticket.');
+      setDetailError(e.message || 'Error cargando detalle del ticket.');
     } finally {
       setDetailLoading(false);
     }
@@ -150,15 +143,15 @@ export default function SupportTicketsBento() {
     setSavingDetail(true);
     setDetailError('');
     try {
-      await updateBackofficeSupportTicketApi(detailTicket.id, {
+      const updated = await updateBackofficeSupportTicketApi(detailTicket.id, {
         status: statusDraft,
         priority: priorityDraft,
         resolutionNotes: notesDraft
       });
-      closeDetail();
-      await refreshAll();
-    } catch (err) {
-      setDetailError(err.message || 'Error al actualizar el ticket.');
+      setDetailTicket(updated);
+      await loadData();
+    } catch (e) {
+      setDetailError(e.message || 'Error actualizando ticket.');
     } finally {
       setSavingDetail(false);
     }
@@ -168,7 +161,7 @@ export default function SupportTicketsBento() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#191c1e] dark:text-white">Soporte y PQRs</h1>
+          <h1 className="text-2xl font-black text-[#161b22] dark:text-[#f0f6fc]">Soporte y PQRs</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Gestión de peticiones, quejas, reclamos y reportes de bugs</p>
         </div>
       </div>
@@ -177,7 +170,7 @@ export default function SupportTicketsBento() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <MetricCard label="Abiertos" value={metrics?.totalOpen ?? '—'} icon={Clock} accent="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400" />
         <MetricCard label="En Progreso" value={metrics?.inProgress ?? '—'} icon={LifeBuoy} accent="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400" />
-        <MetricCard label="Resueltos" value={metrics?.resolved ?? '—'} icon={CheckCircle2} accent="bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]" />
+        <MetricCard label="Resueltos" value={metrics?.resolved ?? '—'} icon={CheckCircle2} accent="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" />
         <MetricCard label="Cerrados" value={metrics?.closed ?? '—'} icon={Archive} accent="bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300" />
         <MetricCard label="Bugs Críticos" value={metrics?.bugsCritical ?? '—'} icon={Flame} accent="bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400" />
       </div>
@@ -192,7 +185,7 @@ export default function SupportTicketsBento() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por título o radicado..."
-              className="w-full pl-10 pr-3 py-1.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-[#e0e3e6] dark:border-[#1d332c] rounded-2xl text-xs font-semibold text-[#191c1e] dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#006d3c] dark:focus:border-[#12b76a]"
+              className="w-full pl-10 pr-3 py-1.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs font-semibold text-[#161b22] dark:text-[#f0f6fc] placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
             />
           </div>
 
@@ -291,11 +284,11 @@ export default function SupportTicketsBento() {
 
       {/* Ticket Detail Modal */}
       {detailTicket && (
-        <div className="fixed inset-0 bg-navy-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bento-card max-w-lg w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bento-card max-w-lg w-full bg-white dark:bg-[#161b22] p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-extrabold text-base text-[#191c1e] dark:text-white font-mono">{detailTicket.ticketNumber}</h3>
+                <h3 className="font-extrabold text-base text-[#161b22] dark:text-[#f0f6fc] font-mono">{detailTicket.ticketNumber}</h3>
                 <p className="text-[11px] text-gray-400 dark:text-gray-500 font-semibold">{TYPE_LABELS[detailTicket.type] || detailTicket.type}</p>
               </div>
               <button
@@ -320,11 +313,11 @@ export default function SupportTicketsBento() {
                 <div className="space-y-3 text-xs">
                   <div>
                     <p className="font-bold text-gray-700 dark:text-gray-300 mb-1">Título:</p>
-                    <p className="text-[#191c1e] dark:text-white font-semibold">{detailTicket.title}</p>
+                    <p className="text-[#161b22] dark:text-[#f0f6fc] font-semibold">{detailTicket.title}</p>
                   </div>
                   <div>
                     <p className="font-bold text-gray-700 dark:text-gray-300 mb-1">Descripción:</p>
-                    <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap p-3 bg-gray-50/60 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-gray-700">{detailTicket.description}</p>
+                    <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap p-3 bg-gray-50/60 dark:bg-white/5 rounded-2xl border border-[#e2e8f0] dark:border-[#262f38]">{detailTicket.description}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -348,7 +341,7 @@ export default function SupportTicketsBento() {
                       <select
                         value={statusDraft}
                         onChange={e => setStatusDraft(e.target.value)}
-                        className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                        className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                       >
                         {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
                       </select>
@@ -358,7 +351,7 @@ export default function SupportTicketsBento() {
                       <select
                         value={priorityDraft}
                         onChange={e => setPriorityDraft(e.target.value)}
-                        className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl font-semibold text-[#191c1e] dark:text-white"
+                        className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                       >
                         {PRIORITIES.map(p => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
                       </select>
@@ -372,7 +365,7 @@ export default function SupportTicketsBento() {
                       onChange={e => setNotesDraft(e.target.value)}
                       placeholder="Notas internas sobre la resolución del ticket..."
                       rows={3}
-                      className="w-full p-2.5 bg-[#f7f9fc] dark:bg-[#0b1411] border border-gray-300 dark:border-gray-700 rounded-2xl text-xs text-[#191c1e] dark:text-white resize-y"
+                      className="w-full p-2.5 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs text-[#161b22] dark:text-[#f0f6fc] resize-y focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
                     />
                   </div>
                 </div>
@@ -381,7 +374,7 @@ export default function SupportTicketsBento() {
                   <button
                     type="button"
                     onClick={closeDetail}
-                    className="w-1/2 py-3 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
+                    className="w-1/2 py-3 bg-gray-100 dark:bg-[#262f38] hover:bg-gray-200 dark:hover:bg-[#303b47] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
                   >
                     Cerrar
                   </button>
@@ -389,7 +382,7 @@ export default function SupportTicketsBento() {
                     type="button"
                     onClick={handleSaveDetail}
                     disabled={savingDetail}
-                    className="w-1/2 py-3 bg-[#006d3c] hover:bg-[#00522c] disabled:opacity-50 text-white rounded-2xl text-xs font-extrabold cursor-pointer"
+                    className="w-1/2 py-3 bg-[#c83824] hover:bg-[#a82d1c] disabled:opacity-50 text-white rounded-2xl text-xs font-extrabold cursor-pointer shadow-md shadow-[#c83824]/20"
                   >
                     {savingDetail ? 'Guardando...' : 'Guardar Cambios'}
                   </button>

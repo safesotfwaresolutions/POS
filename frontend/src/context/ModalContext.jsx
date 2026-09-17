@@ -47,12 +47,12 @@ export function ModalProvider({ children }) {
       {children}
       {modal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-100 flex items-center justify-center p-4">
-          <div className="bento-card max-w-sm w-full bg-white dark:bg-[#14231e] p-6 rounded-3xl shadow-2xl space-y-4">
+          <div className="bento-card max-w-sm w-full bg-white dark:bg-[#161b22] border border-gray-100 dark:border-[#262f38] p-6 rounded-3xl shadow-2xl space-y-4">
             <div className="flex items-start gap-3">
               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
                 modal.danger
                   ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
-                  : 'bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]'
+                  : 'bg-[#c83824]/10 dark:bg-[#c83824]/20 text-[#c83824]'
               }`}>
                 {modal.type === 'confirm'
                   ? <HelpCircle className="w-5 h-5" />
@@ -69,15 +69,17 @@ export function ModalProvider({ children }) {
                 <button
                   type="button"
                   onClick={() => close(false)}
-                  className="w-1/2 py-2.5 bg-gray-100 dark:bg-[#1e293b] hover:bg-gray-200 dark:hover:bg-[#334155] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
+                  className="w-1/2 py-2.5 bg-gray-100 dark:bg-[#262f38] hover:bg-gray-200 dark:hover:bg-[#323d48] text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer transition-colors"
                 >
                   {modal.cancelText}
                 </button>
                 <button
                   type="button"
                   onClick={() => close(true)}
-                  className={`w-1/2 py-2.5 text-white rounded-2xl text-xs font-extrabold cursor-pointer ${
-                    modal.danger ? 'bg-red-500 hover:bg-red-600' : 'bg-[#006d3c] hover:bg-[#00522c]'
+                  className={`w-1/2 py-2.5 text-white rounded-2xl text-xs font-extrabold cursor-pointer transition-all shadow-md ${
+                    modal.danger
+                      ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20'
+                      : 'bg-[#c83824] hover:bg-[#b02f1e] shadow-[#c83824]/25'
                   }`}
                 >
                   {modal.confirmText}
@@ -88,7 +90,7 @@ export function ModalProvider({ children }) {
                 <button
                   type="button"
                   onClick={() => close()}
-                  className="w-full py-2.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-2xl text-xs font-extrabold cursor-pointer"
+                  className="w-full py-2.5 bg-[#c83824] hover:bg-[#b02f1e] text-white rounded-2xl text-xs font-extrabold cursor-pointer transition-all shadow-lg shadow-[#c83824]/25"
                 >
                   {modal.confirmText}
                 </button>

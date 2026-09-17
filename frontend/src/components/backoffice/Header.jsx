@@ -17,11 +17,11 @@ export default function BackofficeHeader({ onToggleMobileMenu }) {
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleMobileMenu}
-          className="lg:hidden p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#334155] rounded-xl transition-colors cursor-pointer"
+          className="lg:hidden p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#262f38] rounded-xl transition-colors cursor-pointer"
         >
-          <Menu className="w-5 h-5 text-[#006d3c] dark:text-[#12b76a]" />
+          <Menu className="w-5 h-5 text-[#c83824] dark:text-[#ea6a58]" />
         </button>
-        <span className="text-xs font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+        <span className="text-xs font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
           Panel de Super Administración
         </span>
       </div>
@@ -29,7 +29,7 @@ export default function BackofficeHeader({ onToggleMobileMenu }) {
       <div className="flex items-center gap-3 sm:gap-4">
         <button
           onClick={toggleTheme}
-          className="p-2.5 text-gray-600 dark:text-amber-400 bg-white dark:bg-[#1e293b] border border-[#e0e3e6] dark:border-[#334155] hover:bg-[#e0e3e6] dark:hover:bg-[#334155] rounded-full transition-all flex items-center justify-center cursor-pointer shadow-xs"
+          className="p-2.5 text-gray-600 dark:text-amber-400 bg-white dark:bg-[#161b22] border border-[#e2e8f0] dark:border-[#262f38] hover:bg-[#f2f4f7] dark:hover:bg-[#262f38] rounded-full transition-all flex items-center justify-center cursor-pointer shadow-xs"
           title={darkMode ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}
         >
           {darkMode ? (
@@ -40,7 +40,7 @@ export default function BackofficeHeader({ onToggleMobileMenu }) {
         </button>
 
         <div
-          className="w-10 h-10 rounded-full bg-[#006d3c] text-white flex items-center justify-center font-bold text-xs shadow-sm border-2 border-white dark:border-[#334155] cursor-pointer"
+          className="w-10 h-10 rounded-full bg-[#161b22] dark:bg-[#262f38] text-white flex items-center justify-center font-bold text-xs shadow-sm border-2 border-white dark:border-[#38434f] cursor-pointer"
           title={user?.fullName || user?.username}
         >
           {getInitials(user?.fullName || user?.username)}

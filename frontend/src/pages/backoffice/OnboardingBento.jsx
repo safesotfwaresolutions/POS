@@ -86,13 +86,13 @@ export default function OnboardingBento() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <MetricCard label="Usuarios sin verificar" value={stats?.pendingUsers ?? '—'} icon={Users} accent="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400" />
         <MetricCard label="Locales pendientes" value={stats?.pendingStores ?? '—'} icon={Clock} accent="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400" />
-        <MetricCard label="Aprobados (30 días)" value={stats?.approvedStoresLast30Days ?? '—'} icon={CheckCircle2} accent="bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]" />
+        <MetricCard label="Aprobados (30 días)" value={stats?.approvedStoresLast30Days ?? '—'} icon={CheckCircle2} accent="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" />
         <MetricCard label="Rechazados (total)" value={stats?.rejectedStoresTotal ?? '—'} icon={X} accent="bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400" />
       </div>
 
       {/* Usuarios pendientes de verificar */}
       <div className="bento-card p-6 space-y-4">
-        <h2 className="text-sm font-black text-[#191c1e] dark:text-white flex items-center gap-2">
+        <h2 className="text-sm font-black text-[#161b22] dark:text-[#f0f6fc] flex items-center gap-2">
           <Users className="w-4 h-4 text-amber-500" /> Usuarios pendientes de verificar su correo
         </h2>
         {loading ? (
@@ -111,8 +111,8 @@ export default function OnboardingBento() {
               </thead>
               <tbody>
                 {pendingUsers.map(u => (
-                  <tr key={u.id} className="border-t border-gray-100 dark:border-gray-800">
-                    <td className="px-2 py-3 font-extrabold text-[#191c1e] dark:text-white">{u.fullName}</td>
+                  <tr key={u.id} className="border-t border-[#e2e8f0] dark:border-[#262f38]">
+                    <td className="px-2 py-3 font-extrabold text-[#161b22] dark:text-[#f0f6fc]">{u.fullName}</td>
                     <td className="px-2 py-3 text-gray-500 dark:text-gray-400 font-semibold">{u.username}</td>
                     <td className="px-2 py-3">
                       <span className="flex items-center gap-1.5 font-semibold text-gray-600 dark:text-gray-300">
@@ -129,7 +129,7 @@ export default function OnboardingBento() {
 
       {/* Locales pendientes de aprobacion */}
       <div className="bento-card p-6 space-y-4">
-        <h2 className="text-sm font-black text-[#191c1e] dark:text-white flex items-center gap-2">
+        <h2 className="text-sm font-black text-[#161b22] dark:text-[#f0f6fc] flex items-center gap-2">
           <Store className="w-4 h-4 text-amber-500" /> Locales pendientes de aprobación
         </h2>
         {loading ? (
@@ -148,9 +148,9 @@ export default function OnboardingBento() {
               </thead>
               <tbody>
                 {pendingStores.map(s => (
-                  <tr key={s.id} className="border-t border-gray-100 dark:border-gray-800">
+                  <tr key={s.id} className="border-t border-[#e2e8f0] dark:border-[#262f38]">
                     <td className="px-2 py-3">
-                      <p className="font-extrabold text-[#191c1e] dark:text-white">{s.name}</p>
+                      <p className="font-extrabold text-[#161b22] dark:text-[#f0f6fc]">{s.name}</p>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 font-mono">NIT: {s.taxId || '—'}</p>
                     </td>
                     <td className="px-2 py-3">
@@ -161,7 +161,7 @@ export default function OnboardingBento() {
                     <td className="px-2 py-3 text-right space-x-2">
                       <button
                         onClick={() => handleApprove(s)}
-                        className="px-3 py-1.5 bg-[#006d3c] hover:bg-[#00522c] text-white rounded-xl text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 bg-[#c83824] hover:bg-[#a82d1c] text-white rounded-xl text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer shadow-sm shadow-[#c83824]/20"
                       >
                         <Check className="w-3.5 h-3.5" /> Aprobar
                       </button>
@@ -182,19 +182,19 @@ export default function OnboardingBento() {
 
       {rejectingStore && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bento-card bg-white dark:bg-[#1e293b] p-6 rounded-3xl max-w-sm w-full space-y-4">
-            <h3 className="text-sm font-black text-[#191c1e] dark:text-white">Rechazar "{rejectingStore.name}"</h3>
+          <div className="bento-card bg-white dark:bg-[#161b22] p-6 rounded-3xl max-w-sm w-full space-y-4">
+            <h3 className="text-sm font-black text-[#161b22] dark:text-[#f0f6fc]">Rechazar "{rejectingStore.name}"</h3>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="Motivo del rechazo..."
-              className="w-full p-3 bg-gray-50 dark:bg-[#0b1411] border border-gray-200 dark:border-[#1d332c] rounded-2xl text-xs font-semibold focus:outline-none focus:border-red-400"
+              className="w-full p-3 bg-[#f8f9fa] dark:bg-[#0d1117] border border-[#e2e8f0] dark:border-[#262f38] rounded-2xl text-xs font-semibold text-[#161b22] dark:text-[#f0f6fc] focus:outline-none focus:border-[#c83824] dark:focus:border-[#ea6a58]"
               rows={3}
             />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setRejectingStore(null)}
-                className="px-4 py-2 bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold cursor-pointer"
+                className="px-4 py-2 bg-gray-100 dark:bg-[#262f38] text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold cursor-pointer"
               >
                 Cancelar
               </button>

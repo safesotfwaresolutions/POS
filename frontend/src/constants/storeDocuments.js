@@ -21,6 +21,6 @@ export const DOC_STATUS_LABELS = {
 
 export const DOC_STATUS_STYLES = {
   PENDING: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
-  APPROVED: 'bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a]',
+  APPROVED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
   REJECTED: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400',
 };

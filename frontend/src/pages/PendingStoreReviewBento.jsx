@@ -30,7 +30,7 @@ export default function PendingStoreReviewBento({ store }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] dark:bg-[#0f172a] text-[#191c1e] dark:text-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#0d1117] text-[#161b22] dark:text-[#f0f6fc] flex items-center justify-center p-4 select-none">
       <div className="max-w-md w-full bento-card p-8 rounded-3xl shadow-xl space-y-5 text-center">
         <div className={`w-16 h-16 rounded-2xl bg-gray-100 dark:bg-white/10 flex items-center justify-center mx-auto ${copy.iconClass}`}>
           <Icon className="w-9 h-9" />

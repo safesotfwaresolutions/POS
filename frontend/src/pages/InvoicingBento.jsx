@@ -13,16 +13,16 @@ export default function InvoicingBento() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1.5 rounded-2xl bg-emerald-100 dark:bg-[#12b76a]/20 text-[#006d3c] dark:text-[#12b76a] font-extrabold text-xs border border-emerald-300 dark:border-[#12b76a]/30 flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-[#12b76a]" /> Factus API Conectado
+          <span className="px-3 py-1.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs border border-emerald-500/20 flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" /> Factus API Conectado
           </span>
         </div>
       </div>
 
       <div className="bento-card p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-          <h3 className="font-extrabold text-sm text-[#191c1e] dark:text-white">Monitoreo de Emisión DIAN</h3>
-          <button className="text-xs font-bold text-[#006d3c] dark:text-[#12b76a] flex items-center gap-1 hover:underline cursor-pointer">
+        <div className="flex items-center justify-between border-b border-[#e2e8f0] dark:border-[#262f38] pb-3">
+          <h3 className="font-extrabold text-sm text-[#161b22] dark:text-[#f0f6fc]">Monitoreo de Emisión DIAN</h3>
+          <button className="text-xs font-bold text-[#c83824] dark:text-[#ea6a58] flex items-center gap-1 hover:underline cursor-pointer">
             <RefreshCw className="w-3.5 h-3.5" /> Sincronizar Estado
           </button>
         </div>
